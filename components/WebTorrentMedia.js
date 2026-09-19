@@ -505,7 +505,6 @@ const styles = StyleSheet.create({
   },
   overlayText: { color: "#fff", fontSize: 11, fontWeight: "bold" },
   centerPlayButton: {
-
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -519,7 +518,7 @@ const styles = StyleSheet.create({
   playIconText: { color: "#fff", fontSize: 20, marginLeft: 2 },
   bottomControlBar: {
     position: "absolute",
-    bottom: 0,
+    bottom: 50,
     left: 0,
     right: 0,
     paddingHorizontal: 16,
@@ -570,11 +569,13 @@ const styles = StyleSheet.create({
 
     marginLeft: 12,
     height: "100%",
+    zIndex: "5000",
   },
   volumeButton: {
     padding: 4,
     justifyContent: "center",
     alignItems: "center",
+    zIndex: "5000",
   },
   volumeIconText: {
     color: "#fff",
