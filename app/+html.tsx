@@ -268,11 +268,7 @@ export default function Root({ children }: PropsWithChildren) {
             zIndex: 99999,
           }}
         >
-          <img
-            src="/bble.png"
-            alt="BubbleBased"
-            style={{ width: "96px", height: "96px", marginBottom: "1rem" }}
-          />
+
           <h1
             style={{
               fontSize: "2.5rem",

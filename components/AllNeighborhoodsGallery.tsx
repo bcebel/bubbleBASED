@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
     height: height,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: 1,
     overflow: "hidden",
   },
   mediaContainer: {
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
-    padding: 50,
+    padding: 1,
   },
   fixedMediaWrapper: {
     width: "100%",
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: 10,
   },
   errorTitle: {
     fontSize: 22,
