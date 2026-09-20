@@ -7,8 +7,11 @@ import {
   ActivityIndicator,
   FlatList,
   TouchableOpacity,
+  ImageBackground,
 } from "react-native";
 import { gql, useQuery, useSubscription } from "@apollo/client";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Head from "expo-router/head";
 import NeighborhoodLiveStreamPlayer from "../../../components/NeighborhoodLiveStreamPlayer";
 import { warehouse } from "../../../components/StreamWearhouse.js";
 import { useRouter } from "expo-router";
@@ -159,14 +162,79 @@ function StreamItem({ stream }: { stream: any }) {
 
 // --- TAB SCREEN ROUTE ---
 export default function StreamsScreen() {
-    const router = useRouter();
-
+  const router = useRouter();
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    const checkLogin = async () => {
+      const token = await AsyncStorage.getItem("token");
+      setIsLoggedIn(!!token);
+      setAuthChecked(true);
+    };
+    checkLogin();
+  }, []);
 
   const { data: streamsData, loading } = useQuery(GET_ACTIVE_LIVESTREAMS, {
     pollInterval: 5000,
+    skip: !isLoggedIn,
   });
 
+  // 1. auth not resolved yet
+  if (!authChecked) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
+  }
+
+  // 2. logged out → marketing page
+  if (!isLoggedIn) {
+    return (
+      <>
+        <Head>
+          <title>bubbleBASED - Livestream</title>
+          <meta
+            name="description"
+            content="Live streams from your bubbles. Peer-to-peer video, no middlemen, no replay tracking. Watch what your people are sharing right now."
+          />
+        </Head>
+        <View style={styles.mainWrapper}>
+          <ImageBackground
+            source={require("@/assets/images/bbl.jpg")}
+            style={styles.heroBubble}
+            resizeMode="cover"
+          />
+          <View style={styles.marketingCenter}>
+            <Text style={styles.marketingText}>Live from your bubbles</Text>
+          </View>
+          <View style={styles.marketingCenter}>
+            <Text style={styles.marketingText}>
+              Peer-to-peer video, no middlemen
+            </Text>
+          </View>
+          <View style={styles.marketingCenter}>
+            <Text style={styles.marketingText}>
+              No replay tracking, no audience metrics
+            </Text>
+          </View>
+          <View style={styles.marketingCenter}>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={() => router.push("/login")}
+            >
+              <Text style={styles.loginButtonText}>Log in</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </>
+    );
+  }
+
+  // 3. logged in → actual app
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -249,5 +317,37 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     fontSize: 14,
+  },
+  // marketing-only styles
+  marketingCenter: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
+  },
+  marketingText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "600",
+  },
+  heroBubble: {
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    opacity: 0.5,
+  },
+  loginButton: {
+    backgroundColor: "#00FFFF",
+    padding: 15,
+    borderRadius: 30,
+    width: "80%",
+    alignItems: "center",
+    marginTop: 5,
+    marginBottom: 85,
+  },
+  loginButtonText: {
+    color: "#130720",
+    fontWeight: "bold",
+    fontSize: 18,
   },
 });

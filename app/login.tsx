@@ -103,7 +103,7 @@ export default function LoginScreen() {
   return (
     <>
       <Head>
-        <keywords>Log In | bubbleBASED</title>
+        <title>Log In | bubbleBASED</title>
         <meta
           name="description"
           content="Welcome back to your digital neighborhoods. Log in to see what your bubbles have been up to."
