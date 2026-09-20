@@ -133,7 +133,7 @@ export default function GalleryScreen() {
                 </View>
 
                 <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                  Powered by Viewers, Not Servers
+                  Media Gallery - Powered by Viewers
                 </Text>
 
                 <Text style={styles.heroSub}>
