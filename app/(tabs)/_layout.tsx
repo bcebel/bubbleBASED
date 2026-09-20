@@ -45,7 +45,6 @@ export default function TabLayout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="neighborhoods/index"
         options={{
@@ -56,7 +55,6 @@ export default function TabLayout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="gallery"
         options={{
@@ -131,6 +129,8 @@ export default function TabLayout() {
         name="neighborhoods/bubbles/invite-links"
         options={{ href: null }}
       />
+      <Tabs.Screen name="setup/setup" options={{ href: null }} />{" "}
+      <Tabs.Screen name="setup/personal/[id]" options={{ href: null }} />
       <Tabs.Screen
         name="neighborhoods/bubbles/neighborhood-members"
         options={{ href: null }}

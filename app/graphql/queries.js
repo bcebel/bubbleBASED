@@ -1,6 +1,36 @@
 // graphql/queries.js (frontend only)
 import { gql } from "@apollo/client";
 
+export const MY_PERSONAL_BUBBLES = gql`
+  query MyPersonalBubbles {
+    myPersonalBubbles {
+   id
+      name
+      description
+      bubblePhotoCid
+      type
+      owner {
+        id
+        username
+        profilePhoto
+      }
+      members {
+        user {
+          id
+          username
+          profilePhoto
+        }
+        role
+        joinedAt
+      }
+      rules
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+
 // In your frontend queries.js
 export const GET_COMMENTS = gql`
   query GetComments($postId: ID!) {
@@ -231,7 +261,7 @@ export const MY_NEIGHBORHOODS = gql`
       name
       description
       bubblePhotoCid
-      type
+      type 
       owner {
         id
         username

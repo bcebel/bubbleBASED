@@ -84,7 +84,7 @@ export default function CreateNeighborhoodScreen() {
 
         <Text style={styles.label}>Privacy Setting</Text>
         <View style={styles.typeContainer}>
-          {["personal", "private", "public"].map((option) => (
+          {["private", "public"].map((option) => (
             <TouchableOpacity
               key={option}
               style={[
@@ -99,7 +99,6 @@ export default function CreateNeighborhoodScreen() {
                   type === option && styles.typeTextSelected,
                 ]}
               >
-                {option === "personal" && "👤 Personal - Just you"}
                 {option === "private" && "🔒 Private - Invite only"}
                 {option === "public" && "🌍 Public - Anyone can join"}
               </Text>

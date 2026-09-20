@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from "expo-router";
-import ProfileSetupForm from "../../components/ProfileSetupForm"; // 👈 Import your renamed component
+import ProfileSetupForm from "../../../components/ProfileSetupForm"; // 👈 Import your renamed component
 
 export default function SetupScreen() {
   const router = useRouter();
