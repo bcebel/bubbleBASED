@@ -231,10 +231,10 @@ export default function GalleryScreen() {
                         video: "shared"{" "}
                       </Text>
                       <Text style={styles.mockCodeText}>
-                        literally: "shared"{" "}
+                        photo: "shared"{" "}
                       </Text>
                       <Text style={styles.mockCodeText}>
-                        network: "us"{" "}
+                        network: "shared"{" "}
                       </Text>
                       <Text style={styles.mockCodeText}>bubble: "based" </Text>
                     </View>
