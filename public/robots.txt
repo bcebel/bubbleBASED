@@ -1,10 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /login
-Disallow: /register
-Disallow: /setup
-Disallow: /inbox
-Disallow: /cam
-Disallow: /neighborhoods/bubbles/create
+
 
 Sitemap: https://bubblebased.com/sitemap.xml
