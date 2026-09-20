@@ -15,6 +15,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useQuery, useMutation } from "@apollo/client";
 import { BlurView } from "expo-blur";
+import Head from "expo-router/head";
 import { Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -96,34 +97,58 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
   // 🚨 Logged out: Show the preview
   if (!isLoggedIn) {
     return (
-      <View style={{flex:1}}>
-        <ImageBackground
-          source={require("@/assets/images/bbl.jpg")}
-          style={styles.heroBubble}
-          resizeMode="cover"
-        />
-  
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: 20 }}>
-            Make and Join Bubbles
-          </Text>
+      <>
+        <Head>
+          <title>bubbleBASED - bubblehub</title>
+          <meta
+            name="description"
+            content="Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always."
+          />
+        </Head>
+        <View style={{ flex: 1 }}>
+          <ImageBackground
+            source={require("@/assets/images/bbl.jpg")}
+            style={styles.heroBubble}
+            resizeMode="cover"
+          />
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
+            <Text style={{ color: "#fff", fontSize: 20 }}>
+              This is the bubbleHUB
+            </Text>
+          </View>
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
+            <Text style={{ color: "#fff", fontSize: 20 }}>
+              Make and Join Bubbles
+            </Text>
+          </View>
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
+            <Text style={{ color: "#fff", fontSize: 20 }}>
+              Context-based privacy
+            </Text>
+          </View>
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
+            <Text style={{ color: "#fff", fontSize: 20 }}>P2P powered</Text>
+          </View>
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={() => router.push("/login")}
+            >
+              <Text style={styles.loginButtonText}>Log in</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: 20 }}>
-            Context-based privacy
-          </Text>
-        </View>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: 20 }}>
-            P2P powered
-          </Text>
-        </View>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/login')}>
-            <Text style={styles.loginButtonText}>Log in</Text>
-          </TouchableOpacity>
-        </View>
-        </View>
+      </>
     );
   }
 

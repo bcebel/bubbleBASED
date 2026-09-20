@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Head from "expo-router/head";
+
 import { useRouter } from "expo-router";
 import AllNeighborhoodsGallery from '../../components/AllNeighborhoodsGallery';
 
@@ -32,6 +34,14 @@ export default function GalleryScreen() {
   // 🚨 LOGGED OUT: Show the exact same style as Livestream
   if (!isLoggedIn) {
     return (
+            <>
+        <Head>
+          <title>bubbleBASED - Gallery</title>
+          <meta
+            name="description"
+            content="Beautiful gallery of all media posted throughout your bubbles.  Social media is supposed to be enjoyable after all, post events and memories that YOU love, join bubbles you would want to be in.  No clickbait and comment sniping."
+          />
+        </Head>
       <View style={styles.container}>
         <ImageBackground
           source={require("@/assets/images/bbl.jpg")}
@@ -60,7 +70,8 @@ export default function GalleryScreen() {
         </View>
      
        
-      </View>
+        </View>
+        </>
     );
   }
 

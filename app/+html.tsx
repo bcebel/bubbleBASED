@@ -13,7 +13,7 @@ export default function Root({ children }: PropsWithChildren) {
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <title>bubbleBASED - 🫧 Digital Neighborhoods, Not Just Feeds</title>
+        <title>bubbleBASED 🫧</title>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
@@ -42,7 +42,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="description" content={description} />
         <meta
           name="keywords"
-          content="social network, privacy, digital neighborhoods, affiliate marketing, community, bubblebase"
+          content="social network, privacy, digital neighborhoods, affiliate marketing, community, bubbleBASED, webtorrent, p2p, social media, privacy, context"
         />
         <meta name="author" content="BubbleBase" />
         <meta name="robots" content="index, follow" />

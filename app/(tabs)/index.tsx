@@ -13,6 +13,7 @@ import {
 import { BlurView } from "expo-blur";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import Head from "expo-router/head";
 import WebTorrentMedia from "@/components/TorrentOnlyMedia";
 import { themes } from "../theme";
 import { warehouse } from "../../components/StreamWearhouse";
@@ -53,6 +54,11 @@ export default function HomeScreen() {
   };
 
   return (
+        <>
+      <Head>
+        <title>bubbleBASED</title>
+        <meta name="description" content="Private neighborhoods where your content lives in context. No algorithms. Community ads. Just your people." />
+      </Head>
     <View style={styles.container}>
       <ImageBackground
         source={require("@/assets/images/bbl.jpg")}
@@ -220,7 +226,8 @@ export default function HomeScreen() {
           </Text>
         </View>
       </ScrollView>
-    </View>
+      </View>
+      </>
   );
 }
 

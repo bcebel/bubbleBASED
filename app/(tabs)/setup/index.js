@@ -15,6 +15,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useQuery, useMutation } from "@apollo/client";
 import { BlurView } from "expo-blur";
+
+import Head from "expo-router/head";
 import { Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -96,6 +98,14 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
   // 🚨 Logged out: Show the preview
   if (!isLoggedIn) {
     return (
+            <>
+              <Head>
+                <title>bubbleBASED - bubbleBASE</title>
+                <meta
+                  name="description"
+                  content="Your own personal bubbleBASE.  A central hub in a decentralized world.  Enjoy all of the memories you have posted with others."
+                />
+              </Head>
       <View style={{flex:1}}>
         <ImageBackground
           source={require("@/assets/images/bbl.jpg")}
@@ -124,6 +134,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
           </TouchableOpacity>
         </View>
         </View>
+        </>
     );
   }
 

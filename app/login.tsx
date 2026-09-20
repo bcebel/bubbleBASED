@@ -8,6 +8,8 @@ import {
   ImageBackground,
 } from "react-native";
 import { Text } from "react-native";
+import Head from "expo-router/head";
+
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { clearApolloStore } from "@/context/apolloProvider"; // Adjust path if needed
@@ -99,60 +101,69 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={require("@/assets/images/bbl.jpg")}
-        style={styles.heroBubble}
-        resizeMode="cover"
-      />
-      <Text style={styles.title}>Sign In</Text>
-      <Text style={styles.subtitle}>Enter bubbleBASED</Text>
+    <>
+      <Head>
+        <keywords>Log In | bubbleBASED</title>
+        <meta
+          name="description"
+          content="Welcome back to your digital neighborhoods. Log in to see what your bubbles have been up to."
+        />
+      </Head>
+      <View style={styles.container}>
+        <ImageBackground
+          source={require("@/assets/images/bbl.jpg")}
+          style={styles.heroBubble}
+          resizeMode="cover"
+        />
+        <Text style={styles.title}>Sign In</Text>
+        <Text style={styles.subtitle}>Enter bubbleBASED</Text>
 
-      <View style={styles.form}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Username</Text>
-          <RNTextInput
-            style={styles.input}
-            placeholder="Enter your username"
-            placeholderTextColor="#888"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Username</Text>
+            <RNTextInput
+              style={styles.input}
+              placeholder="Enter your username"
+              placeholderTextColor="#888"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Password</Text>
+            <RNTextInput
+              style={styles.input}
+              placeholder="Enter your password"
+              placeholderTextColor="#888"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              onSubmitEditing={handleLogin}
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            <Text style={styles.buttonText}>
+              {isLoading ? "Signing In..." : "Sign In"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => router.push("/register")}
+          >
+            <Text style={styles.linkText}>New here? Create an account</Text>
+          </TouchableOpacity>
         </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Password</Text>
-          <RNTextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor="#888"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            onSubmitEditing={handleLogin}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[styles.button, isLoading && styles.buttonDisabled]}
-          onPress={handleLogin}
-          disabled={isLoading}
-        >
-          <Text style={styles.buttonText}>
-            {isLoading ? "Signing In..." : "Sign In"}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.linkButton}
-          onPress={() => router.push("/register")}
-        >
-          <Text style={styles.linkText}>New here? Create an account</Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </>
   );
 }
 
