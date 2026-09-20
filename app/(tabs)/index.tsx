@@ -54,180 +54,195 @@ export default function HomeScreen() {
   };
 
   return (
-        <>
+    <>
       <Head>
         <title>bubbleBASED</title>
-        <meta name="description" content="Private neighborhoods where your content lives in context. No algorithms. Community ads. Just your people." />
+        <meta
+          name="description"
+          content="Private neighborhoods where your content lives in context. No algorithms. Community ads. Just your people."
+        />
       </Head>
-    <View style={styles.container}>
-      <ImageBackground
-        source={require("@/assets/images/bbl.jpg")}
-        style={styles.heroBubble}
-        resizeMode="cover"
-      />
+      <View style={styles.container}>
+        <ImageBackground
+          source={require("@/assets/images/bbl.jpg")}
+          style={styles.heroBubble}
+          resizeMode="cover"
+        />
 
-      {/* NAV HEADER */}
-      <View
-        style={[
-          styles.navContainer,
-          isDesktop ? styles.navDesktop : styles.navMobile,
-        ]}
-      >
-        <View style={styles.brandContainer}>
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoBadgeText}>bB</Text>
-          </View>
-          <Text style={styles.brandTitle}>bubbleBASED</Text>
-        </View>
-
-        <View style={styles.navLinks}>
-          <NavButton title="" />
-          <NavButton title="" />
-          <NavButton title="" />
-
-          <BlurView
-            intensity={50}
-            tint="dark"
-            style={styles.bubbleGlassCompact}
-          >
-            <TouchableOpacity
-              style={styles.navActionButton}
-              onPress={() => router.push("/login")}
-            >
-              <Text style={styles.navActionButtonText}>Sign In</Text>
-            </TouchableOpacity>
-          </BlurView>
-        </View>
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* HERO SECTION */}
+        {/* NAV HEADER */}
         <View
-          style={[styles.heroSection, isDesktop && styles.heroSectionDesktop]}
+          style={[
+            styles.navContainer,
+            isDesktop ? styles.navDesktop : styles.navMobile,
+          ]}
         >
-          <View
-            style={[
-              styles.heroTextContainer,
-              isDesktop && styles.heroTextDesktop,
-            ]}
-          >
-            <View style={styles.tagBadge}>
-              <Text style={styles.tagBadgeText}>
-                Peer-to-Peer Media Network
-              </Text>
+          <View style={styles.brandContainer}>
+            <View style={styles.logoBadge}>
+              <Text style={styles.logoBadgeText}>bB</Text>
             </View>
-
-            <Text style={styles.heroTitle} role="heading" aria-level={1}>
-              Stream & Share Without Middlemen.
-            </Text>
-
-            <Text style={styles.heroSub}>
-              Direct peer connections, WebTorrent video streaming, and Apollo
-              GraphQL synchronization built for modern web and mobile.
-            </Text>
-
-            {/* ACTION BUTTONS (Login / Logout / Join) */}
-            <View style={styles.actionsRow}>
-              <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-                <TouchableOpacity
-                  style={styles.primaryButton}
-                  onPress={() => router.push("/register")}
-                >
-                  <Text style={styles.actionButtonText}>Join bubbleBASED</Text>
-                </TouchableOpacity>
-              </BlurView>
-
-              <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-                <TouchableOpacity
-                  style={styles.secondaryButton}
-                  onPress={() => router.push("/login")}
-                >
-                  <Text style={styles.actionButtonText}>Sign In</Text>
-                </TouchableOpacity>
-              </BlurView>
-
-              <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-                <TouchableOpacity
-                  onPress={handleLogout}
-                  style={styles.logoutButton}
-                >
-                  <Text style={styles.actionButtonText}>Logout</Text>
-                </TouchableOpacity>
-              </BlurView>
-            </View>
+            <Text style={styles.brandTitle}>bubbleBASED</Text>
           </View>
 
-          {/* CODE / PEER STATUS CARD */}
-          <View
-            style={[
-              styles.heroVisualCard,
-              isDesktop && styles.heroVisualDesktop,
-            ]}
-          >
-            <BlurView intensity={30} tint="dark" style={styles.demoGlassCard}>
-              {/* 1. WebTorrent Live Media Player */}
-              <View style={styles.mediaFrame}>
-                <WebTorrentMedia
-                  media={{
-                    cid: "QmWYyMqc9C3YCnszNsArdTU43KEeXqGKrw1AVrY28wxDZf",
-                    magnetLink:
-                      "magnet:?xt=urn:btih:d2367ea8c4fad0671d0bd565f2ad2a072523eab7&dn=livestream-video-QmWYyMqc9C3YCnszNsArdTU43KEeXqGKrw1AVrY28wxDZf-1789660399008&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Ffuchsia-solid-parrot-571.mypinata.cloud%2Fipfs%2FQmWYyMqc9C3YCnszNsArdTU43KEeXqGKrw1AVrY28wxDZf",
-                    fileName: "post_1789660390926.mp4",
-                    fileType: "video",
-                  }}
-                  isFocused={true}
-                />
-                <View style={styles.peerBadge}>
-                  <View style={styles.liveDot} />
-                  <Text style={styles.peerBadgeText}></Text>
-                </View>
-              </View>
+          <View style={styles.navLinks}>
+            <NavButton title="" />
+            <NavButton title="" />
+            <NavButton title="" />
 
-              {/* 2. Mock Terminal Status Box */}
-              <View style={styles.mockTerminalBox}>
-                <View style={styles.terminalHeader}>
-                  <View style={[styles.dot, { backgroundColor: "#FF5F56" }]} />
-                  <View style={[styles.dot, { backgroundColor: "#FFBD2E" }]} />
-                  <View style={[styles.dot, { backgroundColor: "#27C93F" }]} />
-                  <Text style={styles.terminalTitle}></Text>
-                </View>
-                <View style={styles.mockContentBox}>
-                  <Text style={styles.mockCodeText}>// bubbleBASED</Text>
-                  <Text style={styles.mockCodeTextAccent}>feel: "small" </Text>
-                  <Text style={styles.mockCodeText}>people: "you know" </Text>
-                  <Text style={styles.mockCodeText}>algorithm: "none" </Text>
-                  <Text style={styles.mockCodeText}>bubble: "based" </Text>
-                </View>
-              </View>
+            <BlurView
+              intensity={50}
+              tint="dark"
+              style={styles.bubbleGlassCompact}
+            >
+              <TouchableOpacity
+                style={styles.navActionButton}
+                onPress={() => router.push("/login")}
+              >
+                <Text style={styles.navActionButtonText}>Sign In</Text>
+              </TouchableOpacity>
             </BlurView>
           </View>
         </View>
 
-        {/* MARGARET MEAD QUOTE */}
-        <View style={styles.quoteSection}>
-          <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
-            <Text style={styles.quoteText}>
-              "Never doubt that a small group of thoughtful, committed citizens
-              can change the world; indeed, it's the only thing that ever has."
-            </Text>
-            <Text style={styles.quoteAuthor}>— Margaret Mead</Text>
-          </BlurView>
-        </View>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* HERO SECTION */}
+          <View
+            style={[styles.heroSection, isDesktop && styles.heroSectionDesktop]}
+          >
+            <View
+              style={[
+                styles.heroTextContainer,
+                isDesktop && styles.heroTextDesktop,
+              ]}
+            >
+              <View style={styles.tagBadge}>
+                <Text style={styles.tagBadgeText}>
+                  A Neighborhood on the Internet
+                </Text>
+              </View>
 
-        {/* FOOTER */}
-        <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>
-            © {new Date().getFullYear()} bubbleBASED. Built with React Native &
-            Expo Router.
-          </Text>
-        </View>
-      </ScrollView>
+              <Text style={styles.heroTitle} role="heading" aria-level={1}>
+                Your people. Your stuff. Your corner of the web.
+              </Text>
+
+              <Text style={styles.heroSub}>
+                No algorithm deciding what you see. No strangers in your feed.
+                Just the bubbles you choose to be in, full of the people you
+                chose to be with.
+              </Text>
+
+              {/* ACTION BUTTONS (Login / Logout / Join) */}
+              <View style={styles.actionsRow}>
+                <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <TouchableOpacity
+                    style={styles.primaryButton}
+                    onPress={() => router.push("/register")}
+                  >
+                    <Text style={styles.actionButtonText}>
+                      Join bubbleBASED
+                    </Text>
+                  </TouchableOpacity>
+                </BlurView>
+
+                <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={() => router.push("/login")}
+                  >
+                    <Text style={styles.actionButtonText}>Sign In</Text>
+                  </TouchableOpacity>
+                </BlurView>
+
+                <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <TouchableOpacity
+                    onPress={handleLogout}
+                    style={styles.logoutButton}
+                  >
+                    <Text style={styles.actionButtonText}>Logout</Text>
+                  </TouchableOpacity>
+                </BlurView>
+              </View>
+            </View>
+
+            {/* CODE / PEER STATUS CARD */}
+            <View
+              style={[
+                styles.heroVisualCard,
+                isDesktop && styles.heroVisualDesktop,
+              ]}
+            >
+              <BlurView intensity={30} tint="dark" style={styles.demoGlassCard}>
+                {/* 1. WebTorrent Live Media Player */}
+                <View style={styles.mediaFrame}>
+                  <WebTorrentMedia
+                    media={{
+                      cid: "QmWYyMqc9C3YCnszNsArdTU43KEeXqGKrw1AVrY28wxDZf",
+                      magnetLink:
+                        "magnet:?xt=urn:btih:d2367ea8c4fad0671d0bd565f2ad2a072523eab7&dn=livestream-video-QmWYyMqc9C3YCnszNsArdTU43KEeXqGKrw1AVrY28wxDZf-1789660399008&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Ffuchsia-solid-parrot-571.mypinata.cloud%2Fipfs%2FQmWYyMqc9C3YCnszNsArdTU43KEeXqGKrw1AVrY28wxDZf",
+                      fileName: "post_1789660390926.mp4",
+                      fileType: "video",
+                    }}
+                    isFocused={true}
+                  />
+                  <View style={styles.peerBadge}>
+                    <View style={styles.liveDot} />
+                    <Text style={styles.peerBadgeText}></Text>
+                  </View>
+                </View>
+
+                {/* 2. Mock Terminal Status Box */}
+                <View style={styles.mockTerminalBox}>
+                  <View style={styles.terminalHeader}>
+                    <View
+                      style={[styles.dot, { backgroundColor: "#FF5F56" }]}
+                    />
+                    <View
+                      style={[styles.dot, { backgroundColor: "#FFBD2E" }]}
+                    />
+                    <View
+                      style={[styles.dot, { backgroundColor: "#27C93F" }]}
+                    />
+                    <Text style={styles.terminalTitle}></Text>
+                  </View>
+                  <View style={styles.mockContentBox}>
+                    <Text style={styles.mockCodeText}>// bubbleBASED</Text>
+                    <Text style={styles.mockCodeTextAccent}>
+                      feel: "small"{" "}
+                    </Text>
+                    <Text style={styles.mockCodeText}>people: "you know" </Text>
+                    <Text style={styles.mockCodeText}>algorithm: "none" </Text>
+                    <Text style={styles.mockCodeText}>bubble: "based" </Text>
+                  </View>
+                </View>
+              </BlurView>
+            </View>
+          </View>
+
+          {/* MARGARET MEAD QUOTE */}
+          <View style={styles.quoteSection}>
+            <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
+              <Text style={styles.quoteText}>
+                "Never doubt that a small group of thoughtful, committed
+                citizens can change the world; indeed, it's the only thing that
+                ever has."
+              </Text>
+              <Text style={styles.quoteAuthor}>— Margaret Mead</Text>
+            </BlurView>
+          </View>
+
+          {/* FOOTER */}
+          <View style={styles.footerContainer}>
+            <Text style={styles.footerText}>
+              © {new Date().getFullYear()} bubbleBASED. Built with React Native
+              & Expo Router.
+            </Text>
+          </View>
+        </ScrollView>
       </View>
-      </>
+    </>
   );
 }
 

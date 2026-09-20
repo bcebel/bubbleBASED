@@ -185,17 +185,16 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
               >
                 <View style={styles.tagBadge}>
                   <Text style={styles.tagBadgeText}>
-                    Peer-to-Peer Media Network
+                    Your Own Social Network
                   </Text>
                 </View>
     
                 <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                  Stream & Share Without Middlemen.
+                  Make your own feed.
                 </Text>
     
                 <Text style={styles.heroSub}>
-                  Direct peer connections, WebTorrent video streaming, and Apollo
-                  GraphQL synchronization built for modern web and mobile.
+                 "Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always.
                 </Text>
     
                 {/* ACTION BUTTONS (Login / Logout / Join) */}
@@ -275,10 +274,9 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
             <View style={styles.quoteSection}>
               <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
                 <Text style={styles.quoteText}>
-                  "Never doubt that a small group of thoughtful, committed citizens
-                  can change the world; indeed, it's the only thing that ever has."
+                  "It's a beautiful day in the neighborhood"
                 </Text>
-                <Text style={styles.quoteAuthor}>— Margaret Mead</Text>
+                <Text style={styles.quoteAuthor}>— Mr. Rogers </Text>
               </BlurView>
             </View>
     
