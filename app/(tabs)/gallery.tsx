@@ -197,10 +197,10 @@ export default function GalleryScreen() {
                   <View style={styles.mediaFrame}>
                     <WebTorrentMedia
                       media={{
-                        cid: "QmWYyMqc9C3YCnszNsArdTU43KEeXqGKrw1AVrY28wxDZf",
+                        cid: "QmZd15VPt9KXtn9svRk77LrheBtu9Gkhdv9ALphug9C3L3",
                         magnetLink:
-                          "magnet:?xt=urn:btih:d2367ea8c4fad0671d0bd565f2ad2a072523eab7&dn=livestream-video-QmWYyMqc9C3YCnszNsArdTU43KEeXqGKrw1AVrY28wxDZf-1789660399008&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Ffuchsia-solid-parrot-571.mypinata.cloud%2Fipfs%2FQmWYyMqc9C3YCnszNsArdTU43KEeXqGKrw1AVrY28wxDZf",
-                        fileName: "post_1789660390926.mp4",
+                          "magnet:?xt=urn:btih:b4496f8e52e074b5a233814b0cd83785211a1393&dn=video-QmZd15VPt9KXtn9svRk77LrheBtu9Gkhdv9ALphug9C3L3&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Ffuchsia-solid-parrot-571.mypinata.cloud%2Fipfs%2FQmZd15VPt9KXtn9svRk77LrheBtu9Gkhdv9ALphug9C3L3",
+                        fileName: "post_1789941383843.mp4w",
                         fileType: "video",
                       }}
                       isFocused={true}
@@ -234,7 +234,7 @@ export default function GalleryScreen() {
                         literally: "shared"{" "}
                       </Text>
                       <Text style={styles.mockCodeText}>
-                        algorithm: "what you share"{" "}
+                        network: "us"{" "}
                       </Text>
                       <Text style={styles.mockCodeText}>bubble: "based" </Text>
                     </View>
@@ -251,11 +251,10 @@ export default function GalleryScreen() {
                 style={styles.quoteGlassCard}
               >
                 <Text style={styles.quoteText}>
-                  based (adj.) Unconcerned with what others think. Being
-                  yourself, not scared of what people think about you. Opposite
-                  of cringe.
+                  "The best thing about a picture is that it never changes,
+                  even when the people in it do."
                 </Text>
-                <Text style={styles.quoteAuthor}>— Merriam-Webster</Text>
+                <Text style={styles.quoteAuthor}>— Andy Warhol</Text>
               </BlurView>
             </View>
 
@@ -290,7 +289,7 @@ const styles = StyleSheet.create({
   },
   heroBubble: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.75,
+    opacity: 0.90,
   },
   loginButton: {
     backgroundColor: "#00FFFF",
@@ -313,7 +312,7 @@ const styles = StyleSheet.create({
     },
     heroBubble: {
       ...StyleSheet.absoluteFillObject,
-      opacity: 0.35,
+      opacity: 0.55,
     },
     scrollView: {
       flex: 1,

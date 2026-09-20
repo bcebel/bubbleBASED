@@ -225,11 +225,10 @@ export default function HomeScreen() {
           <View style={styles.quoteSection}>
             <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
               <Text style={styles.quoteText}>
-                "Never doubt that a small group of thoughtful, committed
-                citizens can change the world; indeed, it's the only thing that
-                ever has."
+                based (adj.) Unconcerned with what others think. Being yourself,
+                not scared of what people think about you. Opposite of cringe.
               </Text>
-              <Text style={styles.quoteAuthor}>— Margaret Mead</Text>
+              <Text style={styles.quoteAuthor}>— Mirriam Webster</Text>
             </BlurView>
           </View>
 
