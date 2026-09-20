@@ -166,9 +166,8 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   marketingText: { color: "#fff", fontSize: 18 },
   heroBubble: {
-    width: "100%",
-    height: "100%",
-    position: "absolute",
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.75,
   },
   loginButton: {
     backgroundColor: "#00FFFF",

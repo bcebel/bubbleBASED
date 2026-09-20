@@ -331,10 +331,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   heroBubble: {
-    width: "100%",
-    height: "100%",
-    position: "absolute",
-    opacity: 0.5,
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.75,
   },
   loginButton: {
     backgroundColor: "#00FFFF",

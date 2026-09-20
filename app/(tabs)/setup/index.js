@@ -224,9 +224,8 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
 
 const styles = StyleSheet.create({
   heroBubble: {
-    width: "100%",
-    height: "100%",
-    position: "absolute",
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.75,
   },
   loginButton: {
     backgroundColor: "#00FFFF",
