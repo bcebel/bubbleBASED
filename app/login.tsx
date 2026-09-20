@@ -9,8 +9,7 @@ import {
 } from "react-native";
 import { Text } from "react-native";
 import Head from "expo-router/head";
-
-import { useRouter } from "expo-router";
+import { useRouter, Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { clearApolloStore } from "@/context/apolloProvider"; // Adjust path if needed
 
@@ -160,6 +159,12 @@ export default function LoginScreen() {
             onPress={() => router.push("/register")}
           >
             <Text style={styles.linkText}>New here? Create an account</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => router.push("/")}
+          >
+            <Text style={styles.linkText}>Return to Homepage</Text>
           </TouchableOpacity>
         </View>
       </View>
