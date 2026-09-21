@@ -28,7 +28,7 @@ import {
   isOwner,
   isModerator,
 } from "../../../utils/permissions";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io } from "socket.io-client";
 import { gql, useQuery, useMutation, useApolloClient } from "@apollo/client";
@@ -1990,6 +1990,11 @@ export default function NeighborhoodChatScreen() {
 
   return (
     <View style={styles.container}>
+          <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
+              <TouchableOpacity style={styles.backButton}>
+                <Text style={styles.backButtonText}>← Back to Bubble</Text>
+              </TouchableOpacity>
+            </Link>
       <View style={styles.header}>
         <Text style={styles.roomTitle}>🫧 {neighborhoodName} 🫧 </Text>
         <TouchableOpacity
@@ -2574,5 +2579,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#130720", // Match your theme
     borderBottomWidth: 1,
     borderBottomColor: "#333",
+  },
+  backButton: {
+    color: "#fff",
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: "#fff",
+    padding: 12,
   },
 });
