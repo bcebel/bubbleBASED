@@ -213,7 +213,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                       style={styles.secondaryButton}
                       onPress={() => router.push("/login")}
                     >
-                      <Text style={styles.actionButtonText}>Sign In</Text>
+                      <Text style={styles.actionButtonText}>Log in to make one.</Text>
                     </TouchableOpacity>
                   </BlurView>
     

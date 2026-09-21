@@ -169,15 +169,11 @@ export default function GalleryScreen() {
                       style={styles.secondaryButton}
                       onPress={() => router.push("/login")}
                     >
-                      <Text style={styles.actionButtonText}>Sign In</Text>
+                      <Text style={styles.actionButtonText}>
+                        Log in to see yours.
+                      </Text>
                     </TouchableOpacity>
                   </BlurView>
-
-                  <BlurView
-                    intensity={50}
-                    tint="dark"
-                    style={styles.bubbleGlass}
-                  ></BlurView>
                 </View>
               </View>
 
@@ -230,9 +226,7 @@ export default function GalleryScreen() {
                       <Text style={styles.mockCodeTextAccent}>
                         video: "shared"{" "}
                       </Text>
-                      <Text style={styles.mockCodeText}>
-                        photo: "shared"{" "}
-                      </Text>
+                      <Text style={styles.mockCodeText}>photo: "shared" </Text>
                       <Text style={styles.mockCodeText}>
                         network: "shared"{" "}
                       </Text>
@@ -251,8 +245,8 @@ export default function GalleryScreen() {
                 style={styles.quoteGlassCard}
               >
                 <Text style={styles.quoteText}>
-                  "The best thing about a picture is that it never changes,
-                  even when the people in it do."
+                  "The best thing about a picture is that it never changes, even
+                  when the people in it do."
                 </Text>
                 <Text style={styles.quoteAuthor}>— Andy Warhol</Text>
               </BlurView>
