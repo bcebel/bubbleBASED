@@ -415,7 +415,7 @@ export default function StreamsScreen() {
             {/* FOOTER */}
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                © {new Date().getFullYear()} bubbleBASED. bubbleBASED. Click
+                © {new Date().getFullYear()} bubbleBASED. Click
                 tabs for more info.
               </Text>
             </View>
