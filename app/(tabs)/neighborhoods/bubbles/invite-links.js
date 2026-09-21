@@ -13,7 +13,7 @@ import {
   Clipboard,
   Share,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, Link } from "expo-router";
 import { useQuery, useMutation } from "@apollo/client";
 import {
   GET_NEIGHBORHOOD_INVITE_LINKS,
@@ -308,12 +308,11 @@ export default function InviteLinksScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
+         <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
+              <TouchableOpacity style={styles.backButton}>
+                <Text style={styles.backButtonText}>← Back to Bubble</Text>
+              </TouchableOpacity>
+            </Link>
         <Text style={styles.headerTitle}>Invite Links</Text>
       </View>
 
@@ -709,5 +708,13 @@ const styles = StyleSheet.create({
   debugButtonText: {
     color: "#FFF",
     textAlign: "center",
+  },
+  backButton: {
+    color: "#fff",
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: "#fff",
+    padding: 12,
   },
 });

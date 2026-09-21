@@ -13,7 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, Link } from "expo-router";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { BlurView } from "expo-blur";
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
@@ -200,14 +200,14 @@ export default function NeighborhoodMembersScreen() {
 
   return (
     <View style={styles.container}>
+         <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
+              <TouchableOpacity style={styles.backButton}>
+                <Text style={styles.backButtonText}>← Back to Bubble</Text>
+              </TouchableOpacity>
+            </Link>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+    
         <Text style={styles.title}>🏘️ {neighborhood?.name} - Members</Text>
         <View style={styles.headerSpacer} />
       </View>
@@ -546,5 +546,13 @@ const styles = StyleSheet.create({
   retryText: {
     color: "#130720",
     fontWeight: "bold",
+  },
+  backButton: {
+    color: "#fff",
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: "#fff",
+    padding: 12,
   },
 });
