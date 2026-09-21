@@ -176,11 +176,11 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
               </View>
 
               <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                Everything you've made. Everyone you know. All in one bubble.
+                Your Home Bubble Base.  Keep tabs on content you posted and the friends you've made along the way.  All in one bubble.
               </Text>
 
               <Text style={styles.heroSub}>
-                The bubblebase is your home base. Every post you've shared, every bubble you're in, every conversation — it all lands here. It's also where you control how you show up: what each bubble sees, what stays private, and what you share with the world. And if you want to add affiliate links to your profile bubbleBASED will share them throughout the app.
+                The bubblebase is your home bubble base. Every post you've shared, every bubble you're in, every conversation — it all lands here. It's also where you control how you show up: what each bubble sees, what stays private, and what you share with the world. And if you want to add affiliate links to your profile bubbleBASED will share them throughout the app.
               </Text>
 
               {/* ACTION BUTTONS (Login / Logout / Join) */}
