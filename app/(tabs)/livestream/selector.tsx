@@ -55,6 +55,7 @@ export default function SelectorScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Pick a Bubble to Stream To</Text>
+      <Text style={styles.title2}>Works best on Regular Safari tab. Not Private/Incognito</Text>
 
       <View style={styles.picker}>
         {hoodsData?.myNeighborhoods?.map((h: { id: string; name: string }) => (
@@ -103,6 +104,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
+  title2: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
   picker: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -125,7 +133,7 @@ const styles = StyleSheet.create({
   },
   goLive: {
     backgroundColor: "#ff375f",
-    paddingVertical: 18,
+    paddingVertical: 28,
     paddingHorizontal: 40,
     borderRadius: 15,
     marginTop: 20,
