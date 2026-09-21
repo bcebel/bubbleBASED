@@ -131,7 +131,7 @@ export default function HomeScreen() {
               <Text style={styles.heroSub}>
                 No algorithm deciding what you see. No strangers in your feed.
                 Just the bubbles you choose to be in, full of the people you
-                chose to be with.
+                chose to meet.
               </Text>
 
               {/* ACTION BUTTONS (Login / Logout / Join) */}

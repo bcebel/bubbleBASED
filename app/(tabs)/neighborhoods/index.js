@@ -194,7 +194,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                 </Text>
      
                 <Text style={styles.heroSub}>
-                 "Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always.
+                 "Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always.  Meet new people, or chill with your best friends.  All good.  Different bubbles for different parts of your life.  Assemble your perfect team. 
                 </Text>
     
                 {/* ACTION BUTTONS (Login / Logout / Join) */}
