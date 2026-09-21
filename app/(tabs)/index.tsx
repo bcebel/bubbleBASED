@@ -21,8 +21,8 @@ import { mediaCache } from "../../components/mediaCache";
 import { clearApolloStore } from "@/context/apolloProvider";
 
 export default function HomeScreen() {
-    const [peerCount, setPeerCount] = useState(null);
-    const [source, setSource] = useState(null);
+  const [peerCount, setPeerCount] = useState(null);
+  const [source, setSource] = useState(null);
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
@@ -95,7 +95,7 @@ export default function HomeScreen() {
             >
               <TouchableOpacity
                 style={styles.navActionButton}
-                onPress={() => router.push("/login")}
+                onPress={() => router.replace("/login")}
               >
                 <Text style={styles.navActionButtonText}>Sign In</Text>
               </TouchableOpacity>
@@ -139,7 +139,7 @@ export default function HomeScreen() {
                 <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
                   <TouchableOpacity
                     style={styles.primaryButton}
-                    onPress={() => router.push("/register")}
+                    onPress={() => router.replace("/register")}
                   >
                     <Text style={styles.actionButtonText}>
                       Join bubbleBASED
@@ -150,7 +150,7 @@ export default function HomeScreen() {
                 <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
                   <TouchableOpacity
                     style={styles.secondaryButton}
-                    onPress={() => router.push("/login")}
+                    onPress={() => router.replace("/login")}
                   >
                     <Text style={styles.actionButtonText}>Sign In</Text>
                   </TouchableOpacity>
@@ -235,7 +235,8 @@ export default function HomeScreen() {
           {/* FOOTER */}
           <View style={styles.footerContainer}>
             <Text style={styles.footerText}>
-              © {new Date().getFullYear()} bubbleBASED. Click tabs for more info.
+              © {new Date().getFullYear()} bubbleBASED. Click tabs for more
+              info.
             </Text>
           </View>
         </ScrollView>

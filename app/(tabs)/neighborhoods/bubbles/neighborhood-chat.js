@@ -22,7 +22,12 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { ROLE_RANK, canModerate, isOwner, isModerator } from "../../../utils/permissions";
+import {
+  ROLE_RANK,
+  canModerate,
+  isOwner,
+  isModerator,
+} from "../../../utils/permissions";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io } from "socket.io-client";
@@ -417,8 +422,6 @@ const getMimeTypeFromExtension = (filename) => {
 };
 
 export default function NeighborhoodChatScreen() {
-
-  
   const { data: meData } = useQuery(GET_ME_ID);
   const currentUserId = meData?.me?.id;
   const params = useLocalSearchParams();
@@ -438,7 +441,7 @@ export default function NeighborhoodChatScreen() {
   const [messages, setMessages] = useState([]);
   // State to track item IDs that should be active in P2P swarm
   const [swarmItemIds, setSwarmItemIds] = useState([]);
-  
+
   useEffect(() => {
     (async () => {
       const storedId = await AsyncStorage.getItem("userId");
@@ -601,14 +604,14 @@ export default function NeighborhoodChatScreen() {
     },
   );
 
-    const myMember = useMemo(() => {
-      return neighborhoodData?.neighborhood?.members?.find(
-        (m) =>
-          String(m.user?.id || m.user?._id || "")
-            .trim()
-            .toLowerCase() === currentUserIdStr,
-      );
-    }, [neighborhoodData, currentUserIdStr]);
+  const myMember = useMemo(() => {
+    return neighborhoodData?.neighborhood?.members?.find(
+      (m) =>
+        String(m.user?.id || m.user?._id || "")
+          .trim()
+          .toLowerCase() === currentUserIdStr,
+    );
+  }, [neighborhoodData, currentUserIdStr]);
 
   const { loading, error, data, refetch } = useQuery(
     GET_NEIGHBORHOOD_MESSAGES,
@@ -717,13 +720,13 @@ export default function NeighborhoodChatScreen() {
         ? canModerate(myMember?.role, authorMember?.role, isSelf)
         : isSelf; // before data loads, only self-delete
 
-  console.log("DELETE CHECK", {
-    messageId: message.id,
-    isSelf,
-    deleterRole: myMember?.role,
-    authorRole: authorMember?.role,
-    canDelete,
-  });
+      console.log("DELETE CHECK", {
+        messageId: message.id,
+        isSelf,
+        deleterRole: myMember?.role,
+        authorRole: authorMember?.role,
+        canDelete,
+      });
 
       return (
         <View key={uniqueKey} style={styles.messageContainer}>
@@ -844,13 +847,12 @@ export default function NeighborhoodChatScreen() {
   const initializeSocket = (token) => {
     console.log("🔌 Initializing neighborhood socket...");
     const WS_URL = BACKEND_URL.replace(/^https?:\/\//, "wss://");
-    
- 
-  const newSocket = io(WS_URL, {
-    auth: { token },
-    path: "/socket.io-chat/",
-    transports: ["websocket", "polling"], // Use websocket first, fallback to polling
-  });
+
+    const newSocket = io(WS_URL, {
+      auth: { token },
+      path: "/socket.io-chat/",
+      transports: ["websocket", "polling"], // Use websocket first, fallback to polling
+    });
 
     newSocket.on("connect", () => {
       console.log("✅ Neighborhood socket connected");
@@ -1972,7 +1974,7 @@ export default function NeighborhoodChatScreen() {
         <Text style={styles.errorText}>Error loading chat</Text>
         <Text style={styles.errorDetail}>{error.message}</Text>
         <TouchableOpacity
-          onPress={() => router.push(`/login`)}
+          onPress={() => router.replace(`/login`)}
           style={styles.retryButton}
         >
           <Text style={styles.retryText}>Log In</Text>
@@ -1992,7 +1994,7 @@ export default function NeighborhoodChatScreen() {
         <Text style={styles.roomTitle}>🫧 {neighborhoodName} 🫧 </Text>
         <TouchableOpacity
           onPress={() =>
-            router.push(
+            router.replace(
               `/neighborhood-members?neighborhoodId=${neighborhoodId}`,
             )
           }

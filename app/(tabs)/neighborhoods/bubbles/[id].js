@@ -49,7 +49,7 @@ export default function NeighborhoodDetailScreen() {
     variables: { id },
     fetchPolicy: "network-only",
   });
-const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
+  const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
   const { data: userData } = useQuery(GET_CURRENT_USER);
   const [username, setUsername] = useState("");
   const [updateBubblePhoto] = useMutation(UPDATE_BUBBLE_PHOTO);
@@ -204,7 +204,7 @@ const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
           <TouchableOpacity
             onPress={() =>
-              router.push(
+              router.replace(
                 `/neighborhoods/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
               )
             }
@@ -216,7 +216,7 @@ const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
           <TouchableOpacity
             onPress={() =>
-              router.push(
+              router.replace(
                 `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
               )
             }
@@ -228,7 +228,7 @@ const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
           <TouchableOpacity
             onPress={() =>
-              router.push(
+              router.replace(
                 `/neighborhoods/bubbles/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
               )
             }
@@ -240,7 +240,7 @@ const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
           <TouchableOpacity
             onPress={() =>
-              router.push(
+              router.replace(
                 `/neighborhoods/bubbles/neighborhood-members?neighborhoodId=${neighborhood.id}`,
               )
             }
@@ -253,7 +253,7 @@ const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
           <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
             <TouchableOpacity
               onPress={() =>
-                router.push(
+                router.replace(
                   `/neighborhoods/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
                 )
               }

@@ -68,7 +68,6 @@ function NavButton({ title }: { title: string }) {
   );
 }
 
-
 // --- INDIVIDUAL STREAM PLAYER ITEM ---
 function StreamItem({ stream }: { stream: any }) {
   const [availableInWarehouse, setAvailableInWarehouse] = useState<number[]>(
@@ -190,8 +189,8 @@ export default function StreamsScreen() {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-    const { width } = useWindowDimensions();
-    const isDesktop = width >= 768;
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -260,7 +259,7 @@ export default function StreamsScreen() {
               >
                 <TouchableOpacity
                   style={styles.navActionButton}
-                  onPress={() => router.push("/login")}
+                  onPress={() => router.replace("/login")}
                 >
                   <Text style={styles.navActionButtonText}>Sign In</Text>
                 </TouchableOpacity>
@@ -311,7 +310,7 @@ export default function StreamsScreen() {
                   >
                     <TouchableOpacity
                       style={styles.primaryButton}
-                      onPress={() => router.push("/register")}
+                      onPress={() => router.replace("/register")}
                     >
                       <Text style={styles.actionButtonText}>
                         Join bubbleBASED
@@ -326,7 +325,7 @@ export default function StreamsScreen() {
                   >
                     <TouchableOpacity
                       style={styles.secondaryButton}
-                      onPress={() => router.push("/login")}
+                      onPress={() => router.replace("/login")}
                     >
                       <Text style={styles.actionButtonText}>
                         Log in to watch.
@@ -415,8 +414,8 @@ export default function StreamsScreen() {
             {/* FOOTER */}
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                © {new Date().getFullYear()} bubbleBASED. Click
-                tabs for more info.
+                © {new Date().getFullYear()} bubbleBASED. Click tabs for more
+                info.
               </Text>
             </View>
           </ScrollView>
@@ -455,7 +454,7 @@ export default function StreamsScreen() {
       />
       <TouchableOpacity
         style={styles.goLiveButton}
-        onPress={() => router.push("/livestream/selector")}
+        onPress={() => router.replace("/livestream/selector")}
       >
         <Text style={styles.goLiveButtonText}>+ Go Live</Text>
       </TouchableOpacity>

@@ -13,8 +13,6 @@ import { useRouter, Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { clearApolloStore } from "@/context/apolloProvider"; // Adjust path if needed
 
-
-
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function LoginScreen() {
@@ -24,7 +22,6 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-    
     if (!username.trim() || !password.trim()) {
       Alert.alert("Error", "Please fill in all fields");
       return;
@@ -73,15 +70,14 @@ export default function LoginScreen() {
         Alert.alert("Success", `Welcome back, ${user.username}!`);
         router.replace("/(tabs)/neighborhoods");
 
-
         // ✅ CRITICAL: Save token and username to AsyncStorage
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("username", user.username);
-        await AsyncStorage.setItem("userId", user.id); 
+        await AsyncStorage.setItem("userId", user.id);
 
         console.log(
           "✅ Token saved to AsyncStorage:",
-          token.substring(0, 20) + "..."
+          token.substring(0, 20) + "...",
         );
         console.log("✅ Username saved:", user.username);
 
@@ -156,13 +152,13 @@ export default function LoginScreen() {
 
           <TouchableOpacity
             style={styles.linkButton}
-            onPress={() => router.push("/register")}
+            onPress={() => router.replace("/register")}
           >
             <Text style={styles.linkText}>New here? Create an account</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.linkButton}
-            onPress={() => router.push("/")}
+            onPress={() => router.replace("/")}
           >
             <Text style={styles.linkText}>Return to Homepage</Text>
           </TouchableOpacity>

@@ -8,7 +8,7 @@ import {
   ImageBackground,
   TouchableOpacity,
 } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import ProfileSetupForm from "../../../components/ProfileSetupForm"; // 👈 Import your renamed component
 
@@ -19,14 +19,17 @@ export default function SetupScreen() {
 
   useEffect(() => {
     const checkLogin = async () => {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem("token");
       setIsLoggedIn(!!token);
       setLoading(false);
     };
     checkLogin();
   }, []);
 
-  if (loading) return <ActivityIndicator size="large" color="#00ffff" style={styles.loading} />;
+  if (loading)
+    return (
+      <ActivityIndicator size="large" color="#00ffff" style={styles.loading} />
+    );
 
   if (!isLoggedIn) {
     return (
@@ -36,25 +39,34 @@ export default function SetupScreen() {
           style={styles.heroBubble}
           resizeMode="cover"
         />
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: 18 }}>
-            Profile & Setup
-          </Text>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text style={{ color: "#fff", fontSize: 18 }}>Profile & Setup</Text>
         </View>
-        
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: 18 }}>
+
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text style={{ color: "#fff", fontSize: 18 }}>
             Paste your affiliate links
           </Text>
         </View>
-<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: 18 }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text style={{ color: "#fff", fontSize: 18 }}>
             Earn from your community!
           </Text>
         </View>
-       
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/login')}>
+
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => router.replace("/login")}
+          >
             <Text style={styles.loginButtonText}>Log in</Text>
           </TouchableOpacity>
         </View>
@@ -79,17 +91,17 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   loginButton: {
-    backgroundColor: '#00FFFF',
+    backgroundColor: "#00FFFF",
     padding: 15,
     borderRadius: 30,
-    width: '80%',
-    alignItems: 'center',
+    width: "80%",
+    alignItems: "center",
     marginTop: 5,
-marginBottom: 85,
+    marginBottom: 85,
   },
   loginButtonText: {
-    color: '#130720',
-    fontWeight: 'bold',
+    color: "#130720",
+    fontWeight: "bold",
     fontSize: 18,
   },
 });

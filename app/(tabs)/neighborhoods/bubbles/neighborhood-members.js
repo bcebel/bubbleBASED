@@ -110,11 +110,10 @@ const getProfilePhotoUrl = (profilePhoto) => {
 };
 
 export default function NeighborhoodMembersScreen() {
-
   const params = useLocalSearchParams();
   const router = useRouter();
   const neighborhoodId = params.neighborhoodId;
-const [createDirectMessageBubble] = useMutation(CREATE_DIRECT_MESSAGE_BUBBLE);
+  const [createDirectMessageBubble] = useMutation(CREATE_DIRECT_MESSAGE_BUBBLE);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
 
@@ -321,7 +320,7 @@ const [createDirectMessageBubble] = useMutation(CREATE_DIRECT_MESSAGE_BUBBLE);
                         variables: { userId: selectedMember.user.id },
                       });
                       if (data?.createDirectMessageBubble?.id) {
-                        router.push(
+                        router.replace(
                           `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${data.createDirectMessageBubble.id}`,
                         );
                       }

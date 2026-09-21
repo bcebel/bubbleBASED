@@ -6,12 +6,14 @@ import {
   Text,
   StyleSheet,
   RefreshControl,
+  TouchableOpacity,
 } from "react-native";
 import { useQuery } from "@apollo/client";
 import { GET_POSTS } from "../../../graphql/queries";
 import FeedItem from "../../../../components/FeedItem";
 import PostComposer from "../../PostComposer";
 import RandomAd from "../../../../components/RandomAd";
+import { Link } from "expo-router";
 
 export default function PostFeed({
   neighborhoodId,
@@ -64,46 +66,53 @@ export default function PostFeed({
 
   // ✅ 4. Everything else is safe to use now
   return (
-    <FlatList
-      data={feedData}
-      keyExtractor={(item, index) => {
-        if (item.type === "ad") return item.adId || `ad-${index}`;
-        return item.id ? `post-${item.id}` : `item-${index}`;
-      }}
-      renderItem={({ item, index }) => {
-        if ((index + 1) % 5 === 0) {
-          return <RandomAd />;
-        }
-        return (
-          <FeedItem
-            post={item}
-            onLike={() => console.log("Like:", item.id)}
-            onComment={() => console.log("Comment:", item.id)}
-            onDelete={() => refetch()}
+    <>
+      <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
+        <TouchableOpacity style={styles.backButton}>
+          <Text style={styles.backButtonText}>← Back to Bubble</Text>
+        </TouchableOpacity>
+      </Link>
+      <FlatList
+        data={feedData}
+        keyExtractor={(item, index) => {
+          if (item.type === "ad") return item.adId || `ad-${index}`;
+          return item.id ? `post-${item.id}` : `item-${index}`;
+        }}
+        renderItem={({ item, index }) => {
+          if ((index + 1) % 5 === 0) {
+            return <RandomAd />;
+          }
+          return (
+            <FeedItem
+              post={item}
+              onLike={() => console.log("Like:", item.id)}
+              onComment={() => console.log("Comment:", item.id)}
+              onDelete={() => refetch()}
+            />
+          );
+        }}
+        ListHeaderComponent={
+          <PostComposer
+            currentNeighborhoodId={neighborhoodId}
+            onPostCreated={refetch}
           />
-        );
-      }}
-      ListHeaderComponent={
-        <PostComposer
-          currentNeighborhoodId={neighborhoodId}
-          onPostCreated={refetch}
-        />
-      }
-      ListEmptyComponent={
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No posts yet.</Text>
-          <Text style={styles.emptySubText}>Be the first to post!</Text>
-        </View>
-      }
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={handleRefresh}
-          tintColor="#00FFFF"
-        />
-      }
-      contentContainerStyle={styles.listContent}
-    />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No posts yet.</Text>
+            <Text style={styles.emptySubText}>Be the first to post!</Text>
+          </View>
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor="#00FFFF"
+          />
+        }
+        contentContainerStyle={styles.listContent}
+      />
+    </>
   );
 }
 
@@ -120,7 +129,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#130720",
     padding: 20,
-    
   },
   loadingText: {
     color: "#8A829E",
@@ -151,5 +159,13 @@ const styles = StyleSheet.create({
     color: "#8A829E",
     fontSize: 13,
     marginTop: 4,
+  },
+  backButton: {
+    color: "#fff",
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: "#fff",
+    padding: 12,
   },
 });

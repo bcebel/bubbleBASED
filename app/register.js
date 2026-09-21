@@ -64,14 +64,14 @@ const RegistrationScreen = () => {
         // Auto-login after registration
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("username", user.username);
-        await AsyncStorage.setItem("userId", user.id); 
+        await AsyncStorage.setItem("userId", user.id);
 
         console.log("✅ Registration - Token saved to AsyncStorage");
         console.log("✅ Registration - Username saved:", user.username);
 
         Alert.alert(
           "Welcome!",
-          `🎉 Welcome to the club, ${user.username}! You've been automatically logged in.`
+          `🎉 Welcome to the club, ${user.username}! You've been automatically logged in.`,
         );
         router.replace("/(tabs)/neighborhoods"); // Use replace so they can't go back to registration
       } else {
@@ -95,11 +95,11 @@ const RegistrationScreen = () => {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-        <ImageBackground
-                source={require("@/assets/images/bbl.jpg")}
-                style={styles.heroBubble}
-                resizeMode="cover"
-              />
+      <ImageBackground
+        source={require("@/assets/images/bbl.jpg")}
+        style={styles.heroBubble}
+        resizeMode="cover"
+      />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Join bubbleBASED</Text>
@@ -161,7 +161,7 @@ const RegistrationScreen = () => {
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/login")}>
+            <TouchableOpacity onPress={() => router.replace("/login")}>
               <Text style={styles.linkText}>Sign In</Text>
             </TouchableOpacity>
           </View>

@@ -160,7 +160,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
               >
                 <TouchableOpacity
                   style={styles.navActionButton}
-                  onPress={() => router.push("/login")}
+                  onPress={() => router.replace("/login")}
                 >
                   <Text style={styles.navActionButtonText}>Sign In</Text>
                 </TouchableOpacity>
@@ -202,7 +202,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                   <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
                     <TouchableOpacity
                       style={styles.primaryButton}
-                      onPress={() => router.push("/register")}
+                      onPress={() => router.replace("/register")}
                     >
                       <Text style={styles.actionButtonText}>Join bubbleBASED</Text>
                     </TouchableOpacity>
@@ -211,7 +211,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                   <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
                     <TouchableOpacity
                       style={styles.secondaryButton}
-                      onPress={() => router.push("/login")}
+                      onPress={() => router.replace("/login")}
                     >
                       <Text style={styles.actionButtonText}>Log in to make one.</Text>
                     </TouchableOpacity>
@@ -344,7 +344,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
           <TouchableOpacity
             style={styles.createButton}
-            onPress={() => router.push(`/neighborhoods/bubbles/create`)}
+            onPress={() => router.replace(`/neighborhoods/bubbles/create`)}
           >
             <Text style={styles.createButtonText}>➕ Create New Bubble</Text>
           </TouchableOpacity>
@@ -361,7 +361,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
           </Text>
           <TouchableOpacity
             style={styles.browseButton}
-            onPress={() => router.push(`/bubbles/all`)}
+            onPress={() => router.replace(`/bubbles/all`)}
           >
             <Text style={styles.browseButtonText}>Browse Bubbles to Join</Text>
           </TouchableOpacity>

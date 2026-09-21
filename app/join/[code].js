@@ -69,7 +69,6 @@ const JOIN_VIA_INVITE_LINK = gql`
   }
 `;
 
-
 export default function JoinViaLinkScreen() {
   const [hasJoined, setHasJoined] = useState(false);
   const [newNeighborhoodId, setNewNeighborhoodId] = useState(null);
@@ -95,10 +94,10 @@ export default function JoinViaLinkScreen() {
           {
             text: "Go to Neighborhood",
             onPress: () => {
-router.replace({
-  pathname: "/neighborhoods/bubbles/neighborhood-postfeed",
-  params: { neighborhoodId: nId },
-});
+              router.replace({
+                pathname: "/neighborhoods/bubbles/neighborhood-postfeed",
+                params: { neighborhoodId: nId },
+              });
             },
           },
         ]);
@@ -112,22 +111,22 @@ router.replace({
     },
   });
 
-const handleJoin = async () => {
-  setIsJoining(true);
-  try {
-    const result = await joinViaInviteLink({ variables: { code } });
-    if (result.data?.joinViaInviteLink.success) {
-      setNewNeighborhoodId(result.data.joinViaInviteLink.neighborhood.id);
-      setHasJoined(true); // 🎯 Switch the UI
-    } else {
-      Alert.alert("Error", result.data.joinViaInviteLink.message);
+  const handleJoin = async () => {
+    setIsJoining(true);
+    try {
+      const result = await joinViaInviteLink({ variables: { code } });
+      if (result.data?.joinViaInviteLink.success) {
+        setNewNeighborhoodId(result.data.joinViaInviteLink.neighborhood.id);
+        setHasJoined(true); // 🎯 Switch the UI
+      } else {
+        Alert.alert("Error", result.data.joinViaInviteLink.message);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsJoining(false);
     }
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setIsJoining(false);
-  }
-};
+  };
 
   if (loading) {
     return (
@@ -173,90 +172,89 @@ const handleJoin = async () => {
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-    <View style={styles.container}>
-      <ImageBackground
-        source={require("@/assets/images/bbl.jpg")}
-        style={styles.heroBubble}
-        resizeMode="cover"
-      />
-      <View style={styles.header}>
-        <Text style={styles.mainTitle}>bubbleBASED.com</Text>
-        <Text style={styles.title}>
-          Your formal invitation to the {neighborhood.name} bubble.
-        </Text>
-        <Text style={styles.description}>{neighborhood.description}</Text>
-      </View>
-
-      <View style={styles.neighborhoodInfo}>
-        <Text style={styles.infoTitle}>Bubble Info</Text>
-        <Text style={styles.infoTitle}>Type: {neighborhood.type}</Text>
-      </View>
-
-      {link && (
-        <View style={styles.linkInfo}>
-          <Text style={styles.infoTitle}>Role: {link.role}</Text>
-          <Text>
-            Uses: {link.uses}/{link.maxUses || "Unlimited"}
+      <View style={styles.container}>
+        <ImageBackground
+          source={require("@/assets/images/bbl.jpg")}
+          style={styles.heroBubble}
+          resizeMode="cover"
+        />
+        <View style={styles.header}>
+          <Text style={styles.mainTitle}>bubbleBASED.com</Text>
+          <Text style={styles.title}>
+            Your formal invitation to the {neighborhood.name} bubble.
           </Text>
-          {link.expiresAt && (
-            <Text style={styles.infoTitle}>
-              Expires: {new Date(link.expiresAt).toLocaleDateString()}
-            </Text>
-          )}
+          <Text style={styles.description}>{neighborhood.description}</Text>
+        </View>
 
+        <View style={styles.neighborhoodInfo}>
+          <Text style={styles.infoTitle}>Bubble Info</Text>
+          <Text style={styles.infoTitle}>Type: {neighborhood.type}</Text>
+        </View>
+
+        {link && (
+          <View style={styles.linkInfo}>
+            <Text style={styles.infoTitle}>Role: {link.role}</Text>
+            <Text>
+              Uses: {link.uses}/{link.maxUses || "Unlimited"}
+            </Text>
+            {link.expiresAt && (
+              <Text style={styles.infoTitle}>
+                Expires: {new Date(link.expiresAt).toLocaleDateString()}
+              </Text>
+            )}
+
+            <TouchableOpacity
+              style={[styles.joinButton, { backgroundColor: "#28a745" }]} // Green for success
+              onPress={() => {
+                router.replace({
+                  pathname: "/",
+                });
+              }}
+            >
+              <Text style={styles.infoTitle}>
+                New User? Register Here First
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!hasJoined ? (
+          <TouchableOpacity
+            style={[styles.joinButton, isJoining && styles.joinButtonDisabled]}
+            onPress={handleJoin}
+            disabled={isJoining}
+          >
+            {isJoining ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.joinButtonText}>Join Bubble</Text>
+            )}
+          </TouchableOpacity>
+        ) : (
           <TouchableOpacity
             style={[styles.joinButton, { backgroundColor: "#28a745" }]} // Green for success
             onPress={() => {
-              router.push({
-                pathname: "/",
+              router.replace({
+                pathname: "/neighborhoods/bubbles/neighborhood-postfeed",
+                params: { neighborhoodId: newNeighborhoodId },
               });
             }}
           >
-            <Text style={styles.infoTitle}>
-              New User?  Register Here First
-            </Text>
+            <Text style={styles.joinButtonText}>✅ GO TO NEIGHBORHOOD</Text>
           </TouchableOpacity>
-        </View>
-      )}
+        )}
 
-      {!hasJoined ? (
         <TouchableOpacity
-          style={[styles.joinButton, isJoining && styles.joinButtonDisabled]}
-          onPress={handleJoin}
-          disabled={isJoining}
+          style={styles.cancelButton}
+          onPress={() => router.back()}
         >
-          {isJoining ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.joinButtonText}>Join Bubble</Text>
-          )}
+          <Text style={styles.cancelButtonText}>
+            {hasJoined ? "Back to Home" : "Cancel"}
+          </Text>
         </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          style={[styles.joinButton, { backgroundColor: "#28a745" }]} // Green for success
-          onPress={() => {
-            router.push({
-              pathname: "/neighborhoods/bubbles/neighborhood-postfeed",
-              params: { neighborhoodId: newNeighborhoodId },
-            });
-          }}
-        >
-          <Text style={styles.joinButtonText}>✅ GO TO NEIGHBORHOOD</Text>
-        </TouchableOpacity>
-      )}
-
-      <TouchableOpacity
-        style={styles.cancelButton}
-        onPress={() => router.back()}
-      >
-        <Text style={styles.cancelButtonText}>
-          {hasJoined ? "Back to Home" : "Cancel"}
-        </Text>
-      </TouchableOpacity>
       </View>
     </ScrollView>
   );
-
 }
 
 const styles = StyleSheet.create({
@@ -318,7 +316,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     marginBottom: 15,
-    
   },
   joinButtonDisabled: {
     backgroundColor: "#CCCCCC",
