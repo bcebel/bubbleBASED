@@ -179,7 +179,16 @@ export default function JoinViaLinkScreen() {
           resizeMode="cover"
         />
         <View style={styles.header}>
-          <Text style={styles.mainTitle}>bubbleBASED.com</Text>
+          <TouchableOpacity
+            style={[styles.infoTitle, { padding: 10, borderRadius: 48, backgroundColor: "rgba(50,50,50, .5)" }] } // Green for success
+            onPress={() => {
+              router.push({
+                pathname: "/",
+              });
+            }}
+          >
+            <Text style={styles.mainTitle}>bubbleBASED.com</Text>
+          </TouchableOpacity>
           <Text style={styles.title}>
             Your formal invitation to the {neighborhood.name} bubble.
           </Text>
@@ -206,7 +215,10 @@ export default function JoinViaLinkScreen() {
             <TouchableOpacity
               style={[styles.joinButton, { backgroundColor: "#28a745" }]} // Green for success
               onPress={() => {
-         router.push({ pathname: "/register", params: { inviteCode: code } });
+                router.push({
+                  pathname: "/register",
+                  params: { inviteCode: code },
+                });
               }}
             >
               <Text style={styles.infoTitle}>
