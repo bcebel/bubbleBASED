@@ -215,6 +215,7 @@ export default function JoinViaLinkScreen() {
                 New User? Register Here First
               </Text>
             </TouchableOpacity>
+            <Text style={styles.infoTitle}>Then come back here to join bubble</Text>
           </View>
         )}
 
