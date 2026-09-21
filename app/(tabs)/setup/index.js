@@ -267,17 +267,16 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
           <View style={styles.quoteSection}>
             <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
               <Text style={styles.quoteText}>
-               "No matter where you go, there you are"
+               "There's no place like home"
               </Text>
-              <Text style={styles.quoteAuthor}>— Buckaroo Banzai</Text>
+              <Text style={styles.quoteAuthor}>— Dorothy</Text>
             </BlurView>
           </View>
 
           {/* FOOTER */}
           <View style={styles.footerContainer}>
             <Text style={styles.footerText}>
-              © {new Date().getFullYear()} bubbleBASED. Built with React Native
-              & Expo Router.
+              © {new Date().getFullYear()} bubbleBASED. bubbleBASED. Click tabs for more info.
             </Text>
           </View>
         </ScrollView>

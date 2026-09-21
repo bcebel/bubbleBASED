@@ -284,8 +284,8 @@ export default function InboxScreen() {
             {/* FOOTER */}
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                © {new Date().getFullYear()} bubbleBASED. Built with React
-                Native & Expo Router.
+                © {new Date().getFullYear()} bubbleBASED. Click tabs for more
+                info.
               </Text>
             </View>
           </ScrollView>

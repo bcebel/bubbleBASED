@@ -385,9 +385,7 @@ export default function StreamsScreen() {
                       <Text style={styles.mockCodeTextAccent}>
                         live: "stream"{" "}
                       </Text>
-                      <Text style={styles.mockCodeText}>
-                        peers: "boost"{" "}
-                      </Text>
+                      <Text style={styles.mockCodeText}>peers: "boost" </Text>
                       <Text style={styles.mockCodeText}>
                         replay: "temporary"{" "}
                       </Text>
@@ -417,8 +415,8 @@ export default function StreamsScreen() {
             {/* FOOTER */}
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                © {new Date().getFullYear()} bubbleBASED. Built with React
-                Native & Expo Router.
+                © {new Date().getFullYear()} bubbleBASED. bubbleBASED. Click
+                tabs for more info.
               </Text>
             </View>
           </ScrollView>
