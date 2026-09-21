@@ -1989,38 +1989,7 @@ export default function NeighborhoodChatScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() =>
-            router.push(
-              `/neighborhoods/bubbles/neighborhood-gallery?neighborhoodId=${neighborhoodId}`,
-            )
-          }
-          style={styles.galleryButton}
-        >
-          <Text style={styles.galleryButtonText}> 🖼 Gallery</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() =>
-            router.push(
-              `/neighborhoods/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhoodId}`,
-            )
-          }
-          style={styles.galleryButton}
-        >
-          <Text style={styles.galleryButtonText}> 🖼 Feed</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() =>
-            router.push(
-              `/neighborhoods/bubbles/invite-links?neighborhoodId=${neighborhoodId}`,
-            )
-          }
-          style={styles.galleryButton}
-        >
-          <Text style={styles.galleryButtonText}>📧 Invite</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.roomTitle}>🏘️ {neighborhoodName}</Text>
+        <Text style={styles.roomTitle}>🫧 {neighborhoodName} 🫧 </Text>
         <TouchableOpacity
           onPress={() =>
             router.push(
