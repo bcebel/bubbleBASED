@@ -206,16 +206,13 @@ export default function JoinViaLinkScreen() {
             <TouchableOpacity
               style={[styles.joinButton, { backgroundColor: "#28a745" }]} // Green for success
               onPress={() => {
-                router.replace({
-                  pathname: "/",
-                });
+         router.push({ pathname: "/register", params: { inviteCode: code } });
               }}
             >
               <Text style={styles.infoTitle}>
                 New User? Register Here First
               </Text>
             </TouchableOpacity>
-            <Text style={styles.infoTitle}>Then come back here to join bubble</Text>
           </View>
         )}
 

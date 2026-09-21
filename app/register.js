@@ -11,13 +11,30 @@ import {
   ImageBackground,
 } from "react-native";
 import { Text } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useMutation, gql } from "@apollo/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
+const JOIN_VIA_INVITE_LINK = gql`
+  mutation JoinViaInviteLink($code: String!) {
+    joinViaInviteLink(code: $code) {
+      success
+      message
+      error
+      neighborhood {
+        id
+        name
+      }
+    }
+  }
+`;
+
 const RegistrationScreen = () => {
+  const { inviteCode } = useLocalSearchParams();
   const router = useRouter();
+  const [joinViaInviteLink] = useMutation(JOIN_VIA_INVITE_LINK);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -65,15 +82,40 @@ const RegistrationScreen = () => {
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("username", user.username);
         await AsyncStorage.setItem("userId", user.id);
+console.log("✅ Registration - Token saved to AsyncStorage");
+console.log("✅ Registration - Username saved:", user.username);
 
-        console.log("✅ Registration - Token saved to AsyncStorage");
-        console.log("✅ Registration - Username saved:", user.username);
+// 🔗 If they came from an invite link, auto-join the bubble
+if (inviteCode) {
+  try {
+    const joinResult = await joinViaInviteLink({
+      variables: { code: inviteCode },
+    });
+    const joined = joinResult.data?.joinViaInviteLink;
 
-        Alert.alert(
-          "Welcome!",
-          `🎉 Welcome to the club, ${user.username}! You've been automatically logged in.`,
-        );
-        router.replace("/(tabs)/neighborhoods"); // Use replace so they can't go back to registration
+    if (joined?.success && joined.neighborhood?.id) {
+      Alert.alert(
+        "Welcome!",
+        `🎉 Welcome to the club, ${user.username}! You've been added to ${joined.neighborhood.name}.`,
+      );
+      router.replace({
+        pathname: "/neighborhoods/bubbles/neighborhood-postfeed",
+        params: { neighborhoodId: joined.neighborhood.id },
+      });
+      return;
+    }
+  } catch (err) {
+    console.warn("Auto-join failed:", err.message);
+    // Fall through to normal setup
+  }
+}
+
+// No invite code, or auto-join failed → normal setup flow
+Alert.alert(
+  "Welcome!",
+  `🎉 Welcome to the club, ${user.username}! You've been automatically logged in.`,
+);
+router.replace("/(tabs)/setup");
       } else {
         // Handle GraphQL errors
         const errorMessage =
