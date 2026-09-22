@@ -1,11 +1,12 @@
 // torrentManager.js
 import idbChunkStore from "@thaunknown/idb-chunk-store";
-import { getMedia, saveMedia } from "../components/mediaCache";
+import { getMedia } from "../components/mediaCache";
 import { webtorrentService } from "../utils/webtorrentService";
+import parseTorrent from "parse-torrent";
 
 // Global WebTorrent client instance
 let client = null;
-const activeDownloads = new Map(); // Magnet/CID -> { torrent, blobUrl, status }
+const activeDownloads = new Map(); // CID -> { torrent, blobUrl, isDone }
 
 const MAX_ACTIVE_TORRENTS = 15;
 
@@ -32,7 +33,7 @@ export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
     client = new WebTorrent();
   }
 
-  // 1. Return immediately if already cached in-memory
+  // 1. Return immediately if already tracked in-memory
   if (activeDownloads.has(cid)) {
     return activeDownloads.get(cid);
   }
@@ -40,8 +41,10 @@ export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
   // 2. Evict before adding (prevents unbounded growth)
   evictOldestIfNeeded();
 
-  // 3. Check if client already knows about this magnet
-  let torrent = await client.get(magnetLink);
+  // 3. Parse infoHash so we can check if client already has it
+  const infoHash = parseTorrent(magnetLink).infoHash;
+
+  let torrent = await client.get(infoHash);
 
   if (!torrent) {
     torrent = await client.add(magnetLink, {
@@ -77,7 +80,7 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
 
   // 1. Check IndexedDB first (Fastest path)
   try {
-    const cached = await getMedia(cid); // <--- Requires the getMedia import above!
+    const cached = await getMedia(cid);
     if (cached?.blob) {
       onStatusChange?.("cached");
       return { url: URL.createObjectURL(cached.blob), source: "cache" };
@@ -107,6 +110,7 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
     try {
       onStatusChange?.("connecting_p2p");
       const record = await getOrStartTorrent(magnetLink, cid, media);
+
       const checkProgress = () => {
         if (!resolved && (record.torrent.progress > 0 || record.isDone)) {
           resolved = true;
