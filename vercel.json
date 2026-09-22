@@ -1,4 +1,3 @@
-
 {
   "cleanUrls": true,
   "rewrites": [
@@ -20,7 +19,7 @@
   ],
   "headers": [
     {
-      "source": "/(.*\\.(ico|png|jpg|jpeg|gif|svg|woff|woff2|js|css))",
+      "source": "/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
