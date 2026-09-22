@@ -147,8 +147,8 @@ export default function Root({ children }: PropsWithChildren) {
           type="module"
           dangerouslySetInnerHTML={{
             __html: `
-      import WebTorrent from 'https://esm.sh/webtorrent/dist/webtorrent.min.js';
-      window.WebTorrent = WebTorrent;
+  import WebTorrent from '/webtorrent.min.js';
+window.WebTorrent = WebTorrent;
 
       window.enhancedTrackers = [
         "wss://tracker-0ad4cca9fd92.herokuapp.com",

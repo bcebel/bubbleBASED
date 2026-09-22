@@ -24,30 +24,7 @@ if (typeof window !== "undefined") {
   import("@vercel/analytics").then(({ inject }) => inject());
 }
 
-  if (Platform.OS === "web" && typeof window !== "undefined") {
-    const initChamp = () => {
-      if (window.WebTorrent && !window.globalWebTorrentClient) {
-        try {
-          window.globalWebTorrentClient = new window.WebTorrent({
-            tracker: { announce: ["wss://tracker-0ad4cca9fd92.herokuapp.com"] },
-          });
-          console.log("🌪️ CHAMP INITIALIZED IN LAYOUT");
-        } catch (e) {
-          console.error("🌪️ CHAMP FAILED TO START:", e);
-        }
-      }
-    };
 
-    if (!window.WebTorrent) {
-      const script = document.createElement("script");
-      script.src =
-        "https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js";
-      script.onload = initChamp;
-      document.head.appendChild(script);
-    } else {
-      initChamp();
-    }
-  }
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -89,14 +66,6 @@ if (typeof window !== "undefined") {
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="login" options={{ title: "Login" }} />
               <Stack.Screen name="register" options={{ title: "Register" }} />
-              <Stack.Screen
-                name="privacy"
-                options={{ title: "Privacy Policy" }}
-              />
-              <Stack.Screen
-                name="tos"
-                options={{ title: "Terms of Service" }}
-              />
               <Stack.Screen
                 name="+not-found"
                 options={{ title: "Not Found" }}
