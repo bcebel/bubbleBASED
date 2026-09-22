@@ -13,6 +13,10 @@
       "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/og/join/:code"
     },
     {
+      "source": "/api/upload",
+      "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/upload"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }

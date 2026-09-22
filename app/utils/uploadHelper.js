@@ -24,11 +24,16 @@ export const uploadToIPFS = async (fileUri, fileName, type, neighborhoodId) => {
       formData.append("neighborhoodId", neighborhoodId);
     }
 
-    const res = await fetch(`${BACKEND_URL}/upload`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
+const uploadUrl =
+  Platform.OS === "web"
+    ? "/api/upload" // same-origin via Vercel proxy
+    : `${BACKEND_URL}/upload`; // native still hits Heroku directly
+
+const res = await fetch(uploadUrl, {
+  method: "POST",
+  headers: { Authorization: `Bearer ${token}` },
+  body: formData,
+});
 
     if (!res.ok) {
       const errorText = await res.text();
