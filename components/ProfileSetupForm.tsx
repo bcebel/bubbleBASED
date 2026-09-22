@@ -20,6 +20,16 @@ const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 // --- GraphQL Definitions (Unchanged) ---
+
+const UPDATE_VISIBILITY = gql`
+  mutation UpdateVisibility($isPublic: Boolean!) {
+    updateVisibility(isPublic: $isPublic) {
+      id
+      isPublic
+    }
+  }
+`;
+
 const UPDATE_PROFILE = gql`
   mutation UpdateProfile(
     $bio: String
@@ -51,6 +61,7 @@ const GET_PROFILE = gql`
     me {
       id
       bio
+      isPublic
       profilePhoto
       affiliateLinks {
         id
@@ -72,6 +83,7 @@ const getProfilePhotoUrl = (cid) => {
 
 export default function ProfileSetupScreen() {
   const router = useRouter();
+  const [isPublic, setIsPublic] = useState(false);
 
   // State for Form Inputs: 'rawHtml' is the key for the single input field
   const [bio, setBio] = useState("");
@@ -107,6 +119,7 @@ export default function ProfileSetupScreen() {
         affiliateLinks: incomingLinks,
       } = profileData.me;
 
+      setIsPublic(profileData.me.isPublic ?? false);
       // 1. Photo and Bio
       setBio(bio || "");
       setProfilePhotoCid(profilePhoto || null);
