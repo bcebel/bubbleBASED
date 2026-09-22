@@ -174,13 +174,20 @@ export default function JoinViaLinkScreen() {
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <View style={styles.container}>
         <ImageBackground
-          source={require("@/assets/images/bbl.jpg")}
+          source={require("@/assets/images/bbl.webp")}
           style={styles.heroBubble}
           resizeMode="cover"
         />
         <View style={styles.header}>
           <TouchableOpacity
-            style={[styles.infoTitle, { padding: 10, borderRadius: 48, backgroundColor: "rgba(50,50,50, .5)" }] } // Green for success
+            style={[
+              styles.infoTitle,
+              {
+                padding: 10,
+                borderRadius: 48,
+                backgroundColor: "rgba(50,50,50, .5)",
+              },
+            ]} // Green for success
             onPress={() => {
               router.push({
                 pathname: "/",

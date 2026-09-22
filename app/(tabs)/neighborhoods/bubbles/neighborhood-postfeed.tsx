@@ -14,11 +14,11 @@ import PostFeed from "./PostFeed"; // Adjust path if needed
 export default function NeighborhoodGalleryScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
-   const handleGoBack = () => {
-     // 🌟 This forces Expo Router to cleanly pop the post screen
-     // and drop the user right back inside the bubble view they came from
-     router.back();
-   };
+  const handleGoBack = () => {
+    // 🌟 This forces Expo Router to cleanly pop the post screen
+    // and drop the user right back inside the bubble view they came from
+    router.back();
+  };
   const neighborhoodId = params.neighborhoodId as string;
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -42,7 +42,7 @@ export default function NeighborhoodGalleryScreen() {
     return (
       <View style={styles.container}>
         <ImageBackground
-          source={require("@/assets/images/bbl.jpg")}
+          source={require("@/assets/images/bbl.webp")}
           style={styles.heroBubble}
           resizeMode="cover"
         />
@@ -89,7 +89,7 @@ export default function NeighborhoodGalleryScreen() {
   }
 
   // ✅ Logged in: Render the actual feed
-  return   <PostFeed neighborhoodId={neighborhoodId} />;
+  return <PostFeed neighborhoodId={neighborhoodId} />;
 }
 
 const styles = StyleSheet.create({

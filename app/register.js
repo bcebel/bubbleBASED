@@ -82,40 +82,40 @@ const RegistrationScreen = () => {
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("username", user.username);
         await AsyncStorage.setItem("userId", user.id);
-console.log("✅ Registration - Token saved to AsyncStorage");
-console.log("✅ Registration - Username saved:", user.username);
+        console.log("✅ Registration - Token saved to AsyncStorage");
+        console.log("✅ Registration - Username saved:", user.username);
 
-// 🔗 If they came from an invite link, auto-join the bubble
-if (inviteCode) {
-  try {
-    const joinResult = await joinViaInviteLink({
-      variables: { code: inviteCode },
-    });
-    const joined = joinResult.data?.joinViaInviteLink;
+        // 🔗 If they came from an invite link, auto-join the bubble
+        if (inviteCode) {
+          try {
+            const joinResult = await joinViaInviteLink({
+              variables: { code: inviteCode },
+            });
+            const joined = joinResult.data?.joinViaInviteLink;
 
-    if (joined?.success && joined.neighborhood?.id) {
-      Alert.alert(
-        "Welcome!",
-        `🎉 Welcome to the club, ${user.username}! You've been added to ${joined.neighborhood.name}.`,
-      );
-      router.replace({
-        pathname: "/neighborhoods/bubbles/neighborhood-postfeed",
-        params: { neighborhoodId: joined.neighborhood.id },
-      });
-      return;
-    }
-  } catch (err) {
-    console.warn("Auto-join failed:", err.message);
-    // Fall through to normal setup
-  }
-}
+            if (joined?.success && joined.neighborhood?.id) {
+              Alert.alert(
+                "Welcome!",
+                `🎉 Welcome to the club, ${user.username}! You've been added to ${joined.neighborhood.name}.`,
+              );
+              router.replace({
+                pathname: "/neighborhoods/bubbles/neighborhood-postfeed",
+                params: { neighborhoodId: joined.neighborhood.id },
+              });
+              return;
+            }
+          } catch (err) {
+            console.warn("Auto-join failed:", err.message);
+            // Fall through to normal setup
+          }
+        }
 
-// No invite code, or auto-join failed → normal setup flow
-Alert.alert(
-  "Welcome!",
-  `🎉 Welcome to the club, ${user.username}! You've been automatically logged in.`,
-);
-router.replace("/(tabs)/setup");
+        // No invite code, or auto-join failed → normal setup flow
+        Alert.alert(
+          "Welcome!",
+          `🎉 Welcome to the club, ${user.username}! You've been automatically logged in.`,
+        );
+        router.replace("/(tabs)/setup");
       } else {
         // Handle GraphQL errors
         const errorMessage =
@@ -138,7 +138,7 @@ router.replace("/(tabs)/setup");
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ImageBackground
-        source={require("@/assets/images/bbl.jpg")}
+        source={require("@/assets/images/bbl.webp")}
         style={styles.heroBubble}
         resizeMode="cover"
       />

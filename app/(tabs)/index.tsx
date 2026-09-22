@@ -64,7 +64,7 @@ export default function HomeScreen() {
       </Head>
       <View style={styles.container}>
         <ImageBackground
-          source={require("@/assets/images/bbl.jpg")}
+          source={require("@/assets/images/bbl.webp")}
           style={styles.heroBubble}
           resizeMode="cover"
         />

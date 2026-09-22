@@ -242,7 +242,7 @@ export default function Root({ children }: PropsWithChildren) {
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: "#130720",
-            backgroundImage: "url(/bble.png)",
+            backgroundImage: "url(/1024.webp)",
             backgroundSize: "cover",
             backgroundPosition: "center",
             color: "#ffffff",
