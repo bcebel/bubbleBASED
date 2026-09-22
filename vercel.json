@@ -1,4 +1,6 @@
+
 {
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/join/:code",
@@ -16,10 +18,9 @@
       "destination": "/"
     }
   ],
-  
   "headers": [
     {
-      "source": "/(.*\\.(ico|png|jpg|jpeg|gif|svg|woff|woff2))",
+      "source": "/(.*\\.(ico|png|jpg|jpeg|gif|svg|woff|woff2|js|css))",
       "headers": [
         {
           "key": "Cache-Control",
