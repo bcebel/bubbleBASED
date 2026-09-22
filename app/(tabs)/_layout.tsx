@@ -9,7 +9,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      // ✅ ADD THIS: Makes the tab bar a semantic <nav> element
+      // ✅ Tells web browsers this entire bar is a navigation zone
       role="navigation"
       screenOptions={{
         headerShown: false,
@@ -39,7 +39,8 @@ export default function TabLayout() {
         name="index"
         options={{
           tabBarIcon: () => (
-            <View style={styles.bubbleGlass} role="heading" aria-level={1}>
+            // Removed role="heading" to keep web layout semantics correct
+            <View style={styles.bubbleGlass}>
               <Text style={styles.iconText}>👋</Text>
             </View>
           ),
@@ -49,7 +50,7 @@ export default function TabLayout() {
         name="neighborhoods/index"
         options={{
           tabBarIcon: () => (
-            <View style={styles.bubbleGlass} role="heading" aria-level={1}>
+            <View style={styles.bubbleGlass}>
               <Text style={styles.iconText}>🫧</Text>
             </View>
           ),
@@ -59,7 +60,7 @@ export default function TabLayout() {
         name="gallery"
         options={{
           tabBarIcon: () => (
-            <View style={styles.bubbleGlass} role="heading" aria-level={1}>
+            <View style={styles.bubbleGlass}>
               <Text style={styles.iconText}>🖼️</Text>
             </View>
           ),
@@ -69,7 +70,7 @@ export default function TabLayout() {
         name="livestream"
         options={{
           tabBarIcon: () => (
-            <View style={styles.bubbleGlass} role="heading" aria-level={1}>
+            <View style={styles.bubbleGlass}>
               <Text style={styles.iconText}>📺</Text>
             </View>
           ),
@@ -79,7 +80,7 @@ export default function TabLayout() {
         name="selector"
         options={{
           tabBarIcon: () => (
-            <View style={styles.bubbleGlass} role="heading" aria-level={1}>
+            <View style={styles.bubbleGlass}>
               <Text style={styles.iconText}>📺</Text>
             </View>
           ),
@@ -89,7 +90,7 @@ export default function TabLayout() {
         name="inbox"
         options={{
           tabBarIcon: () => (
-            <View style={styles.bubbleGlass} role="heading" aria-level={1}>
+            <View style={styles.bubbleGlass}>
               <Text style={styles.iconText}>📩</Text>
             </View>
           ),
@@ -99,7 +100,7 @@ export default function TabLayout() {
         name="setup"
         options={{
           tabBarIcon: () => (
-            <View style={styles.bubbleGlass} role="heading" aria-level={1}>
+            <View style={styles.bubbleGlass}>
               <Text style={styles.iconText}>😀</Text>
             </View>
           ),
