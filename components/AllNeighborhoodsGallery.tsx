@@ -410,11 +410,14 @@ export default function AllNeighborhoodsGallery({
   const mediaItems = combinedData;
 
   // MUST BE HERE: Before any `if (loading)` or `if (error)` returns!
+  /*
+
   useEffect(() => {
     if (mediaItems && mediaItems.length > 0) {
       updatePriorityWindow(mediaItems, activeIndex);
     }
   }, [activeIndex, mediaItems]);
+  */
 
   const handleRefresh = async () => {
     setRefreshing(true);

@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
   playIconText: { color: "#fff", fontSize: 20, marginLeft: 2 },
   bottomControlBar: {
     position: "absolute",
-    bottom: "2%"
+    bottom: "5%"
     ,
     left: 0,
     right: 0,
