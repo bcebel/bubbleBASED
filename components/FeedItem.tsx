@@ -132,10 +132,8 @@ export default function FeedItem({ post, onLike, onComment, onDelete }) {
         </View>
       </View>
 
-      {/* Main Post Content */}
       {content ? <Text style={styles.content}>{content}</Text> : null}
 
-      {/* Attached Media */}
       {media && media.length > 0 && (
         <View style={styles.mediaContainer}>
           {media.map((item, index) => {
@@ -164,14 +162,13 @@ export default function FeedItem({ post, onLike, onComment, onDelete }) {
                   key={getMediaKey(normalizedMedia)}
                   media={normalizedMedia}
                   isFocused={true}
-                />{" "}
+                />
               </View>
             );
           })}
         </View>
       )}
 
-      {/* Affiliate Link Card */}
       {affiliate && <AffiliateCard affiliate={affiliate} />}
 
       {/* Action Bar */}

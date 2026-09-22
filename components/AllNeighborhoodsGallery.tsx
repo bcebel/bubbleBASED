@@ -14,12 +14,12 @@ import { gql, useQuery } from "@apollo/client";
 import WebTorrentMedia from "../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "./AdMessage";
+import { updatePriorityWindow } from "../components/torrentmanager";
 
 const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = width;
 const MEDIA_SIZE = width - 40;
 
-// Use the ALL query for everything!
 const GET_ALL_GALLERY = gql`
   query GetMyAllNeighborhoodsGallery {
     getMyAllNeighborhoodsGallery {
@@ -64,7 +64,6 @@ const GET_ALL_GALLERY = gql`
   }
 `;
 
-// ✅ 1. Query for SPECIFIC neighborhood (when you have an ID)
 const GET_NEIGHBORHOOD_GALLERY = gql`
   query GetNeighborhoodGallery {
     getMyAllNeighborhoodsGallery {
@@ -109,7 +108,6 @@ const GET_NEIGHBORHOOD_GALLERY = gql`
   }
 `;
 
-// ✅ 2. Query for ALL neighborhoods (when you have NO ID)
 const GET_MY_ALL_NEIGHBORHOODS_GALLERY = gql`
   query GetMyAllNeighborhoodsGallery {
     getMyAllNeighborhoodsGallery {
@@ -202,7 +200,7 @@ const MediaDisplay = ({
   onMediaAspectChange,
 }: {
   item: any;
-    isFocused: boolean;
+  isFocused: boolean;
   isAlmostFocused: boolean;
   onMediaAspectChange: (ratio: number) => void;
 }) => {
@@ -337,15 +335,14 @@ export default function AllNeighborhoodsGallery({
 }: {
   neighborhoodId?: string;
 }) {
-  // ✅ 3. USE THE RIGHT QUERY!
   const query = neighborhoodId
     ? GET_NEIGHBORHOOD_GALLERY
     : GET_MY_ALL_NEIGHBORHOODS_GALLERY;
   const variables = neighborhoodId ? { neighborhoodId } : {};
 
-const { data, loading, error, refetch } = useQuery(GET_ALL_GALLERY, {
-  fetchPolicy: "cache-and-network",
-});
+  const { data, loading, error, refetch } = useQuery(GET_ALL_GALLERY, {
+    fetchPolicy: "cache-and-network",
+  });
 
   const [refreshing, setRefreshing] = useState(false);
   const { data: adData } = useQuery(GET_RANDOM_AFFILIATE_LINK);
@@ -353,64 +350,71 @@ const { data, loading, error, refetch } = useQuery(GET_ALL_GALLERY, {
   const [mediaAspect, setMediaAspect] = useState(1);
   const scrollRef = useRef(null);
 
-const combinedData = React.useMemo(() => {
-  if (!data?.getMyAllNeighborhoodsGallery) return [];
+  const combinedData = React.useMemo(() => {
+    if (!data?.getMyAllNeighborhoodsGallery) return [];
 
-  const { videos, images } = data.getMyAllNeighborhoodsGallery;
-  let flattened = [...(videos || []), ...(images || [])];
+    const { videos, images } = data.getMyAllNeighborhoodsGallery;
+    let flattened = [...(videos || []), ...(images || [])];
 
-  // ✅ THE CORRECT FILTER:
-  if (neighborhoodId) {
-    flattened = flattened.filter(
-      (item) =>
-        item.neighborhood?.id === neighborhoodId ||
-        item.neighborhood?._id === neighborhoodId ||
-        item.neighborhood === neighborhoodId,
-    );
-  }
-
-  // Normalize, sort, inject ads... (rest of your logic)
-  const normalized = flattened.map((item: any) => {
-    if (item.media && item.media.length > 0) {
-      return {
-        ...item,
-        ...item.media[0],
-        fileName:
-          item.fileName ||
-          item.media[0].fileName ||
-          `media-${item.media[0].cid}`,
-        fileType: item.media[0].mediaType === "video" ? "video" : "image",
-        neighborhoodId: item.neighborhood,
-      };
+    if (neighborhoodId) {
+      flattened = flattened.filter(
+        (item) =>
+          item.neighborhood?.id === neighborhoodId ||
+          item.neighborhood?._id === neighborhoodId ||
+          item.neighborhood === neighborhoodId,
+      );
     }
-    return item;
-  });
 
- const raw = normalized.sort((a, b) => {
-   const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-   const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-   const idTimeA = a.id
-     ? new Date(parseInt(a.id.substring(0, 8), 16) * 1000).getTime()
-     : 0;
-   const idTimeB = b.id
-     ? new Date(parseInt(b.id.substring(0, 8), 16) * 1000).getTime()
-     : 0;
-   return (timeB || idTimeB) - (timeA || idTimeA);
- });
+    const normalized = flattened.map((item: any) => {
+      if (item.media && item.media.length > 0) {
+        return {
+          ...item,
+          ...item.media[0],
+          fileName:
+            item.fileName ||
+            item.media[0].fileName ||
+            `media-${item.media[0].cid}`,
+          fileType: item.media[0].mediaType === "video" ? "video" : "image",
+          neighborhoodId: item.neighborhood,
+        };
+      }
+      return item;
+    });
 
-  const withAds = [];
-  raw.forEach((item, index) => {
-    withAds.push(item);
-    if ((index + 1) % 5 === 0 && adData?.randomAffiliateLink) {
-      withAds.push({
-        isAd: true,
-        id: `ad-page-${index}`,
-        ...adData.randomAffiliateLink,
-      });
+    const raw = normalized.sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const idTimeA = a.id
+        ? new Date(parseInt(a.id.substring(0, 8), 16) * 1000).getTime()
+        : 0;
+      const idTimeB = b.id
+        ? new Date(parseInt(b.id.substring(0, 8), 16) * 1000).getTime()
+        : 0;
+      return (timeB || idTimeB) - (timeA || idTimeA);
+    });
+
+    const withAds: any[] = [];
+    raw.forEach((item, index) => {
+      withAds.push(item);
+      if ((index + 1) % 5 === 0 && adData?.randomAffiliateLink) {
+        withAds.push({
+          isAd: true,
+          id: `ad-page-${index}`,
+          ...adData.randomAffiliateLink,
+        });
+      }
+    });
+    return withAds;
+  }, [data, adData, neighborhoodId]);
+
+  const mediaItems = combinedData;
+
+  // MUST BE HERE: Before any `if (loading)` or `if (error)` returns!
+  useEffect(() => {
+    if (mediaItems && mediaItems.length > 0) {
+      updatePriorityWindow(mediaItems, activeIndex);
     }
-  });
-  return withAds;
-}, [data, adData, neighborhoodId]);
+  }, [activeIndex, mediaItems]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -431,6 +435,7 @@ const combinedData = React.useMemo(() => {
         <ActivityIndicator size="large" color="#FF00FF" />
       </View>
     );
+
   if (error)
     return (
       <View style={styles.center}>
@@ -438,7 +443,6 @@ const combinedData = React.useMemo(() => {
       </View>
     );
 
-  const mediaItems = combinedData;
   const totalCount = mediaItems.length;
   const videoCount = mediaItems.filter(
     (m) => getFileType(m.fileName) === "video",
@@ -488,7 +492,6 @@ const combinedData = React.useMemo(() => {
             item.neighborhood?.name || "Unknown Neighborhood";
           const isFocused = Math.abs(index - activeIndex) <= 2;
           const isAlmostFocused = Math.abs(index - activeIndex) <= 10;
-
           const uniqueKey = `${item.id}-${index}`;
 
           if (item.isAd) {
@@ -710,6 +713,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontStyle: "italic",
   },
+  badgeText: { color: "#000", fontSize: 10, fontWeight: "bold" },
   gifContainer: {
     position: "relative",
     width: "100%",

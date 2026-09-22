@@ -4,6 +4,7 @@ import { getMedia } from "../components/mediaCache";
 import { webtorrentService } from "../utils/webtorrentService";
 import parseTorrent from "parse-torrent";
 
+
 // Global WebTorrent client instance
 let client = null;
 const activeDownloads = new Map(); // CID -> { torrent, blobUrl, isDone, priority }

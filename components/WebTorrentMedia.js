@@ -379,11 +379,9 @@ useEffect(() => {
       />
 
       <View
-        style={[
-          styles.controlsOverlay,
-          { opacity: controlsVisible ? 1 : 0 },
-          !controlsVisible && { pointerEvents: "none" },
-        ]}
+        style={
+          styles.controlsOverlay
+        }
         // @ts-ignore
         onClick={togglePlay}
       >
@@ -518,7 +516,8 @@ const styles = StyleSheet.create({
   playIconText: { color: "#fff", fontSize: 20, marginLeft: 2 },
   bottomControlBar: {
     position: "absolute",
-    bottom: 50,
+    bottom: "2%"
+    ,
     left: 0,
     right: 0,
     paddingHorizontal: 16,
