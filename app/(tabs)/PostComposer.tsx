@@ -48,7 +48,6 @@ const GET_FEED_POSTS = gql`
         profilePhoto
       }
       media {
-    
         url
         cid
         magnetURI
@@ -68,6 +67,8 @@ interface PostComposerProps {
 interface SelectedMedia {
   uri: string;
   mediaType: "image" | "video";
+  file?: File;
+  fileSize?: number;
 }
 
 export default function PostComposer({
@@ -105,8 +106,6 @@ export default function PostComposer({
     },
   });
 
-
-
   const pickMedia = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images", "videos"],
@@ -119,15 +118,17 @@ export default function PostComposer({
       setSelectedMedia({
         uri: asset.uri,
         mediaType: detectedType,
+        file: asset.file,
+        fileSize: asset.fileSize ?? asset.file?.size,
       });
     }
   };
 
   const handleSubmit = async () => {
-const hasContent = content.trim().length > 0;
-const hasMedia = !!selectedMedia?.uri;
+    const hasContent = content.trim().length > 0;
+    const hasMedia = !!selectedMedia?.uri;
 
-if (!hasContent && !hasMedia) return;
+    if (!hasContent && !hasMedia) return;
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem("token");
@@ -147,10 +148,10 @@ if (!hasContent && !hasMedia) return;
         const uri = selectedMedia.uri;
 
         if (uri.startsWith("blob:") || uri.startsWith("file:")) {
-          const response = await fetch(uri);
-          const blob = await response.blob();
+  
           const isLargeVideo =
-            currentMediaType === "video" && blob.size > 10 * 1024 * 1024;
+            currentMediaType === "video" &&
+            (selectedMedia?.fileSize ?? 0) > 10 * 1024 * 1024;
 
           // Upload to Pinata
           console.log(`📤 Uploading to Pinata: ${fileName}`);
@@ -160,6 +161,7 @@ if (!hasContent && !hasMedia) return;
               `post_${Date.now()}.${currentMediaType === "video" ? "mp4" : "jpg"}`,
             currentMediaType,
             neighborhoodId,
+            selectedMedia?.file,
           );
 
           const slice = pinataResult?.slices?.[0];
@@ -175,9 +177,9 @@ if (!hasContent && !hasMedia) return;
           if (isLargeVideo) {
             try {
               console.log(`🎬 Also seeding via P2P for large video...`);
-              const seedResult = await webtorrentService.seed(blob, {
-                name: fileName,
-              });
+         const seedResult = await webtorrentService.seed(selectedMedia.file, {
+           name: fileName,
+         });
               const p2pMagnet = seedResult.magnetUri;
               magnetLink = p2pMagnet;
 
@@ -185,11 +187,11 @@ if (!hasContent && !hasMedia) return;
                 `✅ P2P seed active: ${p2pMagnet.substring(0, 50)}...`,
               );
 
-              await webtorrentService.storeSeedData(p2pMagnet, blob, {
-                fileName: fileName,
-                fileType: "video",
-                size: blob.size,
-              });
+       await webtorrentService.storeSeedData(p2pMagnet, selectedMedia.file, {
+         fileName: fileName,
+         fileType: "video",
+         size: selectedMedia.fileSize,
+       });
 
               await fetch(`${BACKEND_URL}/api/seed-register`, {
                 method: "POST",
@@ -202,7 +204,7 @@ if (!hasContent && !hasMedia) return;
                   neighborhoodId: currentNeighborhoodId,
                   content: content,
                   fileName: fileName,
-                  fileSize: blob.size,
+                  fileSize: selectedMedia.fileSize,
                   mediaType: "video",
                 }),
               }).catch(() => {
@@ -281,11 +283,8 @@ if (!hasContent && !hasMedia) return;
     }
   };
 
-
-
   return (
     <View style={styles.container}>
-
       {/* Composer */}
       <View style={styles.composer}>
         <TextInput
@@ -344,7 +343,6 @@ if (!hasContent && !hasMedia) return;
       </View>
 
       {/* Feed with Ads */}
-
     </View>
   );
 }

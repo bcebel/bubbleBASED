@@ -1,27 +1,32 @@
 // torrentManager.js
 import idbChunkStore from "@thaunknown/idb-chunk-store";
 import { getMedia, saveMedia } from "../components/mediaCache";
-import { webtorrentService } from "../utils/webtorrentService"
+import { webtorrentService } from "../utils/webtorrentService";
+
 // Global WebTorrent client instance
 let client = null;
 const activeDownloads = new Map(); // Magnet/CID -> { torrent, blobUrl, status }
-// torrentManager.js
+
 const MAX_ACTIVE_TORRENTS = 15;
 
-if (activeDownloads.size >= MAX_ACTIVE_TORRENTS) {
+// Eviction helper — call this before adding a new torrent
+const evictOldestIfNeeded = () => {
+  if (activeDownloads.size < MAX_ACTIVE_TORRENTS) return;
+  if (!client) return;
+
   const oldestCid = activeDownloads.keys().next().value;
   const item = activeDownloads.get(oldestCid);
 
   if (item?.torrent) {
-    client.remove(item.torrent.infoHash); // Releases WebRTC connections
+    client.remove(item.torrent.infoHash);
   }
   if (item?.blobUrl) {
-    URL.revokeObjectURL(item.blobUrl); // Frees browser RAM
+    URL.revokeObjectURL(item.blobUrl);
   }
   activeDownloads.delete(oldestCid);
-}
+};
 
-export const getOrStartTorrent = async (magnetLink, cid) => {
+export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
   if (!client) {
     const WebTorrent = window.WebTorrent;
     client = new WebTorrent();
@@ -32,22 +37,25 @@ export const getOrStartTorrent = async (magnetLink, cid) => {
     return activeDownloads.get(cid);
   }
 
-  // 2. Check if client already knows about this magnet
-let torrent = await client.get(magnetLink);
-if (!torrent) {
-  torrent = await client.add(magnetLink, {
-    store: idbChunkStore,
-    storeOpts: { name: `media-${cid}` },
-    announce: webtorrentService.trackers,
-    strategy: media.fileType === "image" ? "rarest" : "sequential",
-  });
-}
+  // 2. Evict before adding (prevents unbounded growth)
+  evictOldestIfNeeded();
 
+  // 3. Check if client already knows about this magnet
+  let torrent = await client.get(magnetLink);
+
+  if (!torrent) {
+    torrent = await client.add(magnetLink, {
+      store: idbChunkStore,
+      storeOpts: { name: `media-${cid}` },
+      announce: window.enhancedTrackers || webtorrentService.trackers,
+      strategy: media.fileType === "image" ? "rarest" : "sequential",
+    });
+  }
 
   const record = { torrent, blobUrl: null, isDone: false };
   activeDownloads.set(cid, record);
 
-  // 3. Handle chunk assembly without dying on React unmount
+  // 4. Handle chunk assembly without dying on React unmount
   torrent.on("done", async () => {
     try {
       const file = torrent.files[0];
@@ -98,8 +106,7 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
 
     try {
       onStatusChange?.("connecting_p2p");
-      const record = await getOrStartTorrent(magnetLink, cid);
-
+      const record = await getOrStartTorrent(magnetLink, cid, media);
       const checkProgress = () => {
         if (!resolved && (record.torrent.progress > 0 || record.isDone)) {
           resolved = true;

@@ -6,16 +6,25 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 
 // ✅ FIX: Correct parameter order: (fileUri, fileName, type, neighborhoodId)
-export const uploadToIPFS = async (fileUri, fileName, type, neighborhoodId) => {
+export const uploadToIPFS = async (
+  fileUri,
+  fileName,
+  type,
+  neighborhoodId,
+  fileObject,
+) => {
   const token = await AsyncStorage.getItem("token");
   if (!token) throw new Error("No authentication token found");
 
   if (Platform.OS === "web") {
-    const formData = new FormData();
-    const response = await fetch(fileUri);
-    const blob = await response.blob();
-
-    formData.append("video", blob, fileName);
+   const formData = new FormData();
+   if (fileObject) {
+     formData.append("video", fileObject, fileName);
+   } else {
+     const response = await fetch(fileUri);
+     const blob = await response.blob();
+     formData.append("video", blob, fileName);
+   }
     formData.append("title", fileName);
     formData.append("description", `Uploaded ${type} - ${fileName}`);
 
@@ -24,16 +33,11 @@ export const uploadToIPFS = async (fileUri, fileName, type, neighborhoodId) => {
       formData.append("neighborhoodId", neighborhoodId);
     }
 
-const uploadUrl =
-  Platform.OS === "web"
-    ? "/api/upload" // same-origin via Vercel proxy
-    : `${BACKEND_URL}/upload`; // native still hits Heroku directly
-
-const res = await fetch(uploadUrl, {
-  method: "POST",
-  headers: { Authorization: `Bearer ${token}` },
-  body: formData,
-});
+    const res = await fetch(`${BACKEND_URL}/upload`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
 
     if (!res.ok) {
       const errorText = await res.text();
