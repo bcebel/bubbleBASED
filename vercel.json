@@ -20,5 +20,25 @@
       "source": "/(.*)",
       "destination": "/"
     }
-  ]
+  ],
+  "headers": [
+  {
+    "source": "/assets/(.*)",
+    "headers": [
+      { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+    ]
+  },
+  {
+    "source": "/webtorrent.min.js",
+    "headers": [
+      { "key": "Cache-Control", "value": "public, max-age=86400" }
+    ]
+  },
+  {
+    "source": "/(.*\\.(png|jpg|jpeg|gif|webp|avif|ico))",
+    "headers": [
+      { "key": "Cache-Control", "value": "public, max-age=86400" }
+    ]
+  }
+]
 }
