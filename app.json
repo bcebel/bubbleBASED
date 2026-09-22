@@ -4,7 +4,7 @@
     "slug": "gigunit",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/bubble.png",
+    "icon": "./assets/images/1024.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -34,7 +34,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png",
+      "favicon": "./assets/images/48.png",
       "build": {
         "publicFolder": "public"
       },
@@ -49,25 +49,25 @@
         "start_url": "/",
         "icons": [
           {
-            "src": "./assets/images/favicon-96x96.png",
+            "src": "/96.png",
             "type": "image/png",
             "sizes": "96x96",
             "purpose": "any maskable"
           },
           {
-            "src": "./assets/images/web-app-manifest-128x128.png",
+            "src": "/128.png",
             "type": "image/png",
             "sizes": "128x128",
             "purpose": "any maskable"
           },
           {
-            "src": "./assets/images/web-app-manifest-192x192.png",
+            "src": "/192.png",
             "type": "image/png",
             "sizes": "192x192",
             "purpose": "any maskable"
           },
           {
-            "src": "./assets/images/web-app-manifest-512X512.png",
+            "src": "/512.png",
             "type": "image/png",
             "sizes": "512x512",
             "purpose": "any maskable"
