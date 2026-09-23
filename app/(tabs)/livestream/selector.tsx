@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
 import NeighborhoodLiveStreamRecorder from "../../../components/NeighborhoodLiveStreamRecorder";
-import { useRouter } from "expo-router";
+import { useRouter, Link } from "expo-router";
 
 
 const GET_ME = gql`
@@ -57,12 +57,11 @@ export default function SelectorScreen() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.goLiveButton}
-        onPress={() => router.replace("/livestream/")}
-      >
-        <Text style={styles.goLiveButtonText}>🫧 Watch Livestreams</Text>
-      </TouchableOpacity>
+   <Link href={`livestream`} replace asChild>
+        <TouchableOpacity style={styles.backButton}>
+          <Text style={styles.backButtonText}>← Back to Bubble</Text>
+        </TouchableOpacity>
+      </Link>
       <Text style={styles.title}>Pick a Bubble to Stream To</Text>
       <Text style={styles.title2}>
         Works best on Regular Safari tab. Not Private/Incognito
@@ -150,7 +149,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   goLiveButton: {
-    position: "absolute",
+    position: "relative",
     top: 50,
     right: 20,
     backgroundColor: "#5f37ff",
@@ -163,6 +162,14 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     fontSize: 14,
+  },
+  backButton: {
+    color: "#fff",
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: "#fff",
+    padding: 12,
   },
   btnText: { color: "white", fontWeight: "bold", fontSize: 18 },
 });

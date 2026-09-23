@@ -1,7 +1,7 @@
 // components/NeighborhoodLiveStreamRecorder.tsx
 import React, { useState, useRef, useEffect } from "react";
 import { View, TouchableOpacity, Text, Alert, StyleSheet } from "react-native";
-import { usePathname } from "expo-router"; // 👈 Use Expo Router's hook instead
+import { usePathname, useRouter } from "expo-router"; // 👈 Use Expo Router's hook instead
 import { useMutation, gql } from "@apollo/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { warehouse } from "./StreamWearhouse.js";
@@ -64,6 +64,7 @@ export default function NeighborhoodLiveStreamRecorder({
   unifiedUpload,
   onStreamEnd,
 }) {
+   const router = useRouter();
   const pathname = usePathname(); // Returns current active route (e.g., "/selector" or "/chat")
   const [isStreaming, setIsStreaming] = useState(false);
   const [chunkCount, setChunkCount] = useState(0);
@@ -401,8 +402,16 @@ useEffect(() => {
             onPress={startStream}
             style={[styles.button, styles.startBtn]}
           >
-            <Text style={styles.buttonText}>🔴 START LIVE STREAM</Text>
+            <Text style={styles.buttonText}>🔴 CLICK to START LIVE STREAM</Text>
+    <TouchableOpacity
+        style={styles.goLiveButton}
+        onPress={() => router.replace("/livestream/")}
+      >
+        <Text style={styles.goLiveButtonText}>🫧 Watch Livestreams</Text>
+      </TouchableOpacity>
+
           </TouchableOpacity>
+          
         ) : (
           <View style={styles.controlsRow}>
             <TouchableOpacity
@@ -461,7 +470,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  startBtn: { backgroundColor: "#ff375f" },
+  startBtn: { backgroundColor: "#ff375f", marginBottom: 50 },
   stopBtn: { backgroundColor: "#444" },
   archiveBtn: { backgroundColor: "#2ecc71" },
   buttonText: {
@@ -478,5 +487,20 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.8)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 5,
+  },
+  goLiveButton: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    backgroundColor: "#5f37ff",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 25,
+    zIndex: 20,
+  },
+  goLiveButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });
