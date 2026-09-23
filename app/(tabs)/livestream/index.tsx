@@ -220,10 +220,10 @@ export default function StreamsScreen() {
     return (
       <>
         <Head>
-          <title>bubbleBASED - Livestream</title>
+          <title>bubbleBASED - livestream</title>
           <meta
             name="description"
-            content="Live streams from your bubbles. Peer-to-peer video, no middlemen, no replay tracking. Watch what your people are sharing right now."
+            content="🫧  Live streams from your bubbles. Peer-to-peer video, no middlemen, no replay tracking. Watch what your people are sharing right now."
           />
         </Head>
         <View style={styles.container}>
@@ -292,7 +292,7 @@ export default function StreamsScreen() {
                 </View>
 
                 <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                  Live Streaming
+                  Live Streaming 🫧
                 </Text>
 
                 <Text style={styles.heroSub}>

@@ -9,12 +9,12 @@ export default function NotFoundScreen() {
       <View style={styles.container}>
         <View style={styles.content}>
           <Text style={styles.title} role="heading" aria-level={1}>
-            You're not in this bubble.
+            You're not in this bubble 🫧.
           </Text>
 
           <Text style={styles.subtitle}>
             This page doesn't exist, or it's private, or it never existed. Hard
-            to say. The bubble doesn't remember.
+            to say. The bubble doesn't remember 🫧
           </Text>
 
           {/* CIRCULAR LOGIC TERMINAL BOX */}
@@ -38,7 +38,7 @@ export default function NotFoundScreen() {
             <Text style={styles.quoteText}>
               "You can observe a lot by just watching."
             </Text>
-            <Text style={styles.quoteAuthor}>— Yogi Berra</Text>
+            <Text style={styles.quoteAuthor}>🫧 Yogi Berra</Text>
           </BlurView>
 
           <Link href="/" style={styles.link}>

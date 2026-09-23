@@ -5,7 +5,7 @@ import VerificationText from "../components/verification";
 export default function Root({ children }: PropsWithChildren) {
   const title = "BubbleBased - Digital Neighborhoods, Not Just Feeds";
   const description =
-    "Join bubblebased.com - a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based.";
+    "Join bubblebased.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based.";
   const url = "https://bubblebased.com";
   const image = "https://bubblebased.com/bble.png";
 
@@ -42,9 +42,9 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="description" content={description} />
         <meta
           name="keywords"
-          content="social network, privacy, digital neighborhoods, affiliate marketing, community, bubbleBASED, webtorrent, p2p, social media, privacy, context"
+          content="social network, privacy, digital neighborhoods, affiliate marketing, community, bubbleBASED, 🫧, webtorrent, p2p, social media, privacy, context"
         />
-        <meta name="author" content="BubbleBase" />
+        <meta name="author" content="BubbleBased" />
         <meta name="robots" content="index, follow" />
 
         {/* Open Graph / Facebook */}
@@ -88,17 +88,13 @@ export default function Root({ children }: PropsWithChildren) {
               applicationCategory: "SocialNetworkApplication",
               operatingSystem: "Web Browser, iOS, Android",
               permissions: "browser",
-              offers: {
-                "@type": "Offer",
-                price: "0",
-                priceCurrency: "USD",
-              },
               author: {
                 "@type": "Organization",
                 name: "BubbleBase",
                 url: url,
               },
               featureList: [
+                "Private and Public Bubbles 🫧",
                 "Digital neighborhoods",
                 "Privacy control",
                 "Affiliate link integration",
@@ -261,10 +257,10 @@ window.WebTorrent = WebTorrent;
               color: "#20B2AA",
             }}
           >
-            BubbleBased
+            🫧 BubbleBased 🫧
           </h1>
           <p style={{ fontSize: "1.2rem", color: "#ccc", maxWidth: "500px" }}>
-            Digital Neighborhoods, Not Just Feeds.
+            Digital Bubbles 🫧 For Everyone
           </p>
         </div>
 

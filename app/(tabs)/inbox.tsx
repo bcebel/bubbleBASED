@@ -95,7 +95,7 @@ export default function InboxScreen() {
           <title>bubbleBASED - Inbox</title>
           <meta
             name="description"
-            content="Your direct messages, all in one place. Private conversations between you and the people you actually want to talk to."
+            content="🫧  Your direct messages, all in one place. Private conversations between you and the people you actually want to talk to."
           />
         </Head>
         <View style={styles.container}>
@@ -164,7 +164,7 @@ export default function InboxScreen() {
                 </View>
 
                 <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                  A bubble for two.
+                  A bubble for two 🫧
                 </Text>
 
                 <Text style={styles.heroSub}>

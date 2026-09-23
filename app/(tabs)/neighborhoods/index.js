@@ -123,7 +123,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
           <title>bubbleBASED - bubblehub</title>
           <meta
             name="description"
-            content="Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always."
+            content="🫧  Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always."
           />
         </Head>
  
@@ -190,7 +190,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                 </View>
     
                 <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                  Make your own feed.
+                  Make your own feed  🫧
                 </Text>
      
                 <Text style={styles.heroSub}>

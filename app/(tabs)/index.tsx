@@ -59,7 +59,7 @@ export default function HomeScreen() {
         <title>bubbleBASED</title>
         <meta
           name="description"
-          content="Private neighborhoods where your content lives in context. No algorithms. Community ads. Just your people."
+          content="🫧  Private & public bubbles 🫧 where your content lives in context. No algorithms. Community ads. Just your people."
         />
       </Head>
       <View style={styles.container}>
@@ -125,7 +125,7 @@ export default function HomeScreen() {
               </View>
 
               <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                Your people. Your stuff. Your corner of the web.
+                Your people. Your stuff. Your bubble.  🫧
               </Text>
 
               <Text style={styles.heroSub}>

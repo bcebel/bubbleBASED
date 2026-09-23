@@ -65,10 +65,10 @@ export default function GalleryScreen() {
     return (
       <>
         <Head>
-          <title>bubbleBASED - Gallery</title>
+          <title>bubbleBASED - gallery</title>
           <meta
             name="description"
-            content="Beautiful gallery of all media posted throughout your bubbles.  Social media is supposed to be enjoyable after all, post events and memories that YOU love, join bubbles you would want to be in.  No clickbait and comment sniping."
+            content="🫧  Beautiful gallery of all media posted throughout your bubbles.  Social media is supposed to be enjoyable after all, post events and memories that YOU love, join bubbles you would want to be in.  No clickbait and comment sniping."
           />
         </Head>
         <View style={styles.container}>
@@ -135,7 +135,7 @@ export default function GalleryScreen() {
                 </View>
 
                 <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                  Media Gallery - Powered by Viewers
+                  Media Gallery Powered by Viewers 🫧
                 </Text>
 
                 <Text style={styles.heroSub}>

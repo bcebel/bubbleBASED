@@ -107,10 +107,10 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
     return (
             <>
               <Head>
-                <title>bubbleBASED - bubbleBASE</title>
+                <title>bubbleBASED  bubbleBASE</title>
                 <meta
                   name="description"
-                  content="Your own personal bubbleBASE.  A central hub in a decentralized world.  Enjoy all of the memories you have posted with others."
+                  content="🫧  Your own personal bubbleBASE.  A central hub in a decentralized world.  Enjoy all of the memories you have posted with others."
                 />
               </Head>
     <View style={styles.container}>
@@ -176,7 +176,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
               </View>
 
               <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                Your Home Bubble Base.  Keep tabs on content you posted and the friends you've made along the way.  All in one bubble.
+                Your Home Bubble Base  🫧
               </Text>
 
               <Text style={styles.heroSub}>

@@ -211,7 +211,7 @@ const RegistrationScreen = () => {
 
         <View style={styles.features}>
           <Text style={styles.featuresTitle}>What you get:</Text>
-          <Text style={styles.feature}>🏠 Your own digital neighborhood</Text>
+          <Text style={styles.feature}>🫧 Your own digital bubbles</Text>
           <Text style={styles.feature}>🎪 Live stream with friends</Text>
           <Text style={styles.feature}>💎 Monetize with affiliate links</Text>
           <Text style={styles.feature}>🔒 Control your privacy</Text>

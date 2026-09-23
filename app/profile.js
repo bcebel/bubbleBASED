@@ -38,7 +38,7 @@ export default function EditProfileScreen() {
       <Text style={styles.title}>Edit Your Profile</Text>
       <TextInput
         style={styles.bioInput}
-        placeholder="Tell everyone about yourself..."
+        placeholder="🫧 Tell everyone about yourself..."
         value={bio}
         onChangeText={setBio}
         multiline
