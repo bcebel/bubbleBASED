@@ -1,4 +1,4 @@
-// WebTorrentMedia.js - ULTIMATE CACHING VERSION (Background Cache)
+// components/WebTorrentMedia.js
 import React, { useState, useEffect, useRef } from "react";
 import {
   View,
@@ -6,166 +6,160 @@ import {
   ActivityIndicator,
   StyleSheet,
   Text,
+  TouchableOpacity,
   Platform,
 } from "react-native";
-import * as FileSystem from "expo-file-system";
-import { getMediaWithFallback } from "./torrentmanager";
-
-const CACHE_FOLDER = `${FileSystem.cacheDirectory}webtorrent_media/`;
-
-const ensureCacheDir = async () => {
-  if (Platform.OS !== "web") {
-    const dirInfo = await FileSystem.getInfoAsync(CACHE_FOLDER);
-    if (!dirInfo.exists) {
-      await FileSystem.makeDirectoryAsync(CACHE_FOLDER, {
-        intermediates: true,
-      });
-    }
-  }
-};
+import { getMedia, saveMedia } from "./mediaCache";
+import { getOrStartTorrent, getMediaWithFallback } from "./torrentmanager";
 
 const PINATA_GATEWAY =
   process.env.EXPO_PUBLIC_PINATA_GATEWAY || "gateway.pinata.cloud";
 
-const pinataCache = new Map();
-
-if (typeof window !== "undefined") {
-  window.__pinataCache = pinataCache;
-}
-
 export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
   const [mediaUrl, setMediaUrl] = useState(null);
+  const [status, setStatus] = useState("idle");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [peerCount, setPeerCount] = useState(0);
+
   const videoRef = useRef(null);
+  const isMountedRef = useRef(true);
+  const objectUrlRef = useRef(null);
 
+  const isVideo =
+    media?.fileType === "video" ||
+    media?.mediaType === "video" ||
+    (media?.fileName && /\.(mp4|mov|webm|avi|mkv)$/i.test(media.fileName));
+
+  const isImage =
+    !isVideo &&
+    (media?.fileType === "image" ||
+      media?.mediaType === "image" ||
+      (media?.fileName &&
+        /\.(jpg|jpeg|png|gif|webp|avif|heic|heif|svg)$/i.test(media.fileName)));
+
+  // ---------- 1. PRELOAD ON ALMOST FOCUSED (background seed, no render) ----------
   useEffect(() => {
-    let isMounted = true;
-    let objectUrlToRevoke = null;
+    if (!isAlmostFocused || isFocused) return;
+    if (!media?.magnetLink) return;
 
+    let cancelled = false;
+
+    const warm = async () => {
+      try {
+        await getOrStartTorrent(media.magnetLink, media.cid, media);
+        if (!cancelled) console.log(`🔥 Prewarming ${media.cid?.slice(0, 8)}`);
+      } catch (err) {
+        if (!cancelled) console.log("Prewarm skip:", err.message);
+      }
+    };
+
+    warm();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAlmostFocused, isFocused, media?.magnetLink, media?.cid]);
+
+  // ---------- 2. LOAD WHEN FOCUSED ----------
+  useEffect(() => {
+    if (!isFocused) return;
     if (!media) return;
 
-    const loadMedia = async () => {
+    isMountedRef.current = true;
+    let localObjectUrl = null;
+
+    const load = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // 1. Direct URL/URI fast path
+        // Direct URL fast path
         if (media.url || media.uri) {
-          if (isMounted) {
-            setMediaUrl(media.url || media.uri);
-            setLoading(false);
-          }
-          return;
-        }
-
-        // 2. Fetch via fallback pipeline
-        const result = await getMediaWithFallback(media);
-
-        if (!isMounted) return;
-
-        if (!result) {
-          setError("Media unavailable");
+          if (!isMountedRef.current) return;
+          setMediaUrl(media.url || media.uri);
           setLoading(false);
+          setStatus("direct");
           return;
         }
 
-        // 3. Resolve result format
-        let resolvedUrl = null;
-
-        if (typeof result === "string") {
-          resolvedUrl = result;
-        } else if (result.url || result.uri) {
-          resolvedUrl = result.url || result.uri;
-        } else if (result instanceof Blob) {
-          resolvedUrl = URL.createObjectURL(result);
-          objectUrlToRevoke = resolvedUrl;
-        } else if (result.getBlob) {
-          result.getBlob((err, blob) => {
-            if (!isMounted) return;
-            if (err || !blob || blob.size === 0) {
-              setError("Torrent file buffer empty");
+        // Cached blob (fastest P2P-adjacent path)
+        if (media.cid) {
+          try {
+            const cached = await getMedia(media.cid);
+            if (cached?.blob && isMountedRef.current) {
+              const url = URL.createObjectURL(cached.blob);
+              objectUrlRef.current = url;
+              setMediaUrl(url);
+              setStatus("cached");
               setLoading(false);
               return;
             }
-            try {
-              const url = URL.createObjectURL(blob);
-              objectUrlToRevoke = url;
-              setMediaUrl(url);
-              setLoading(false);
-            } catch (e) {
-              setError("Blob URL creation failed");
-              setLoading(false);
-            }
-          });
-          return;
-        } else if (result.files && result.files.length > 0) {
-          const file =
-            result.files.find(
-              (f) =>
-                f.name.endsWith(".mp4") ||
-                f.name.endsWith(".jpg") ||
-                f.name.endsWith(".png") ||
-                f.name.endsWith(".webp"),
-            ) || result.files[0];
-
-          if (file && file.getBlob) {
-            file.getBlob((err, blob) => {
-              if (!isMounted) return;
-              if (err || !blob) {
-                setError("Torrent file blob error");
-                setLoading(false);
-                return;
-              }
-              try {
-                const url = URL.createObjectURL(blob);
-                objectUrlToRevoke = url;
-                setMediaUrl(url);
-                setLoading(false);
-              } catch (e) {
-                setError("Blob URL creation failed");
-                setLoading(false);
-              }
-            });
-            return;
-          }
+          } catch (_) {}
         }
 
-        if (resolvedUrl) {
-          setMediaUrl(resolvedUrl);
-          setLoading(false);
+        // P2P with HTTP fallback
+        const result = await getMediaWithFallback(media, (s) => {
+          if (isMountedRef.current) setStatus(s);
+        });
+
+        if (!isMountedRef.current) return;
+
+        if (typeof result === "string") {
+          setMediaUrl(result);
+        } else if (result?.url) {
+          setMediaUrl(result.url);
         } else {
-          setError(`Unsupported media format: ${typeof result}`);
-          setLoading(false);
+          throw new Error("Unsupported media result");
         }
+
+        setLoading(false);
       } catch (err) {
-        if (isMounted) {
-          setError(err.message || "Error loading media");
+        if (isMountedRef.current) {
+          setError(err.message || "Failed to load media");
           setLoading(false);
         }
       }
     };
 
-    loadMedia();
+    load();
 
     return () => {
-      isMounted = false;
-      if (objectUrlToRevoke && Platform.OS === "web") {
-        URL.revokeObjectURL(objectUrlToRevoke);
+      isMountedRef.current = false;
+      if (localObjectUrl && Platform.OS === "web") {
+        URL.revokeObjectURL(localObjectUrl);
       }
     };
-  }, [media?.cid, media?.id]);
+  }, [isFocused, media?.cid, media?.magnetLink, media?.url, media?.uri]);
 
-  // Sync video play/pause on focus change
+  // ---------- 3. AUTO-PLAY / PAUSE ON FOCUS (mobile-safe) ----------
   useEffect(() => {
-    if (Platform.OS === "web" && videoRef.current) {
-      if (isFocused) {
-        videoRef.current.play().catch(() => {});
-      } else {
-        videoRef.current.pause();
+    if (Platform.OS !== "web") return;
+    const video = videoRef.current;
+    if (!video || !video.play) return;
+
+    // Always ensure these are set — mobile browsers require them for autoplay
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute("playsinline", "true");
+    video.setAttribute("webkit-playsinline", "true");
+
+    if (isFocused && mediaUrl) {
+      const playPromise = video.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch((err) => {
+          console.log(
+            "Autoplay blocked, waiting for user gesture:",
+            err.message,
+          );
+        });
       }
+    } else {
+      video.pause();
     }
-  }, [isFocused]);
+  }, [isFocused, mediaUrl]);
+
+  // ---------- RENDER ----------
 
   if (error) {
     return (
@@ -179,15 +173,16 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#FF00FF" />
+        <Text style={styles.statusText}>
+          {status === "connecting_p2p" && "📡 Connecting to peers..."}
+          {status === "p2p_streaming" && `🌪️ Swarming (${progress}%)`}
+          {status === "fallback_http" && "🌍 Loading via CDN..."}
+          {status === "cached" && "📦 Loading from cache..."}
+          {(!status || status === "idle") && "⏳ Preparing media..."}
+        </Text>
       </View>
     );
   }
-
-  // Detect video by fileType property or file extension fallback
-  const isVideo =
-    media?.fileType === "video" ||
-    media?.mediaType === "video" ||
-    (media?.fileName && /\.(mp4|mov|webm|avi|mkv)$/i.test(media.fileName));
 
   if (isVideo && Platform.OS === "web") {
     return (
@@ -196,10 +191,11 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
           ref={videoRef}
           src={mediaUrl}
           controls
-          autoPlay={isFocused}
-          muted={true}
+          muted
           loop
           playsInline
+          // @ts-ignore — RN Web passes these through to DOM
+          webkit-playsinline="true"
           style={{
             width: "100%",
             height: "100%",
@@ -238,5 +234,12 @@ const styles = StyleSheet.create({
   errorText: {
     color: "#FF4444",
     fontSize: 14,
+    textAlign: "center",
+  },
+  statusText: {
+    color: "#FFF",
+    fontSize: 12,
+    marginTop: 10,
+    textAlign: "center",
   },
 });
