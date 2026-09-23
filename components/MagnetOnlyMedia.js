@@ -69,7 +69,7 @@ export default function MagnetOnlyMedia({ media, isFocused, onPeerUpdate }) {
     };
 
     load();
-
+// sdfsdfsdfsdf
     return () => {
       mountedRef.current = false;
       if (activeTorrent) {
