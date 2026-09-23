@@ -8,6 +8,8 @@ import {
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
 import NeighborhoodLiveStreamRecorder from "../../../components/NeighborhoodLiveStreamRecorder";
+import { useRouter } from "expo-router";
+
 
 const GET_ME = gql`
   query GetMe {
@@ -28,6 +30,7 @@ const GET_MY_NEIGHBORHOODS = gql`
 `;
 
 export default function SelectorScreen() {
+   const router = useRouter();
   const [isRecording, setIsRecording] = useState(false);
   const [selectedHood, setSelectedHood] = useState<string | null>(null);
 
@@ -54,8 +57,16 @@ export default function SelectorScreen() {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.goLiveButton}
+        onPress={() => router.replace("/livestream/")}
+      >
+        <Text style={styles.goLiveButtonText}>🫧 Watch Livestreams</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>Pick a Bubble to Stream To</Text>
-      <Text style={styles.title2}>Works best on Regular Safari tab. Not Private/Incognito</Text>
+      <Text style={styles.title2}>
+        Works best on Regular Safari tab. Not Private/Incognito
+      </Text>
 
       <View style={styles.picker}>
         {hoodsData?.myNeighborhoods?.map((h: { id: string; name: string }) => (
@@ -137,6 +148,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     borderRadius: 15,
     marginTop: 20,
+  },
+  goLiveButton: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    backgroundColor: "#5f37ff",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 25,
+    zIndex: 20,
+  },
+  goLiveButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
   },
   btnText: { color: "white", fontWeight: "bold", fontSize: 18 },
 });
