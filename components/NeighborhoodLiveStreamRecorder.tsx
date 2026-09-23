@@ -108,7 +108,7 @@ export default function NeighborhoodLiveStreamRecorder({
 
   // 1. INITIALIZE PREVIEW CAMERA ON MOUNT
 
-
+/*
   const handleStitchAndShip = async () => {
     try {
       const sessionId = sessionIdRef.current;
@@ -158,6 +158,7 @@ export default function NeighborhoodLiveStreamRecorder({
       Alert.alert("Error", "Could not stitch and ship.");
     }
   };
+  */
 
   const processSeedQueue = async () => {
     if (isProcessingQueueRef.current || chunkQueueRef.current.length === 0)
@@ -418,18 +419,10 @@ useEffect(() => {
               onPress={stopStream}
               style={[styles.button, styles.stopBtn]}
             >
-              <Text style={styles.buttonText}>⏹️ STOP (DELETE)</Text>
+              <Text style={styles.buttonText}>⏹️ STOP</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => {
-                stopStream();
-                handleStitchAndShip();
-              }}
-              style={[styles.button, styles.archiveBtn]}
-            >
-              <Text style={styles.buttonText}>📁 STOP & ARCHIVE</Text>
-            </TouchableOpacity>
+
           </View>
         )}
 
@@ -471,7 +464,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   startBtn: { backgroundColor: "#ff375f", marginBottom: 50 },
-  stopBtn: { backgroundColor: "#444" },
+  stopBtn: { backgroundColor: "#444", marginBottom: 50 },
   archiveBtn: { backgroundColor: "#2ecc71" },
   buttonText: {
     color: "white",
@@ -481,7 +474,7 @@ const styles = StyleSheet.create({
   chunkCountText: {
     color: "#00ffff",
     textAlign: "center",
-    marginTop: 10,
+    marginBottom: 30,
     fontSize: 14,
     fontWeight: "bold",
     textShadowColor: "rgba(0, 0, 0, 0.8)",
