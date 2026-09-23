@@ -1,18 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  ScrollView,
-  ActivityIndicator,
   StyleSheet,
-  TouchableOpacity,
-  Linking,
   Dimensions,
+  ActivityIndicator,
+  TouchableOpacity,
   Platform,
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
 import WebTorrentMedia from "../components/WebTorrentMedia";
-import { Image } from "expo-image";
 import AdMessage from "./AdMessage";
 import { updatePriorityWindow } from "../components/torrentmanager";
 
@@ -335,24 +332,17 @@ export default function AllNeighborhoodsGallery({
 }: {
   neighborhoodId?: string;
 }) {
-  const query = neighborhoodId
-    ? GET_NEIGHBORHOOD_GALLERY
-    : GET_MY_ALL_NEIGHBORHOODS_GALLERY;
-  const variables = neighborhoodId ? { neighborhoodId } : {};
-
-  const { data, loading, error, refetch } = useQuery(GET_ALL_GALLERY, {
+  const { data, loading, error } = useQuery(GET_ALL_GALLERY, {
     fetchPolicy: "cache-and-network",
   });
-
-  const [refreshing, setRefreshing] = useState(false);
   const { data: adData } = useQuery(GET_RANDOM_AFFILIATE_LINK);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [mediaAspect, setMediaAspect] = useState(1);
-  const scrollRef = useRef(null);
 
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(0);
+
+  // Compute combined data
   const combinedData = React.useMemo(() => {
     if (!data?.getMyAllNeighborhoodsGallery) return [];
-
     const { videos, images } = data.getMyAllNeighborhoodsGallery;
     let flattened = [...(videos || []), ...(images || [])];
 
@@ -360,38 +350,21 @@ export default function AllNeighborhoodsGallery({
       flattened = flattened.filter(
         (item) =>
           item.neighborhood?.id === neighborhoodId ||
-          item.neighborhood?._id === neighborhoodId ||
           item.neighborhood === neighborhoodId,
       );
     }
 
-    const normalized = flattened.map((item: any) => {
-      if (item.media && item.media.length > 0) {
-        return {
-          ...item,
-          ...item.media[0],
-          fileName:
-            item.fileName ||
-            item.media[0].fileName ||
-            `media-${item.media[0].cid}`,
-          fileType: item.media[0].mediaType === "video" ? "video" : "image",
-          neighborhoodId: item.neighborhood,
-        };
-      }
-      return item;
-    });
+  const normalized = flattened.map((item: any) => ({
+    ...item,
+    ...(item.media?.[0] || {}),
+    fileName: item.fileName || item.media?.[0]?.fileName || `media-${item.cid}`,
+    fileType: item.media?.[0]?.mediaType === "video" ? "video" : "image",
+  }));
 
-    const raw = normalized.sort((a, b) => {
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      const idTimeA = a.id
-        ? new Date(parseInt(a.id.substring(0, 8), 16) * 1000).getTime()
-        : 0;
-      const idTimeB = b.id
-        ? new Date(parseInt(b.id.substring(0, 8), 16) * 1000).getTime()
-        : 0;
-      return (timeB || idTimeB) - (timeA || idTimeA);
-    });
+    const raw = normalized.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
     const withAds: any[] = [];
     raw.forEach((item, index) => {
@@ -409,28 +382,32 @@ export default function AllNeighborhoodsGallery({
 
   const mediaItems = combinedData;
 
-  // MUST BE HERE: Before any `if (loading)` or `if (error)` returns!
-  /*
-
   useEffect(() => {
     if (mediaItems && mediaItems.length > 0) {
       updatePriorityWindow(mediaItems, activeIndex);
     }
   }, [activeIndex, mediaItems]);
-  */
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+  const handleNext = () => {
+    setActiveIndex((prev) => (prev < mediaItems.length - 1 ? prev + 1 : prev));
   };
 
-  const handleScroll = (e: any) => {
-    const newIndex = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);
-    if (newIndex !== activeIndex) {
-      setActiveIndex(newIndex);
-    }
+  const handlePrev = () => {
+    setActiveIndex((prev) => (prev > 0 ? prev - 1 : prev));
   };
+
+  // Keyboard navigation for desktop web
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") handleNext();
+      if (e.key === "ArrowLeft") handlePrev();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mediaItems.length]);
 
   if (loading)
     return (
@@ -446,293 +423,148 @@ export default function AllNeighborhoodsGallery({
       </View>
     );
 
-  const totalCount = mediaItems.length;
-  const videoCount = mediaItems.filter(
-    (m) => getFileType(m.fileName) === "video",
-  ).length;
-  const imageCount = mediaItems.filter(
-    (m) => getFileType(m.fileName) === "image",
-  ).length;
-
-  if (mediaItems.length === 0) {
+  if (mediaItems.length === 0)
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>All Bubbles</Text>
-          <Text style={styles.headerSubtitle}>
-            Your combined media from all bubbles
-          </Text>
-        </View>
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>🖼️</Text>
-          <Text style={styles.emptyTitle}>No media found</Text>
-        </View>
+      <View style={styles.center}>
+        <Text style={styles.emptyTitle}>No media found</Text>
       </View>
     );
-  }
 
-  const WINDOW = 2;
-  const startIndex = Math.max(0, activeIndex - WINDOW);
-  const endIndex = Math.min(mediaItems.length - 1, activeIndex + WINDOW);
-  const visibleIndices = [];
-  for (let i = startIndex; i <= endIndex; i++) visibleIndices.push(i);
+  const currentItem = mediaItems[activeIndex];
+
+  // Touch handlers for mobile horizontal swipe
+  const handleTouchStart = (e: any) => {
+    setTouchStartX(e.nativeEvent.pageX);
+  };
+
+  const handleTouchEnd = (e: any) => {
+    const touchEndX = e.nativeEvent.pageX;
+    const diff = touchStartX - touchEndX;
+
+    if (diff > 50) {
+      handleNext(); // Swipe left
+    } else if (diff < -50) {
+      handlePrev(); // Swipe right
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        snapToInterval={CARD_WIDTH}
-        decelerationRate="fast"
-      >
-        {mediaItems.map((item, index) => {
-          const isInWindow = index >= startIndex && index <= endIndex;
-          const neighborhoodName =
-            item.neighborhood?.name || "Unknown Neighborhood";
-          const isFocused = Math.abs(index - activeIndex) <= 2;
-          const isAlmostFocused = Math.abs(index - activeIndex) <= 10;
-          const uniqueKey = `${item.id}-${index}`;
+    <View
+      style={styles.container}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Media Viewport */}
+      <View style={styles.viewport}>
+        {currentItem.isAd ? (
+          <View style={styles.adContainer}>
+            <AdMessage ad={currentItem} />
+          </View>
+        ) : (
+          <View style={styles.mediaWrapper}>
+            <WebTorrentMedia
+              key={currentItem.cid || currentItem.id || activeIndex}
+              media={currentItem}
+              isFocused={true}
+              isAlmostFocused={true}
+            />
+          </View>
+        )}
+      </View>
 
-          if (item.isAd) {
-            return (
-              <View key={uniqueKey} style={[styles.card, styles.adCardCenter]}>
-                <View style={styles.adBadgeOverlay}>
-                  <Text style={styles.badgeText}>SPONSORED</Text>
-                </View>
-                <View style={styles.adMessageContainer}>
-                  <AdMessage ad={item} />
-                </View>
-                <Text style={styles.adSwipeHint}>
-                  Swipe to continue gallery →
-                </Text>
-              </View>
-            );
-          }
+      {/* Floating Counter Badge */}
+      <View style={styles.counterOverlay}>
+        <Text style={styles.counterText}>
+          {activeIndex + 1} / {mediaItems.length}
+        </Text>
+      </View>
 
-          if (!isInWindow) {
-            return (
-              <View key={uniqueKey} style={styles.card}>
-                <View style={styles.mediaContainer} />
-                <View style={styles.metadata}>
-                  <Text style={styles.metadataValue}>
-                    Loading {index + 1}...
-                  </Text>
-                </View>
-              </View>
-            );
-          }
+      {/* Left & Right Tap Buttons */}
+      <View style={styles.buttonRow} pointerEvents="box-none">
+        <TouchableOpacity
+          style={[styles.navBtn, activeIndex === 0 && styles.disabledBtn]}
+          onPress={handlePrev}
+          disabled={activeIndex === 0}
+        >
+          <Text style={styles.navBtnText}>‹</Text>
+        </TouchableOpacity>
 
-          return (
-            <View key={uniqueKey} style={styles.card}>
-              <View style={styles.metadata}>
-                <View style={styles.metadataRow}>
-                  <Text style={styles.metadataLabel}>By:</Text>
-                  <Text style={styles.metadataValue}>
-                    {item.user?.username || "Unknown"}
-                  </Text>
-                </View>
-                <View style={styles.metadataRow}>
-                  <Text style={styles.metadataLabel}>Bubble:</Text>
-                  <Text style={styles.metadataValue}>{neighborhoodName}</Text>
-                </View>
-              </View>
-              <View
-                style={[styles.mediaContainer, { aspectRatio: mediaAspect }]}
-              >
-                <MediaDisplay
-                  item={item}
-                  isFocused={isFocused}
-                  isAlmostFocused={isAlmostFocused}
-                  onMediaAspectChange={setMediaAspect}
-                />
-              </View>
-            </View>
-          );
-        })}
-      </ScrollView>
+        <TouchableOpacity
+          style={[
+            styles.navBtn,
+            activeIndex === mediaItems.length - 1 && styles.disabledBtn,
+          ]}
+          onPress={handleNext}
+          disabled={activeIndex === mediaItems.length - 1}
+        >
+          <Text style={styles.navBtnText}>›</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#130720" },
-  listContainer: { padding: 0 },
-  card: {
-    width: CARD_WIDTH,
-    height: height,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 1,
-    overflow: "hidden",
-  },
-  mediaContainer: {
+  container: {
+    flex: 1,
     width: "100%",
     height: "100%",
-    borderRadius: 12,
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 1,
-  },
-  fixedMediaWrapper: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  standardImage: { width: "100%", height: "100%" },
-  magnetContainer: { width: "100%", height: "100%" },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 10,
-  },
-  errorTitle: {
-    fontSize: 22,
-    color: "#FF0000",
-    marginBottom: 10,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  header: {
-    padding: 10,
-    paddingBottom: 10,
     backgroundColor: "#130720",
-    borderBottomWidth: 2,
-    borderBottomColor: "#591155",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "900",
-    color: "#F5F2FA",
-    marginBottom: 5,
-    letterSpacing: 1,
-  },
-  headerSubtitle: { fontSize: 14, color: "#FFFF00", letterSpacing: 0.5 },
-  noMedia: {
-    padding: 40,
-    backgroundColor: "#130720",
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  noMediaText: { color: "#F5F2FA", fontSize: 14 },
-  image: {
-    width: "100%",
-    aspectRatio: 1,
-    borderRadius: 8,
-    backgroundColor: "#222222",
-  },
-  videoContainer: {
-    width: "100%",
-    height: 250,
-    borderRadius: 8,
-    backgroundColor: "#130720",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#FF0000",
-  },
-  videoThumbnail: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(255, 0, 0, 0.8)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 15,
-  },
-  playIcon: { fontSize: 40, color: "#F5F2FA", marginLeft: 5 },
-  videoLabel: { color: "#F5F2FA", fontSize: 16, fontWeight: "bold" },
-  fileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#130720",
-    padding: 20,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: "#130720",
-  },
-  fileIcon: { fontSize: 36, marginRight: 15, color: "#F5F2FA" },
-  fileInfo: { flex: 1 },
-  fileName: {
-    color: "#F5F2FA",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  fileType: { color: "#00AA00", fontSize: 14 },
-  metadata: {
-    position: "absolute",
-    bottom: 100,
-    left: 27,
-    zIndex: 4,
-  },
-  metadataRow: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
-  metadataLabel: { fontSize: 12, color: "#fafafa", width: 60 },
-  metadataValue: {
-    fontSize: 14,
-    color: "#F5F2FA",
-    fontWeight: "bold",
-    flex: 1,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 40,
-  },
-  emptyIcon: { fontSize: 60, marginBottom: 20, color: "#F5F2FA" },
-  emptyTitle: {
-    fontSize: 24,
-    color: "#F5F2FA",
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  adCardCenter: {
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1C0A2E",
-    borderColor: "#591155",
-  },
-  adBadgeOverlay: {
-    position: "absolute",
-    top: 15,
-    right: 25,
-    backgroundColor: "#FFFF00",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  adMessageContainer: { width: "100%", alignItems: "center", padding: 10 },
-  adSwipeHint: {
-    color: "#888",
-    fontSize: 12,
-    marginTop: 20,
-    fontStyle: "italic",
-  },
-  badgeText: { color: "#000", fontSize: 10, fontWeight: "bold" },
-  gifContainer: {
     position: "relative",
+  },
+  viewport: {
+    flex: 1,
     width: "100%",
+    height: "100%",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
   },
-  gifBadge: {
+  mediaWrapper: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  errorTitle: { color: "#FF0000", fontSize: 18 },
+  emptyTitle: { color: "#FFF", fontSize: 18 },
+  adContainer: { padding: 20, justifyContent: "center", alignItems: "center" },
+
+  counterOverlay: {
     position: "absolute",
-    top: 10,
-    right: 10,
-    backgroundColor: "#FF10FF",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-    zIndex: 10,
+    top: 20,
+    alignSelf: "center",
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    zIndex: 20,
   },
-  gifBadgeText: { color: "#FFFFFF", fontSize: 10, fontWeight: "bold" },
-  gifHint: { color: "#888", fontSize: 12, marginTop: 5, fontStyle: "italic" },
+  counterText: { color: "#FFF", fontSize: 12, fontWeight: "bold" },
+
+  buttonRow: {
+    position: "absolute",
+    top: "50%",
+    left: 10,
+    right: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    transform: [{ translateY: -25 }],
+    zIndex: 30,
+  },
+  navBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  disabledBtn: { opacity: 0.2 },
+  navBtnText: {
+    color: "#FFF",
+    fontSize: 28,
+    fontWeight: "bold",
+    marginTop: -2,
+  },
 });

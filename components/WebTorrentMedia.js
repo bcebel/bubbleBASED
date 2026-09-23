@@ -2,17 +2,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   View,
+  Image,
   ActivityIndicator,
   StyleSheet,
   Text,
-  TouchableOpacity,
+  Platform,
 } from "react-native";
-import { getMedia, saveMedia } from "../components/mediaCache";
-import idbChunkStore from "@thaunknown/idb-chunk-store";
-import webtorrentService from "../utils/webtorrentService";
-import { Platform } from "react-native";
 import * as FileSystem from "expo-file-system";
-import { getOrStartTorrent, getMediaWithFallback } from "./torrentmanager";
+import { getMediaWithFallback } from "./torrentmanager";
 
 const CACHE_FOLDER = `${FileSystem.cacheDirectory}webtorrent_media/`;
 
@@ -27,246 +24,124 @@ const ensureCacheDir = async () => {
   }
 };
 
-
 const PINATA_GATEWAY =
   process.env.EXPO_PUBLIC_PINATA_GATEWAY || "gateway.pinata.cloud";
 
-// Move cache OUTSIDE the component
 const pinataCache = new Map();
 
 if (typeof window !== "undefined") {
   window.__pinataCache = pinataCache;
 }
 
-const getCachedPinataUrl = (cid, fallbackUrl) => {
-  if (pinataCache.has(cid)) {
-    console.log(`💾 Pinata cache hit: ${cid}`);
-    return pinataCache.get(cid);
-  }
-  const url = fallbackUrl || `https://${PINATA_GATEWAY}/ipfs/${cid}`;
-  pinataCache.set(cid, url);
-  //console.log(`💾 Pinata cached: ${cid}`);
-  return url;
-};
-
 export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
-  const [videoSrc, setVideoSrc] = useState(media?.ipfsUrl);
-  const [status, setStatus] = useState("p2p_streaming");
-  const [progress, setProgress] = useState(0);
-  const [peerCount, setPeerCount] = useState(0);
-  const [isReady, setIsReady] = useState(false);
+  const [mediaUrl, setMediaUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const videoRef = useRef(null);
-  const currentUrlRef = useRef(null);
-  const isMountedRef = useRef(true);
-  const p2pHitRef = useRef(false);
-  const progressRef = useRef(0);
-  const [isPaused, setIsPaused] = useState(true);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-    const [volume, setVolume] = useState(1); // 1 = 100% max volume volume
-    const [isMuted, setIsMuted] = useState(true); // Matches your video element's muted={true} default setting
-    const [isVolumeHovered, setIsVolumeHovered] = useState(false);
-    const progressBarRef = useRef(null);
-    const timerRef = useRef(null);
-
-    const [controlsVisible, setControlsVisible] = useState(true);
-
-  const overallTimeoutRef = useRef(null);
-  const noProgressTimeoutRef = useRef(null);
-   const isImage =
-     media.fileType === "image" ||
-     media.type === "image" ||
-     media.fileName?.match(/\.(jpg|jpeg|png|gif|webp|avif|heic|heif|svg)$/i);
-
-  
-const resetActivityTimer = () => {
-  setControlsVisible(true);
-  if (timerRef.current) clearTimeout(timerRef.current);
-  if (videoRef.current && videoRef.current.paused) return;
-
-  timerRef.current = setTimeout(() => {
-    setControlsVisible(false);
-  }, 1000);
-};
-
- 
-
-useEffect(() => {
-  return () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-  };
-}, []);
-
-  const handleVolumeChange = (e) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-
-    if (videoRef.current) {
-      videoRef.current.volume = newVolume;
-      // Automatically toggle off mute if the user slides volume up
-      if (newVolume > 0 && isMuted) {
-        videoRef.current.muted = false;
-        setIsMuted(false);
-      } else if (newVolume === 0) {
-        videoRef.current.muted = true;
-        setIsMuted(true);
-      }
-    }
-  };
-
-  // Click handler to toggle speaker muting settings instantly
-  const toggleMute = () => {
-    if (!videoRef.current) return;
-    const nextMutedState = !isMuted;
-    videoRef.current.muted = nextMutedState;
-    setIsMuted(nextMutedState);
-
-    // Reset slider view location if unmuting from a zero volume state
-    if (!nextMutedState && volume === 0) {
-      videoRef.current.volume = 0.5;
-      setVolume(0.5);
-    }
-  };
-// --- 3. VIDEO INTERACTIONS ---
-const togglePlay = () => {
-  if (!videoRef.current) return;
-  if (videoRef.current.paused) {
-    videoRef.current.play();
-    setIsPaused(false);
-    resetActivityTimer();
-  } else {
-    videoRef.current.pause();
-    setIsPaused(true);
-    setControlsVisible(true);
-  }
-};
-
-const handleSeek = (e) => {
-  if (!videoRef.current || duration === 0 || !progressBarRef.current) return;
-  const rect = progressBarRef.current.getBoundingClientRect();
-  let percentage = (e.clientX - rect.left) / rect.width;
-  if (percentage < 0) percentage = 0;
-  if (percentage > 1) percentage = 1;
-
-  const newTime = percentage * duration;
-  videoRef.current.currentTime = newTime;
-  setCurrentTime(newTime);
-};
-
-const formatTime = (secs) => {
-  if (isNaN(secs) || secs === null) return "00:00";
-  const m = Math.floor(secs / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = Math.floor(secs % 60)
-    .toString()
-    .padStart(2, "0");
-  return `${m}:${s}`;
-};
-
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-  
-useEffect(() => {
-  if (!isFocused) return;
-  let isMounted = true;
-
-  const load = async () => {
-    const result = await getMediaWithFallback(media, (status) => {
-      if (isMounted) setStatus(status);
-    });
-
-    if (isMounted) {
-      setVideoSrc(result.url);
-      setIsReady(true);
-    }
-  };
-
-  load();
-
-  return () => {
-    isMounted = false;
-  };
-}, [isFocused, media.cid, media.magnetLink]);
 
   useEffect(() => {
-    if (!isFocused) return;
-
     let isMounted = true;
-    let unsubscribeProgress = null;
+    let objectUrlToRevoke = null;
+
+    if (!media) return;
 
     const loadMedia = async () => {
-      // 1. Check local IndexedDB cache first
       try {
-        setStatus("checking_cache");
-        const cachedData = await getMedia(media.cid);
-        if (cachedData?.blob && isMounted) {
-          const url = URL.createObjectURL(cachedData.blob);
-          currentUrlRef.current = url;
-          setVideoSrc(url);
-          setStatus("cached");
-          setProgress(100);
-          setIsReady(true);
+        setLoading(true);
+        setError(null);
+
+        // 1. Direct URL/URI fast path
+        if (media.url || media.uri) {
+          if (isMounted) {
+            setMediaUrl(media.url || media.uri);
+            setLoading(false);
+          }
           return;
         }
-      } catch (err) {
-        console.log("Cache miss, falling back to manager:", err.message);
-      }
 
-      // 2. Fallback to HTTP if no P2P magnet link exists
-      const fallbackUrl = media.ipfsUrl || media.fallbackUrl;
-      if (!media.magnetLink && fallbackUrl && isMounted) {
-        const cachedUrl = getCachedPinataUrl(media.cid, fallbackUrl);
-        setVideoSrc(cachedUrl);
-        setStatus("fallback_http");
-        setIsReady(true);
-        return;
-      }
+        // 2. Fetch via fallback pipeline
+        const result = await getMediaWithFallback(media);
 
-      // 3. Delegate P2P handling entirely to the Torrent Manager
-      if (media.magnetLink) {
-        try {
-          setStatus("connecting_p2p");
+        if (!isMounted) return;
 
-          const record = await getOrStartTorrent(media.magnetLink, media.cid);
+        if (!result) {
+          setError("Media unavailable");
+          setLoading(false);
+          return;
+        }
 
-          // If already completed in manager cache, hit immediately
-          if (record.blobUrl && isMounted) {
-            setVideoSrc(record.blobUrl);
-            setStatus(record.status || "p2p_streaming");
-            setProgress(100);
-            setIsReady(true);
+        // 3. Resolve result format
+        let resolvedUrl = null;
+
+        if (typeof result === "string") {
+          resolvedUrl = result;
+        } else if (result.url || result.uri) {
+          resolvedUrl = result.url || result.uri;
+        } else if (result instanceof Blob) {
+          resolvedUrl = URL.createObjectURL(result);
+          objectUrlToRevoke = resolvedUrl;
+        } else if (result.getBlob) {
+          result.getBlob((err, blob) => {
+            if (!isMounted) return;
+            if (err || !blob || blob.size === 0) {
+              setError("Torrent file buffer empty");
+              setLoading(false);
+              return;
+            }
+            try {
+              const url = URL.createObjectURL(blob);
+              objectUrlToRevoke = url;
+              setMediaUrl(url);
+              setLoading(false);
+            } catch (e) {
+              setError("Blob URL creation failed");
+              setLoading(false);
+            }
+          });
+          return;
+        } else if (result.files && result.files.length > 0) {
+          const file =
+            result.files.find(
+              (f) =>
+                f.name.endsWith(".mp4") ||
+                f.name.endsWith(".jpg") ||
+                f.name.endsWith(".png") ||
+                f.name.endsWith(".webp"),
+            ) || result.files[0];
+
+          if (file && file.getBlob) {
+            file.getBlob((err, blob) => {
+              if (!isMounted) return;
+              if (err || !blob) {
+                setError("Torrent file blob error");
+                setLoading(false);
+                return;
+              }
+              try {
+                const url = URL.createObjectURL(blob);
+                objectUrlToRevoke = url;
+                setMediaUrl(url);
+                setLoading(false);
+              } catch (e) {
+                setError("Blob URL creation failed");
+                setLoading(false);
+              }
+            });
             return;
           }
+        }
 
-          // Subscribe UI updates to progress changes
-          const updateStats = () => {
-            if (!isMounted) return;
-            const pct = Math.floor((record.torrent?.progress || 0) * 100);
-            setProgress(pct);
-            setPeerCount(record.torrent?.numPeers || 0);
-
-            if (record.blobUrl) {
-              setVideoSrc(record.blobUrl);
-              setStatus("p2p_streaming");
-              setIsReady(true);
-            }
-          };
-
-          record.torrent.on("download", updateStats);
-          record.torrent.on("done", updateStats);
-
-          unsubscribeProgress = () => {
-            record.torrent.removeListener("download", updateStats);
-            record.torrent.removeListener("done", updateStats);
-          };
-        } catch (err) {
-          console.error("Manager request failed, using HTTP fallback:", err);
-          if (fallbackUrl && isMounted) {
-            const cachedUrl = getCachedPinataUrl(media.cid, fallbackUrl);
-            setVideoSrc(cachedUrl);
-            setStatus("fallback_http");
-            setIsReady(true);
-          }
+        if (resolvedUrl) {
+          setMediaUrl(resolvedUrl);
+          setLoading(false);
+        } else {
+          setError(`Unsupported media format: ${typeof result}`);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message || "Error loading media");
+          setLoading(false);
         }
       }
     };
@@ -275,309 +150,93 @@ useEffect(() => {
 
     return () => {
       isMounted = false;
-
-      // Clean up UI event listeners ONLY — leave the WebTorrent download running in background
-      if (unsubscribeProgress) {
-        unsubscribeProgress();
-      }
-
-      if (currentUrlRef.current && currentUrlRef.current.startsWith("blob:")) {
-        URL.revokeObjectURL(currentUrlRef.current);
-        currentUrlRef.current = null;
+      if (objectUrlToRevoke && Platform.OS === "web") {
+        URL.revokeObjectURL(objectUrlToRevoke);
       }
     };
-  }, [
-    isFocused,
-    media.cid,
-    media.magnetLink,
-    media.ipfsUrl,
-    media.fallbackUrl,
-  ]);
-  
+  }, [media?.cid, media?.id]);
 
-  if (!isFocused) return null;
+  // Sync video play/pause on focus change
+  useEffect(() => {
+    if (Platform.OS === "web" && videoRef.current) {
+      if (isFocused) {
+        videoRef.current.play().catch(() => {});
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [isFocused]);
 
-  if (!videoSrc || !isReady) {
+  if (error) {
     return (
-      <View style={styles.loader}>
-        <ActivityIndicator color="#0f0f0f" size="large" />
-        <Text style={styles.statusText}>
-          {status === "checking_cache" && "📦 Loading from cache..."}
-          {status === "p2p_swarming" && `📡 Swarming (${progress}%)`}
-          {status === "initializing" && "⏳ Initializing..."}
-          {status === "fallback_http" && "🌍 Loading video..."}
-        </Text>
-        {status === "p2p_swarming" && progress > 0 && (
-          <View style={styles.progressBarContainer}>
-            <View style={[styles.progressBar, { width: `${progress}%` }]} />
-          </View>
-        )}
+      <View style={styles.container}>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
 
- 
-
-  if (isImage) {
-    return <img src={videoSrc} style={styles.image} alt="User content" />;
+  if (loading || !mediaUrl) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#FF00FF" />
+      </View>
+    );
   }
 
-  // Custom control states
+  // Detect video by fileType property or file extension fallback
+  const isVideo =
+    media?.fileType === "video" ||
+    media?.mediaType === "video" ||
+    (media?.fileName && /\.(mp4|mov|webm|avi|mkv)$/i.test(media.fileName));
 
-  // Toggle Play / Pause using the standard web element API
- 
-
-  // Tracks time changes to update your progress bar
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
-    }
-  };
-
-  // Captures full video length once metadata loads
-  const handleLoadedMetadata = () => {
-    if (videoRef.current) {
-      setDuration(videoRef.current.duration);
-      console.log("🎬 Video loaded and ready");
-    }
-  };
-
-  // Calculate track bar percentage
- 
-
-   // --- 4. THE LIVE VIEW TREE ---
-  return (
-    <View
-      style={styles.container}
-      // @ts-ignore
-      onMouseMove={resetActivityTimer}
-      onMouseLeave={() => !isPaused && setControlsVisible(false)}
-    >
-      <video
-        ref={videoRef}
-        src={videoSrc}
-        style={styles.video}
-        muted={isMuted}
-        volume={volume}
-        loop={true}
-        playsInline
-        autoPlay
-        preload="auto"
-        onTimeUpdate={() =>
-          videoRef.current && setCurrentTime(videoRef.current.currentTime)
-        }
-        onLoadedMetadata={() =>
-          videoRef.current && setDuration(videoRef.current.duration)
-        }
-        onLoadedData={() => console.log("🎬 Video loaded and ready")}
-        onClick={togglePlay}
-        onEnded={() => {
-          setIsPaused(false);
-          resetActivityTimer();
-        }}
-        onError={(e) => console.log("❌ Video error:", e)}
-      />
-
-      <View
-        style={
-          styles.controlsOverlay
-        }
-        // @ts-ignore
-        onClick={togglePlay}
-      >
-        <View style={styles.bottomControlBar}>
-          {/* 1. Current Time Label */}
-          <Text style={styles.timeLabel}>{formatTime(currentTime)}</Text>
-
-          {/* 2. LOCKED VOLUME CONTAINER (No more hover tracking functions!) */}
-          <View style={styles.volumeControlContainer}>
-            <TouchableOpacity style={styles.volumeButton} onPress={toggleMute}>
-              <Text style={styles.volumeIconText}>
-                {isMuted || volume === 0 ? "🔇" : volume < 0.5 ? "🔉" : "🔊"}
-              </Text>
-            </TouchableOpacity>
-
-            {/* This slider is now locked wide open at 60px permanently */}
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={isMuted ? 0 : volume}
-              onChange={handleVolumeChange}
-              style={{
-                cursor: "pointer",
-                height: "4px",
-                backgroundColor: "#00ffff",
-                accentColor: "#00ffff",
-                outline: "none",
-                border: "none",
-                marginLeft: "6px",
-                width: "60px", // <--- Forces it to stay wide open
-                opacity: 1, // <--- Forces it to stay completely visible
-                display: "block", // <--- Ensures it never hides on web viewports
-              }}
-            />
-          </View>
-
-          {/* 3. The Clickable Timeline Seek Bar */}
-          <TouchableOpacity
-            activeOpacity={1}
-            style={styles.seekHitbox}
-            onPress={handleSeek}
-          >
-            <View ref={progressBarRef} style={styles.progressBarTrack}>
-              <View
-                style={[
-                  styles.progressBarFill,
-                  { width: `${progressPercent}%` },
-                ]}
-              />
-              <View
-                style={[styles.progressKnob, { left: `${progressPercent}%` }]}
-              />
-            </View>
-          </TouchableOpacity>
-
-          {/* 4. Total Duration Label */}
-          <Text style={styles.timeLabel}>{formatTime(duration)}</Text>
-        </View>
+  if (isVideo && Platform.OS === "web") {
+    return (
+      <View style={styles.container}>
+        <video
+          ref={videoRef}
+          src={mediaUrl}
+          controls
+          autoPlay={isFocused}
+          muted={true}
+          loop
+          playsInline
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            backgroundColor: "#000",
+          }}
+        />
       </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <Image
+        source={{ uri: mediaUrl }}
+        style={styles.image}
+        resizeMode="contain"
+      />
     </View>
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
-    height: "100%",
-    position: "relative",
-    backgroundColor: "#000",
-    overflow: "hidden",
-  },
-  video: {
-    width: "100%",
-    height: "100%",
-    objectFit: "contain",
-    cursor: "pointer",
-  },
-  image: { width: "100%", height: "100%", objectFit: "contain" },
-  loader: {
     flex: 1,
+    width: "100%",
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    minHeight: 200,
-    backgroundColor: "#111",
+    backgroundColor: "#130720",
   },
-  statusText: {
-    color: "rgb(255, 255, 255)",
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+  errorText: {
+    color: "#FF4444",
     fontSize: 14,
-    marginTop: 10,
-    textAlign: "center",
-  },
-  progressBarContainer: {
-    width: "80%",
-    height: 4,
-    backgroundColor: "#333",
-    borderRadius: 2,
-    marginTop: 12,
-  },
-  progressBar: { height: "100%", backgroundColor: "#00ffff", borderRadius: 2 },
-  controlsOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 10, // @ts-ignore
-    transition: "opacity 0.25s ease-in-out",
-  },
-  topBar: { position: "absolute", top: 15, right: 15 },
-  overlayStatus: {
-    backgroundColor: "rgba(0, 0, 0, 0.75)",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.15)",
-  },
-  overlayText: { color: "#fff", fontSize: 11, fontWeight: "bold" },
-  centerPlayButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.25)", // @ts-ignore
-    backdropFilter: "blur(6px)",
-  },
-  playIconText: { color: "#fff", fontSize: 20, marginLeft: 2 },
-  bottomControlBar: {
-    position: "absolute",
-    bottom: "5%"
-    ,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    flexDirection: "row",
-    alignItems: "center", // @ts-ignore
-    backgroundImage: "linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0))",
-  },
-  seekHitbox: {
-    flex: 1,
-    paddingVertical: 10,
-    marginHorizontal: 12,
-    cursor: "pointer",
-  },
-  progressBarTrack: {
-    height: 4,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    borderRadius: 2,
-    width: "100%",
-    position: "relative",
-  },
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: "#00ffff",
-    borderRadius: 2,
-  },
-  progressKnob: {
-    position: "absolute",
-    top: -4,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#fff",
-    marginLeft: -6,
-    boxShadow: "0px 2px 6px rgba(0,0,0,0.5)",
-  },
-  timeLabel: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
-  },
-  volumeControlContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 6,
-    marginRight: 12,
-
-    marginLeft: 12,
-    height: "100%",
-    zIndex: "5000",
-  },
-  volumeButton: {
-    padding: 4,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: "5000",
-  },
-  volumeIconText: {
-    color: "#fff",
-    fontSize: 16,
   },
 });
