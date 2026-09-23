@@ -61,93 +61,8 @@ const GET_ALL_GALLERY = gql`
   }
 `;
 
-const GET_NEIGHBORHOOD_GALLERY = gql`
-  query GetNeighborhoodGallery {
-    getMyAllNeighborhoodsGallery {
-      videos {
-        id
-        title
-        cid
-        description
-        fileName
-        ipfsUrl
-        magnetLink
-        createdAt
-        user {
-          username
-          profilePhoto
-        }
-        neighborhood {
-          id
-          name
-        }
-      }
-      images {
-        id
-        title
-        description
-        fileName
-        cid
-        ipfsUrl
-        magnetLink
-        createdAt
-        user {
-          username
-          profilePhoto
-        }
-        neighborhood {
-          id
-          name
-        }
-      }
-      totalCount
-    }
-  }
-`;
 
-const GET_MY_ALL_NEIGHBORHOODS_GALLERY = gql`
-  query GetMyAllNeighborhoodsGallery {
-    getMyAllNeighborhoodsGallery {
-      videos {
-        id
-        title
-        cid
-        description
-        fileName
-        ipfsUrl
-        magnetLink
-        createdAt
-        user {
-          username
-          profilePhoto
-        }
-        neighborhood {
-          id
-          name
-        }
-      }
-      images {
-        id
-        title
-        description
-        fileName
-        cid
-        ipfsUrl
-        magnetLink
-        createdAt
-        user {
-          username
-          profilePhoto
-        }
-        neighborhood {
-          id
-          name
-        }
-      }
-      totalCount
-    }
-  }
-`;
+
 
 const GET_RANDOM_AFFILIATE_LINK = gql`
   query GetRandomAffiliateLink {
@@ -189,7 +104,7 @@ const getFileType = (fileName: string) => {
     return "image";
   return "unknown";
 };
-
+/*
 const MediaDisplay = ({
   item,
   isFocused,
@@ -326,6 +241,7 @@ const MediaDisplay = ({
     </TouchableOpacity>
   );
 };
+*/
 
 export default function AllNeighborhoodsGallery({
   neighborhoodId,
@@ -356,7 +272,7 @@ export default function AllNeighborhoodsGallery({
 
   const normalized = flattened.map((item: any) => ({
     ...item,
-    ...(item.media?.[0] || {}),
+ 
     fileName: item.fileName || item.media?.[0]?.fileName || `media-${item.cid}`,
     fileType: item.media?.[0]?.mediaType === "video" ? "video" : "image",
   }));

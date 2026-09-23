@@ -126,9 +126,10 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
 
     return () => {
       isMountedRef.current = false;
-      if (localObjectUrl && Platform.OS === "web") {
-        URL.revokeObjectURL(localObjectUrl);
-      }
+    if (objectUrlRef.current && Platform.OS === "web") {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
     };
   }, [isFocused, media?.cid, media?.magnetLink, media?.url, media?.uri]);
 
