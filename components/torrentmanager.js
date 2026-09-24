@@ -3,6 +3,8 @@ import idbChunkStore from "@thaunknown/idb-chunk-store";
 import { getMedia } from "../components/mediaCache";
 import { webtorrentService } from "../utils/webtorrentService";
 import parseTorrent from "parse-torrent";
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+
 
 
 // Global WebTorrent client instance
