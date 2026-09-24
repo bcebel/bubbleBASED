@@ -1,310 +1,528 @@
-// components/WebTorrentMedia.js
+// WebTorrentMedia.js - ULTIMATE CACHING VERSION (Background Cache)
 import React, { useState, useEffect, useRef } from "react";
 import {
   View,
-  Image,
   ActivityIndicator,
   StyleSheet,
   Text,
-  Platform,
+  TouchableOpacity,
 } from "react-native";
-import { getMedia } from "./mediaCache";
-import { getOrStartTorrent, getMediaWithFallback, getRecord } from "./torrentmanager";
+import { getMedia, saveMedia } from "../components/mediaCache";
+import idbChunkStore from "@thaunknown/idb-chunk-store";
+import webtorrentService from "../utils/webtorrentService";
+import { Platform } from "react-native";
+import * as FileSystem from "expo-file-system";
+import { getOrStartTorrent, getMediaWithFallback } from "./torrentmanager";
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const CACHE_FOLDER = `${FileSystem.cacheDirectory}webtorrent_media/`;
+
+const ensureCacheDir = async () => {
+  if (Platform.OS !== "web") {
+    const dirInfo = await FileSystem.getInfoAsync(CACHE_FOLDER);
+    if (!dirInfo.exists) {
+      await FileSystem.makeDirectoryAsync(CACHE_FOLDER, {
+        intermediates: true,
+      });
+    }
+  }
+};
+
 const PINATA_GATEWAY =
   process.env.EXPO_PUBLIC_PINATA_GATEWAY || "gateway.pinata.cloud";
 
+// Move cache OUTSIDE the component
+const pinataCache = new Map();
+
+
+if (typeof window !== "undefined") {
+  window.__pinataCache = pinataCache;
+}
+
+const getCachedPinataUrl = (cid, fallbackUrl) => {
+  if (pinataCache.has(cid)) {
+    console.log(`💾 Pinata cache hit: ${cid}`);
+    return pinataCache.get(cid);
+  }
+  const url = fallbackUrl || `https://${PINATA_GATEWAY}/ipfs/${cid}`;
+  pinataCache.set(cid, url);
+  //console.log(`💾 Pinata cached: ${cid}`);
+  return url;
+};
+
+const MAX_PINATA_CACHE = 200;
+if (pinataCache.size > MAX_PINATA_CACHE) {
+  const firstKey = pinataCache.keys().next().value;
+  pinataCache.delete(firstKey);
+}
 export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
-  const [mediaUrl, setMediaUrl] = useState(null);
-  const [status, setStatus] = useState("idle");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [videoSrc, setVideoSrc] = useState(media?.ipfsUrl);
+  const [status, setStatus] = useState("p2p_streaming");
   const [progress, setProgress] = useState(0);
   const [peerCount, setPeerCount] = useState(0);
-
+  const [isReady, setIsReady] = useState(false);
   const videoRef = useRef(null);
+  const currentUrlRef = useRef(null);
   const isMountedRef = useRef(true);
-  const objectUrlRef = useRef(null);
+  const p2pHitRef = useRef(false);
+  const progressRef = useRef(0);
+  const [isPaused, setIsPaused] = useState(true);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1); // 1 = 100% max volume volume
+  const [isMuted, setIsMuted] = useState(true); // Matches your video element's muted={true} default setting
+  const [isVolumeHovered, setIsVolumeHovered] = useState(false);
+  const progressBarRef = useRef(null);
+  const timerRef = useRef(null);
 
-  const isVideo =
-    media?.fileType === "video" ||
-    media?.mediaType === "video" ||
-    (media?.fileName && /\.(mp4|mov|webm|avi|mkv)$/i.test(media.fileName));
+  const [controlsVisible, setControlsVisible] = useState(true);
 
+  const overallTimeoutRef = useRef(null);
+  const noProgressTimeoutRef = useRef(null);
   const isImage =
-    !isVideo &&
-    (media?.fileType === "image" ||
-      media?.mediaType === "image" ||
-      (media?.fileName &&
-        /\.(jpg|jpeg|png|gif|webp|avif|heic|heif|svg)$/i.test(media.fileName)));
+    media.fileType === "image" ||
+    media.type === "image" ||
+    media.fileName?.match(/\.(jpg|jpeg|png|gif|webp|avif|heic|heif|svg)$/i);
 
-  // ---------- 1. PRELOAD ON ALMOST FOCUSED (background seed, no render) ----------
+  const resetActivityTimer = () => {
+    setControlsVisible(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (videoRef.current && videoRef.current.paused) return;
+
+    timerRef.current = setTimeout(() => {
+      setControlsVisible(false);
+    }, 1000);
+  };
+
   useEffect(() => {
-    if (!isAlmostFocused || isFocused) return;
-    if (!media?.magnetLink) return;
-
-    let cancelled = false;
-
-    const warm = async () => {
-      try {
-        await getOrStartTorrent(media.magnetLink, media.cid, media);
-        if (!cancelled) console.log(`🔥 Prewarming ${media.cid?.slice(0, 8)}`);
-      } catch (err) {
-        if (!cancelled) console.log("Prewarm skip:", err.message);
-      }
-    };
-
-    warm();
     return () => {
-      cancelled = true;
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isAlmostFocused, isFocused, media?.magnetLink, media?.cid]);
+  }, []);
 
-  // ---------- 2. LOAD WHEN FOCUSED ----------
-  useEffect(() => {
-    if (!isFocused) return;
-    if (!media) return;
+  const handleVolumeChange = (e) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
 
-    isMountedRef.current = true;
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume;
+      // Automatically toggle off mute if the user slides volume up
+      if (newVolume > 0 && isMuted) {
+        videoRef.current.muted = false;
+        setIsMuted(false);
+      } else if (newVolume === 0) {
+        videoRef.current.muted = true;
+        setIsMuted(true);
+      }
+    }
+  };
 
-    // Build the proxy URL once, from the cid.
-    // This is the "fast path" — your own backend, CORS headers, 1-year cache.
-    const proxyUrl = media.cid
-      ? `${BACKEND_URL}/api/webseed/${media.cid}`
-      : null;
+  // Click handler to toggle speaker muting settings instantly
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    const nextMutedState = !isMuted;
+    videoRef.current.muted = nextMutedState;
+    setIsMuted(nextMutedState);
 
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    // Reset slider view location if unmuting from a zero volume state
+    if (!nextMutedState && volume === 0) {
+      videoRef.current.volume = 0.5;
+      setVolume(0.5);
+    }
+  };
+  // --- 3. VIDEO INTERACTIONS ---
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setIsPaused(false);
+      resetActivityTimer();
+    } else {
+      videoRef.current.pause();
+      setIsPaused(true);
+      setControlsVisible(true);
+    }
+  };
 
-        // ─────────────────────────────────────────────────────────
-        // NEW: Proxy fast path FIRST. Just point the media element at
-        // your backend. The browser does the caching, the torrent
-        // works in the background if you want it to.
-        // ─────────────────────────────────────────────────────────
-        if (proxyUrl && (isImage || isVideo)) {
-          // Always try to start/join the torrent
-          const record = await getOrStartTorrent(
-            media.magnetLink,
-            media.cid,
-            media,
-          ).catch(() => null);
+  const handleSeek = (e) => {
+    if (!videoRef.current || duration === 0 || !progressBarRef.current) return;
+    const rect = progressBarRef.current.getBoundingClientRect();
+    let percentage = (e.clientX - rect.left) / rect.width;
+    if (percentage < 0) percentage = 0;
+    if (percentage > 1) percentage = 1;
 
-          if (!isMountedRef.current) return;
+    const newTime = percentage * duration;
+    videoRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
 
-          // If the torrent is already complete, render from the blob
-          if (record?.isDone && record?.blobUrl) {
-            setMediaUrl(record.blobUrl);
-            setStatus("p2p");
-            setLoading(false);
+  const formatTime = (secs) => {
+    if (isNaN(secs) || secs === null) return "00:00";
+    const m = Math.floor(secs / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = Math.floor(secs % 60)
+      .toString()
+      .padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+useEffect(() => {
+  if (!isFocused || !media) return;
+
+  let isMounted = true;
+  let unsubscribeProgress = null;
+  let objectUrl = null;
+
+  const load = async () => {
+    try {
+      setStatus("checking_cache");
+
+      // 1. Cache first — fastest possible path
+      if (media.cid) {
+        try {
+          const cached = await getMedia(media.cid);
+          if (cached?.blob && isMounted) {
+            objectUrl = URL.createObjectURL(cached.blob);
+            currentUrlRef.current = objectUrl;
+            setVideoSrc(objectUrl);
+            setStatus("cached");
+            setProgress(100);
+            setIsReady(true);
             return;
           }
-
-          // Otherwise render from the proxy immediately
-          setMediaUrl(proxyUrl);
-          setStatus("proxy");
-          setLoading(false);
-          return;
-        }
-
-        // ─────────────────────────────────────────────────────────
-        // Everything below is the OLD path, kept as fallback for
-        // when there's no cid (e.g. direct URL media).
-        // ─────────────────────────────────────────────────────────
-
-        // Direct URL fast path
-        if (media.url || media.uri) {
-          if (!isMountedRef.current) return;
-          setMediaUrl(media.url || media.uri);
-          setLoading(false);
-          setStatus("direct");
-          return;
-        }
-
-        // Cached blob (fastest P2P-adjacent path)
-        if (media.cid) {
-          try {
-            const cached = await getMedia(media.cid);
-            if (cached?.blob && isMountedRef.current) {
-              const url = URL.createObjectURL(cached.blob);
-              objectUrlRef.current = url;
-              setMediaUrl(url);
-              setStatus("cached");
-              setLoading(false);
-              return;
-            }
-          } catch (_) {}
-        }
-
-        // P2P with HTTP fallback
-        const result = await getMediaWithFallback(media, (s) => {
-          if (isMountedRef.current) setStatus(s);
-        });
-
-        if (!isMountedRef.current) return;
-
-        if (typeof result === "string") {
-          setMediaUrl(result);
-        } else if (result?.url) {
-          setMediaUrl(result.url);
-        } else {
-          throw new Error("Unsupported media result");
-        }
-
-        setLoading(false);
-      } catch (err) {
-        if (isMountedRef.current) {
-          setError(err.message || "Failed to load media");
-          setLoading(false);
-        }
+        } catch (_) {}
       }
-    };
 
-    load();
+      // 2. Proxy / fallback / torrent — delegate to manager
+      //    (this is the path that knows about /api/webseed)
+      setStatus("connecting_p2p");
+      const result = await getMediaWithFallback(media, (s) => {
+        if (isMounted) setStatus(s);
+      });
 
-    return () => {
-      isMountedRef.current = false;
-      if (objectUrlRef.current && Platform.OS === "web") {
-        URL.revokeObjectURL(objectUrlRef.current);
-        objectUrlRef.current = null;
+      if (!isMounted) return;
+
+      // Manager returns either a string URL or { url, ... }
+      const url = typeof result === "string" ? result : result?.url;
+      if (!url) throw new Error("No media URL returned");
+
+      currentUrlRef.current = url;
+      setVideoSrc(url);
+      setIsReady(true);
+
+      // If the manager started a torrent, wire up progress + blob swap
+      if (result?.torrent) {
+        const record = getRecord?.(media.cid);
+        const updateStats = () => {
+          if (!isMounted) return;
+          setProgress(Math.floor((result.torrent.progress || 0) * 100));
+          setPeerCount(result.torrent.numPeers || 0);
+          if (record?.blobUrl) {
+            setVideoSrc(record.blobUrl);
+            setStatus("p2p_streaming");
+          }
+        };
+        result.torrent.on("download", updateStats);
+        result.torrent.on("done", updateStats);
+        unsubscribeProgress = () => {
+          result.torrent.removeListener("download", updateStats);
+          result.torrent.removeListener("done", updateStats);
+        };
       }
-    };
-  }, [isFocused, media?.cid, media?.magnetLink, media?.url, media?.uri]);
-
-  // Swap proxy → blob when torrent completes
-  useEffect(() => {
-    if (!isFocused || !media?.cid) return;
-    const record = getRecord(media.cid);
-    if (!record?.torrent || !record.blobUrl) return;
-
-    const swap = () => {
-      if (record.blobUrl && isMountedRef.current) {
-        setMediaUrl(record.blobUrl);
-        setStatus("p2p");
-      }
-    };
-
-    record.torrent.once("done", swap);
-
-    // Cover the case where it finished before we attached
-    if (record.isDone && record.blobUrl) swap();
-
-    return () => {
-      record.torrent?.removeListener("done", swap);
-    };
-  }, [isFocused, media?.cid]);
-  // ---------- 3. AUTO-PLAY / PAUSE ON FOCUS (mobile-safe) ----------
-  useEffect(() => {
-    if (Platform.OS !== "web") return;
-    const video = videoRef.current;
-    if (!video || !video.play) return;
-
-    video.muted = true;
-    video.playsInline = true;
-    video.setAttribute("playsinline", "true");
-    video.setAttribute("webkit-playsinline", "true");
-
-    if (isFocused && mediaUrl) {
-      const playPromise = video.play();
-      if (playPromise && typeof playPromise.catch === "function") {
-        playPromise.catch((err) => {
-          console.log(
-            "Autoplay blocked, waiting for user gesture:",
-            err.message,
-          );
-        });
-      }
-    } else {
-      video.pause();
+    } catch (err) {
+      if (isMounted) setStatus("error");
+      console.error("Media load failed:", err);
     }
-  }, [isFocused, mediaUrl]);
+  };
 
-  // ---------- RENDER ----------
+  load();
 
-  if (error) {
+  return () => {
+    isMounted = false;
+    if (unsubscribeProgress) unsubscribeProgress();
+    if (objectUrl && objectUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(objectUrl);
+    }
+    currentUrlRef.current = null;
+  };
+}, [isFocused, media?.cid, media?.magnetLink, media?.ipfsUrl]);
+
+  if (!isFocused) return null;
+
+  if (!videoSrc || !isReady) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
-
-  if (loading || !mediaUrl) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#FF00FF" />
+      <View style={styles.loader}>
+        <ActivityIndicator color="#0f0f0f" size="large" />
         <Text style={styles.statusText}>
-          {status === "connecting_p2p" && "📡 Connecting to peers..."}
-          {status === "p2p_streaming" && `🌪️ Swarming (${progress}%)`}
-          {status === "fallback_http" && "🌍 Loading via CDN..."}
-          {status === "cached" && "📦 Loading from cache..."}
-          {status === "proxy" && "🫧 Loading..."}
-          {(!status || status === "idle") && "⏳ Preparing media..."}
+          {status === "checking_cache" && "📦 Loading from cache..."}
+          {status === "p2p_swarming" && `📡 Swarming (${progress}%)`}
+          {status === "initializing" && "⏳ Initializing..."}
+          {status === "fallback_http" && "🌍 Loading video..."}
         </Text>
+        {status === "p2p_swarming" && progress > 0 && (
+          <View style={styles.progressBarContainer}>
+            <View style={[styles.progressBar, { width: `${progress}%` }]} />
+          </View>
+        )}
       </View>
     );
   }
 
-  if (isVideo && Platform.OS === "web") {
-    return (
-      <View style={styles.container}>
-        <video
-          ref={videoRef}
-          src={mediaUrl}
-          controls
-          muted
-          loop
-          playsInline
-          crossOrigin="anonymous"
-          // @ts-ignore — RN Web passes these through to DOM
-          webkit-playsinline="true"
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            backgroundColor: "#000",
-          }}
-        />
-      </View>
-    );
+  if (isImage) {
+    return <img src={videoSrc} style={styles.image} alt="User content" />;
   }
 
+  // Custom control states
+
+  // Toggle Play / Pause using the standard web element API
+
+  // Tracks time changes to update your progress bar
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+    }
+  };
+
+  // Captures full video length once metadata loads
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+      console.log("🎬 Video loaded and ready");
+    }
+  };
+
+  // Calculate track bar percentage
+
+  // --- 4. THE LIVE VIEW TREE ---
   return (
-    <View style={styles.container}>
-      <Image
-        source={{ uri: mediaUrl }}
-        style={styles.image}
-        resizeMode="contain"
+    <View
+      style={styles.container}
+      // @ts-ignore
+      onMouseMove={resetActivityTimer}
+      onMouseLeave={() => !isPaused && setControlsVisible(false)}
+    >
+      <video
+        ref={videoRef}
+        src={videoSrc}
+        style={styles.video}
+        muted={isMuted}
+        volume={volume}
+        loop={true}
+        playsInline
+        autoPlay
+        preload="auto"
+        onTimeUpdate={() =>
+          videoRef.current && setCurrentTime(videoRef.current.currentTime)
+        }
+        onLoadedMetadata={() =>
+          videoRef.current && setDuration(videoRef.current.duration)
+        }
+        onLoadedData={() => console.log("🎬 Video loaded and ready")}
+        onClick={togglePlay}
+        onEnded={() => {
+          setIsPaused(false);
+          resetActivityTimer();
+        }}
+        onError={(e) => console.log("❌ Video error:", e)}
       />
+
+      <View
+        style={styles.controlsOverlay}
+        // @ts-ignore
+        onClick={togglePlay}
+      >
+        <View style={styles.bottomControlBar}>
+          {/* 1. Current Time Label */}
+          <Text style={styles.timeLabel}>{formatTime(currentTime)}</Text>
+
+          {/* 2. LOCKED VOLUME CONTAINER (No more hover tracking functions!) */}
+          <View style={styles.volumeControlContainer}>
+            <TouchableOpacity style={styles.volumeButton} onPress={toggleMute}>
+              <Text style={styles.volumeIconText}>
+                {isMuted || volume === 0 ? "🔇" : volume < 0.5 ? "🔉" : "🔊"}
+              </Text>
+            </TouchableOpacity>
+
+            {/* This slider is now locked wide open at 60px permanently */}
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={isMuted ? 0 : volume}
+              onChange={handleVolumeChange}
+              style={{
+                cursor: "pointer",
+                height: "4px",
+                backgroundColor: "#00ffff",
+                accentColor: "#00ffff",
+                outline: "none",
+                border: "none",
+                marginLeft: "6px",
+                width: "60px", // <--- Forces it to stay wide open
+                opacity: 1, // <--- Forces it to stay completely visible
+                display: "block", // <--- Ensures it never hides on web viewports
+              }}
+            />
+          </View>
+
+          {/* 3. The Clickable Timeline Seek Bar */}
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.seekHitbox}
+            onPress={handleSeek}
+          >
+            <View ref={progressBarRef} style={styles.progressBarTrack}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  { width: `${progressPercent}%` },
+                ]}
+              />
+              <View
+                style={[styles.progressKnob, { left: `${progressPercent}%` }]}
+              />
+            </View>
+          </TouchableOpacity>
+
+          {/* 4. Total Duration Label */}
+          <Text style={styles.timeLabel}>{formatTime(duration)}</Text>
+        </View>
+      </View>
     </View>
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     width: "100%",
     height: "100%",
+    position: "relative",
+    backgroundColor: "#000",
+    overflow: "hidden",
+  },
+  video: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+    cursor: "pointer",
+  },
+  image: { width: "100%", height: "100%", objectFit: "contain" },
+  loader: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#130720",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-  },
-  errorText: {
-    color: "#FF4444",
-    fontSize: 14,
-    textAlign: "center",
+    minHeight: 200,
+    backgroundColor: "#111",
   },
   statusText: {
-    color: "#FFF",
-    fontSize: 12,
+    color: "rgb(255, 255, 255)",
+    fontSize: 14,
     marginTop: 10,
     textAlign: "center",
+  },
+  progressBarContainer: {
+    width: "80%",
+    height: 4,
+    backgroundColor: "#333",
+    borderRadius: 2,
+    marginTop: 12,
+  },
+  progressBar: { height: "100%", backgroundColor: "#00ffff", borderRadius: 2 },
+  controlsOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10, // @ts-ignore
+    transition: "opacity 0.25s ease-in-out",
+  },
+  topBar: { position: "absolute", top: 15, right: 15 },
+  overlayStatus: {
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.15)",
+  },
+  overlayText: { color: "#fff", fontSize: 11, fontWeight: "bold" },
+  centerPlayButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.25)", // @ts-ignore
+    backdropFilter: "blur(6px)",
+  },
+  playIconText: { color: "#fff", fontSize: 20, marginLeft: 2 },
+  bottomControlBar: {
+    position: "absolute",
+    bottom: "5%",
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    flexDirection: "row",
+    alignItems: "center", // @ts-ignore
+    backgroundImage: "linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0))",
+  },
+  seekHitbox: {
+    flex: 1,
+    paddingVertical: 10,
+    marginHorizontal: 12,
+    cursor: "pointer",
+  },
+  progressBarTrack: {
+    height: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 2,
+    width: "100%",
+    position: "relative",
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#00ffff",
+    borderRadius: 2,
+  },
+  progressKnob: {
+    position: "absolute",
+    top: -4,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#fff",
+    marginLeft: -6,
+    boxShadow: "0px 2px 6px rgba(0,0,0,0.5)",
+  },
+  timeLabel: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    fontVariant: ["tabular-nums"],
+  },
+  volumeControlContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 6,
+    marginRight: 12,
+
+    marginLeft: 12,
+    height: "100%",
+    zIndex: "5000",
+  },
+  volumeButton: {
+    padding: 4,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: "5000",
+  },
+  volumeIconText: {
+    color: "#fff",
+    fontSize: 16,
   },
 });
