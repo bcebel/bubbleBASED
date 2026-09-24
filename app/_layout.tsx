@@ -17,14 +17,11 @@ import { inject } from "@vercel/analytics";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-
   const pathname = usePathname();
 
-if (typeof window !== "undefined") {
-  import("@vercel/analytics").then(({ inject }) => inject());
-}
-
-
+  if (typeof window !== "undefined") {
+    import("@vercel/analytics").then(({ inject }) => inject());
+  }
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -32,6 +29,18 @@ if (typeof window !== "undefined") {
     Montserrat: require("../assets/fonts/Montserrat-Medium.ttf"),
   });
 
+  // Somewhere that runs once, app-level (e.g. app/_layout.tsx)
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        window.location.reload();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+  
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
