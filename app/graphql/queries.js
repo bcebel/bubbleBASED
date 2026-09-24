@@ -1,6 +1,19 @@
 // graphql/queries.js (frontend only)
 import { gql } from "@apollo/client";
 
+export const GET_PUBLIC_BUBBLES = gql`
+  query DiscoverNeighborhoods {
+    discoverNeighborhoods {
+      id
+      name
+      description
+      type
+      bubblePhotoCid
+      createdAt
+    }
+  }
+`;
+
 export const MY_PERSONAL_BUBBLES = gql`
   query MyPersonalBubbles {
     myPersonalBubbles {
