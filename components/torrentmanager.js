@@ -75,7 +75,7 @@ if (!client) {
     storeOpts: { name: `media-${cid}` },
     announce: window.enhancedTrackers || webtorrentService.trackers,
     strategy: media.fileType === "image" ? "rarest" : "sequential",
-    urlList: [`${BACKEND_URL}/api/webseed/${cid}`],
+//    urlList: [`${BACKEND_URL}/api/webseed/${cid}`],
   });
   }
 

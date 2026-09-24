@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Text, View, Platform, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
@@ -7,8 +7,23 @@ import { BlurView } from "expo-blur";
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
 
+  // (tabs)/_layout.tsx
+  const [wakeKey, setWakeKey] = useState(0);
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        setWakeKey((k) => k + 1);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
+  // Then wrap the tabs (or each screen's content) in <View key={wakeKey}>
+
   return (
     <Tabs
+      key={wakeKey}
       // ✅ Tells web browsers this entire bar is a navigation zone
       role="navigation"
       screenOptions={{

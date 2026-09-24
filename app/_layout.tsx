@@ -29,18 +29,8 @@ export default function RootLayout() {
     Montserrat: require("../assets/fonts/Montserrat-Medium.ttf"),
   });
 
-  // Somewhere that runs once, app-level (e.g. app/_layout.tsx)
-  useEffect(() => {
-    if (Platform.OS !== "web") return;
-    const onVisible = () => {
-      if (document.visibilityState === "visible") {
-        window.location.reload();
-      }
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, []);
-  
+
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
