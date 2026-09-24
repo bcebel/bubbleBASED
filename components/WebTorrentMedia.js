@@ -12,11 +12,11 @@ import idbChunkStore from "@thaunknown/idb-chunk-store";
 import webtorrentService from "../utils/webtorrentService";
 import { Platform } from "react-native";
 import * as FileSystem from "expo-file-system";
-import { getOrStartTorrent, getMediaWithFallback } from "./torrentmanager";
+import { getOrStartTorrent, getMediaWithFallback, getRecord } from "./torrentmanager";
 
 const CACHE_FOLDER = `${FileSystem.cacheDirectory}webtorrent_media/`;
 
-const ensureCacheDir = async () => {
+const ensureCacheDir = async () => {x
   if (Platform.OS !== "web") {
     const dirInfo = await FileSystem.getInfoAsync(CACHE_FOLDER);
     if (!dirInfo.exists) {
@@ -39,21 +39,19 @@ if (typeof window !== "undefined") {
 }
 
 const getCachedPinataUrl = (cid, fallbackUrl) => {
-  if (pinataCache.has(cid)) {
-    console.log(`💾 Pinata cache hit: ${cid}`);
-    return pinataCache.get(cid);
+  if (pinataCache.has(cid)) return pinataCache.get(cid);
+
+  // Evict oldest if over cap
+  if (pinataCache.size >= MAX_PINATA_CACHE) {
+    const firstKey = pinataCache.keys().next().value;
+    pinataCache.delete(firstKey);
   }
+
   const url = fallbackUrl || `https://${PINATA_GATEWAY}/ipfs/${cid}`;
   pinataCache.set(cid, url);
-  //console.log(`💾 Pinata cached: ${cid}`);
   return url;
 };
 
-const MAX_PINATA_CACHE = 200;
-if (pinataCache.size > MAX_PINATA_CACHE) {
-  const firstKey = pinataCache.keys().next().value;
-  pinataCache.delete(firstKey);
-}
 export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
   const [videoSrc, setVideoSrc] = useState(media?.ipfsUrl);
   const [status, setStatus] = useState("p2p_streaming");

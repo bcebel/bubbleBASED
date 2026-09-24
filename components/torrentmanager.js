@@ -244,8 +244,7 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
   const { magnetLink, cid, ipfsUrl, fallbackUrl } = media;
 
   console.log("[fallback] start", media.cid, media.magnetLink);
-  const httpUrl =
-    ipfsUrl || fallbackUrl || `https://gateway.pinata.cloud/ipfs/${cid}`;
+  const httpUrl = ipfsUrl || fallbackUrl || `${BACKEND_URL}/api/webseed/${cid}`;
 
   // 1. Check IndexedDB first (Fastest path)
   try {
