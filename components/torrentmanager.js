@@ -49,10 +49,15 @@ export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
   if (typeof window === "undefined") return null;
 console.log("[torrent] add", magnetLink);
 if (!client) {
-  const WebTorrent = window.WebTorrent;
-  client = new WebTorrent();
-  if (typeof window !== "undefined") {
-    window.WebTorrentClient = client;
+  if (typeof window !== "undefined" && window.globalWebTorrentClient) {
+    client = window.globalWebTorrentClient;
+  } else {
+    // Fallback: create one if +html hasn't yet (rare, but covers dev edge cases)
+    const WebTorrent = window.WebTorrent;
+    client = new WebTorrent();
+    if (typeof window !== "undefined") {
+      window.globalWebTorrentClient = client;
+    }
   }
 }
 
