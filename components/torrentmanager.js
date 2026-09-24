@@ -46,10 +46,13 @@ const evictOldestIfNeeded = () => {
 export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
   if (typeof window === "undefined") return null;
 console.log("[torrent] add", magnetLink);
-  if (!client) {
-    const WebTorrent = window.WebTorrent;
-    client = new WebTorrent();
+if (!client) {
+  const WebTorrent = window.WebTorrent;
+  client = new WebTorrent();
+  if (typeof window !== "undefined") {
+    window.WebTorrentClient = client;
   }
+}
 
   // 1. Return immediately if already tracked in-memory
   if (activeDownloads.has(cid)) {
@@ -74,6 +77,9 @@ console.log("[torrent] add", magnetLink);
   });
   }
 
+  
+
+  
   const record = {
     torrent,
     blobUrl: null,
