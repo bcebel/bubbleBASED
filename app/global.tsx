@@ -156,7 +156,7 @@ export default function NeighborhoodsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>👥 Bublic Town Circle</Text>
+      <Text style={styles.header}>🌍 Global Town Circle</Text>
 
       <View style={styles.actions}>
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
