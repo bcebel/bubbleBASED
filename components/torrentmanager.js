@@ -45,7 +45,7 @@ const evictOldestIfNeeded = () => {
 
 export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
   if (typeof window === "undefined") return null;
-
+console.log("[torrent] add", magnetLink);
   if (!client) {
     const WebTorrent = window.WebTorrent;
     client = new WebTorrent();
@@ -65,12 +65,13 @@ export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
   let torrent = await client.get(infoHash);
 
   if (!torrent) {
-    torrent = await client.add(magnetLink, {
-      store: idbChunkStore,
-      storeOpts: { name: `media-${cid}` },
-      announce: window.enhancedTrackers || webtorrentService.trackers,
-      strategy: media.fileType === "image" ? "rarest" : "sequential",
-    });
+  torrent = await client.add(magnetLink, {
+    store: idbChunkStore,
+    storeOpts: { name: `media-${cid}` },
+    announce: window.enhancedTrackers || webtorrentService.trackers,
+    strategy: media.fileType === "image" ? "rarest" : "sequential",
+    urlList: [`${BACKEND_URL}/api/webseed/${cid}`],
+  });
   }
 
   const record = {
@@ -81,6 +82,7 @@ export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
   };
   activeDownloads.set(cid, record);
 
+  console.log("[torrent] added", torrent.infoHash);
   // 4. Handle chunk assembly without dying on React unmount
   torrent.on("done", async () => {
     try {
@@ -227,6 +229,8 @@ const processQueue = async () => {
 
 export const getMediaWithFallback = async (media, onStatusChange) => {
   const { magnetLink, cid, ipfsUrl, fallbackUrl } = media;
+
+  console.log("[fallback] start", media.cid, media.magnetLink);
   const httpUrl =
     ipfsUrl || fallbackUrl || `https://gateway.pinata.cloud/ipfs/${cid}`;
 
@@ -271,7 +275,7 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
     try {
       onStatusChange?.("connecting_p2p");
       const record = await getOrStartTorrent(magnetLink, cid, media);
-
+  console.log("[fallback] torrent result", typeof record, record);
       const checkProgress = () => {
         if (!resolved && (record.torrent.progress > 0 || record.isDone)) {
           resolved = true;
@@ -296,6 +300,7 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
         record.torrent.on("done", checkProgress);
       }
     } catch (err) {
+        console.log("[fallback] error", err);
       if (!resolved) {
         resolved = true;
         clearTimeout(fallbackTimer);

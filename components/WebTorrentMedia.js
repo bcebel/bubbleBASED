@@ -195,6 +195,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
           muted
           loop
           playsInline
+          crossOrigin="anonymous"
           // @ts-ignore — RN Web passes these through to DOM
           webkit-playsinline="true"
           style={{
