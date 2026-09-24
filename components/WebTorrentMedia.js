@@ -9,7 +9,7 @@ import {
   Platform,
 } from "react-native";
 import { getMedia } from "./mediaCache";
-import { getOrStartTorrent, getMediaWithFallback } from "./torrentmanager";
+import { getOrStartTorrent, getMediaWithFallback, getRecord } from "./torrentmanager";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const PINATA_GATEWAY =
@@ -85,14 +85,24 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
         // works in the background if you want it to.
         // ─────────────────────────────────────────────────────────
         if (proxyUrl && (isImage || isVideo)) {
-          // Optional: warm the torrent in the background so P2P can
-          // take over on subsequent visits. Doesn't block render.
-          if (media.magnetLink) {
-            getOrStartTorrent(media.magnetLink, media.cid, media).catch(
-              () => {},
-            );
-          }
+          // Always try to start/join the torrent
+          const record = await getOrStartTorrent(
+            media.magnetLink,
+            media.cid,
+            media,
+          ).catch(() => null);
+
           if (!isMountedRef.current) return;
+
+          // If the torrent is already complete, render from the blob
+          if (record?.isDone && record?.blobUrl) {
+            setMediaUrl(record.blobUrl);
+            setStatus("p2p");
+            setLoading(false);
+            return;
+          }
+
+          // Otherwise render from the proxy immediately
           setMediaUrl(proxyUrl);
           setStatus("proxy");
           setLoading(false);
@@ -163,6 +173,28 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
     };
   }, [isFocused, media?.cid, media?.magnetLink, media?.url, media?.uri]);
 
+  // Swap proxy → blob when torrent completes
+  useEffect(() => {
+    if (!isFocused || !media?.cid) return;
+    const record = getRecord(media.cid);
+    if (!record?.torrent || !record.blobUrl) return;
+
+    const swap = () => {
+      if (record.blobUrl && isMountedRef.current) {
+        setMediaUrl(record.blobUrl);
+        setStatus("p2p");
+      }
+    };
+
+    record.torrent.once("done", swap);
+
+    // Cover the case where it finished before we attached
+    if (record.isDone && record.blobUrl) swap();
+
+    return () => {
+      record.torrent?.removeListener("done", swap);
+    };
+  }, [isFocused, media?.cid]);
   // ---------- 3. AUTO-PLAY / PAUSE ON FOCUS (mobile-safe) ----------
   useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -249,6 +281,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

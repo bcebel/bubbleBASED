@@ -323,3 +323,6 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
     }
   });
 };
+
+export const getRecord = (cid) => activeDownloads.get(cid);
+
