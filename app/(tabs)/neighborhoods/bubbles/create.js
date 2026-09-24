@@ -84,7 +84,7 @@ export default function CreateNeighborhoodScreen() {
 
         <Text style={styles.label}>Privacy Setting</Text>
         <View style={styles.typeContainer}>
-          {["private", "public"].map((option) => (
+          {["private", "public", "global"].map((option) => (
             <TouchableOpacity
               key={option}
               style={[
@@ -99,8 +99,11 @@ export default function CreateNeighborhoodScreen() {
                   type === option && styles.typeTextSelected,
                 ]}
               >
-                {option === "private" && "🔒 Private - Invite only"}
-                {option === "public" && "🌍 Public - Anyone can join"}
+                {option === "private" && "🔒 PRIVATE - Visible to Members only"}
+                {option === "public" &&
+                  "👥 BUBLIC - Visible to Users of bubbleBASED Only"}
+                {option === "global" &&
+                  "🌍 GLOBAL Visible to The Entire Internet"}
               </Text>
             </TouchableOpacity>
           ))}
