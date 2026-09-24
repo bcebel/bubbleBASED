@@ -22,7 +22,7 @@ import { Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
     GET_NEIGHBORHOODS,
-    GET_PUBLIC_BUBBLES,
+    GET_GLOBAL_BUBBLES,
     JOIN_NEIGHBORHOOD,
     LEAVE_NEIGHBORHOOD,
 } from "../app/graphql/queries";
@@ -71,7 +71,7 @@ export default function NeighborhoodsScreen() {
     error,
     data,
     refetch,
-  } = useQuery(GET_PUBLIC_BUBBLES, {
+  } = useQuery(GET_GLOBAL_BUBBLES, {
     skip: !isLoggedIn,
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "network-only",
@@ -84,7 +84,7 @@ export default function NeighborhoodsScreen() {
     try {
       await joinNeighborhood({
         variables: { neighborhoodId },
-        refetchQueries: [{ query: GET_PUBLIC_BUBBLES }],
+        refetchQueries: [{ query: GET_GLOBAL_BUBBLES }],
       });
       alert("✅ Joined neighborhood!");
     } catch (err) {
@@ -102,7 +102,7 @@ export default function NeighborhoodsScreen() {
     try {
       await leaveNeighborhood({
         variables: { neighborhoodId },
-        refetchQueries: [{ query: GET_PUBLIC_BUBBLES }],
+        refetchQueries: [{ query: GET_GLOBAL_BUBBLES }],
       });
       alert("👋 Left neighborhood");
     } catch (err) {
@@ -330,7 +330,7 @@ export default function NeighborhoodsScreen() {
   // 🚨 Query error state
   if (error) return <Text style={styles.error}>Error: {error.message}</Text>;
 
-  const neighborhoods = data?.discoverNeighborhoods || [];
+  const neighborhoods = data?.discoverGlobalNeighborhoods || [];
 
   const renderItem = ({ item }) => {
     return (

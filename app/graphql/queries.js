@@ -14,6 +14,19 @@ export const GET_PUBLIC_BUBBLES = gql`
   }
 `;
 
+export const GET_GLOBAL_BUBBLES = gql`
+  query DiscoverGlobalNeighborhoods {
+    discoverGlobalNeighborhoods {
+      id
+      name
+      description
+      type
+      bubblePhotoCid
+      createdAt
+    }
+  }
+`;
+
 export const MY_PERSONAL_BUBBLES = gql`
   query MyPersonalBubbles {
     myPersonalBubbles {
