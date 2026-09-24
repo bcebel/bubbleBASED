@@ -298,11 +298,7 @@ export default function AllNeighborhoodsGallery({
 
   const mediaItems = combinedData;
 
-  useEffect(() => {
-    if (mediaItems && mediaItems.length > 0) {
-      updatePriorityWindow(mediaItems, activeIndex);
-    }
-  }, [activeIndex, mediaItems]);
+
 
   const handleNext = () => {
     setActiveIndex((prev) => (prev < mediaItems.length - 1 ? prev + 1 : prev));
@@ -382,7 +378,7 @@ export default function AllNeighborhoodsGallery({
               key={currentItem.cid || currentItem.id || activeIndex}
               media={currentItem}
               isFocused={true}
-              isAlmostFocused={true}
+              isAlmostFocused={false}
             />
           </View>
         )}

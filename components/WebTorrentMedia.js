@@ -6,12 +6,12 @@ import {
   ActivityIndicator,
   StyleSheet,
   Text,
-  TouchableOpacity,
   Platform,
 } from "react-native";
-import { getMedia, saveMedia } from "./mediaCache";
+import { getMedia } from "./mediaCache";
 import { getOrStartTorrent, getMediaWithFallback } from "./torrentmanager";
 
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const PINATA_GATEWAY =
   process.env.EXPO_PUBLIC_PINATA_GATEWAY || "gateway.pinata.cloud";
 
@@ -67,12 +67,42 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
     if (!media) return;
 
     isMountedRef.current = true;
-    let localObjectUrl = null;
+
+    // Build the proxy URL once, from the cid.
+    // This is the "fast path" — your own backend, CORS headers, 1-year cache.
+    const proxyUrl = media.cid
+      ? `${BACKEND_URL}/api/webseed/${media.cid}`
+      : null;
 
     const load = async () => {
       try {
         setLoading(true);
         setError(null);
+
+        // ─────────────────────────────────────────────────────────
+        // NEW: Proxy fast path FIRST. Just point the media element at
+        // your backend. The browser does the caching, the torrent
+        // works in the background if you want it to.
+        // ─────────────────────────────────────────────────────────
+        if (proxyUrl && (isImage || isVideo)) {
+          // Optional: warm the torrent in the background so P2P can
+          // take over on subsequent visits. Doesn't block render.
+          if (media.magnetLink) {
+            getOrStartTorrent(media.magnetLink, media.cid, media).catch(
+              () => {},
+            );
+          }
+          if (!isMountedRef.current) return;
+          setMediaUrl(proxyUrl);
+          setStatus("proxy");
+          setLoading(false);
+          return;
+        }
+
+        // ─────────────────────────────────────────────────────────
+        // Everything below is the OLD path, kept as fallback for
+        // when there's no cid (e.g. direct URL media).
+        // ─────────────────────────────────────────────────────────
 
         // Direct URL fast path
         if (media.url || media.uri) {
@@ -126,10 +156,10 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
 
     return () => {
       isMountedRef.current = false;
-    if (objectUrlRef.current && Platform.OS === "web") {
-      URL.revokeObjectURL(objectUrlRef.current);
-      objectUrlRef.current = null;
-    }
+      if (objectUrlRef.current && Platform.OS === "web") {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
     };
   }, [isFocused, media?.cid, media?.magnetLink, media?.url, media?.uri]);
 
@@ -139,7 +169,6 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
     const video = videoRef.current;
     if (!video || !video.play) return;
 
-    // Always ensure these are set — mobile browsers require them for autoplay
     video.muted = true;
     video.playsInline = true;
     video.setAttribute("playsinline", "true");
@@ -179,6 +208,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
           {status === "p2p_streaming" && `🌪️ Swarming (${progress}%)`}
           {status === "fallback_http" && "🌍 Loading via CDN..."}
           {status === "cached" && "📦 Loading from cache..."}
+          {status === "proxy" && "🫧 Loading..."}
           {(!status || status === "idle") && "⏳ Preparing media..."}
         </Text>
       </View>
