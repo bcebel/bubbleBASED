@@ -65,14 +65,14 @@ export default function NeighborhoodsScreen() {
     });
   };
 
-  const handleScroll = (event) => {
-    const scrollPosition = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollPosition / width);
-    if (index !== activeTab) {
-      setActiveTab(index);
-    }
-  };
-
+const handleScroll = (event) => {
+  const scrollPosition = event.nativeEvent.contentOffset.x;
+  // Rounds to the nearest page as soon as you drag > 50% across
+  const index = Math.round(scrollPosition / width);
+  if (index !== activeTab && index >= 0 && index <= 2) {
+    setActiveTab(index);
+  }
+};
   // Login state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -266,6 +266,7 @@ export default function NeighborhoodsScreen() {
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
+        onScroll={handleScroll}
         onMomentumScrollEnd={handleScroll}
         scrollEventThrottle={16}
         style={{ flex: 1 }}
