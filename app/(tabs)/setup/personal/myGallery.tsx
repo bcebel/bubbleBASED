@@ -212,10 +212,7 @@ export default function AllNeighborhoodsGallery({
 }: {
   neighborhoodId?: string;
 }) {
-  const query = neighborhoodId
-    ? GET_NEIGHBORHOOD_GALLERY
-    : GET_MY_ALL_NEIGHBORHOODS_GALLERY;
-  const variables = neighborhoodId ? { neighborhoodId } : {};
+
 
   const { data, loading, error, refetch } = useQuery(GET_MY_POSTS, {
     fetchPolicy: "cache-and-network",

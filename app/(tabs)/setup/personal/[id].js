@@ -234,7 +234,7 @@ export default function NeighborhoodDetailScreen() {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
+                `setup/personal/myGallery`,
               )
             }
           >
