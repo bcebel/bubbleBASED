@@ -11,17 +11,17 @@ import {
   Platform,
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
-import WebTorrentMedia from "../../../../components/WebTorrentMedia";
+import WebTorrentMedia from "../components/WebTorrentMedia";
 import { Image } from "expo-image";
-import AdMessage from "../../../../components/AdMessage";
-import { updatePriorityWindow } from "../../../../components/torrentmanager";
+import AdMessage from "../components/AdMessage";
+import { updatePriorityWindow } from "../components/torrentmanager";
 
 
 import {
   GET_MY_NEIGHBORHOODS_POSTS,
   GET_NEIGHBORHOOD_POSTS,
   GET_MY_POSTS,
-} from "../../../graphql/queries";
+} from "../app/graphql/queries";
 
 
 
@@ -212,15 +212,12 @@ export default function AllNeighborhoodsGallery({
 }: {
   neighborhoodId?: string;
 }) {
-  const query = neighborhoodId
-    ? GET_NEIGHBORHOOD_GALLERY
-    : GET_MY_ALL_NEIGHBORHOODS_GALLERY;
-  const variables = neighborhoodId ? { neighborhoodId } : {};
-
-  const { data, loading, error, refetch } = useQuery(GET_MY_POSTS, {
-    fetchPolicy: "cache-and-network",
-  });
-
+ 
+const { data, loading, error, refetch } = useQuery(GET_NEIGHBORHOOD_POSTS, {
+  variables: { neighborhoodId },
+  skip: !neighborhoodId,
+  fetchPolicy: "cache-and-network",
+});
   const [refreshing, setRefreshing] = useState(false);
   const { data: adData } = useQuery(GET_RANDOM_AFFILIATE_LINK);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -228,8 +225,7 @@ export default function AllNeighborhoodsGallery({
   const scrollRef = useRef(null);
 
  const mediaItems = React.useMemo(() => {
-   const posts = data?.myPosts || [];
-   const items = [];
+const posts = data?.posts || [];   const items = [];
 
    for (const post of posts) {
      for (const m of post.media || []) {
@@ -306,9 +302,7 @@ items.push({
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>All Bubbles</Text>
-          <Text style={styles.headerSubtitle}>
-            Your combined media from all bubbles
-          </Text>
+          <Text style={styles.headerSubtitle}>Y Media from this bubble</Text>
         </View>
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>🖼️</Text>

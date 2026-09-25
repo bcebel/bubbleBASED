@@ -1,7 +1,7 @@
 // app/neighborhoods/bubbles/neighborhood-gallery.tsx
 import React from "react";
 import { useLocalSearchParams } from "expo-router";
-import AllNeighborhoodsGallery from "../../../../components/AllNeighborhoodsGallery";
+import AllNeighborhoodsGallery from "../../../../components/neighborhoodGallery";
 
 export default function NeighborhoodGalleryScreen() {
   const params = useLocalSearchParams();

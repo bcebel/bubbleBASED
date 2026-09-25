@@ -31,32 +31,16 @@ export const GET_MY_NEIGHBORHOODS_POSTS = gql`
   }
 `;
 
+// app/graphql/queries.js
 export const GET_NEIGHBORHOOD_POSTS = gql`
   query GetNeighborhoodPosts($neighborhoodId: ID!) {
-    neighborhoodPosts(neighborhoodId: $neighborhoodId) {
+    posts(neighborhoodId: $neighborhoodId) {
       id
       content
       createdAt
-      author {
-        id
-        username
-        profilePhoto
-      }
-      neighborhood {
-        id
-        name
-      }
-      media {
-        _id
-        cid
-        url
-        magnetURI
-        mediaType
-        fileName
-        fileSize
-        mimeType
-        thumbnailUrl
-      }
+      author { id username profilePhoto }
+      neighborhood { id name }
+      media { _id cid url magnetURI mediaType fileName fileSize mimeType thumbnailUrl }
     }
   }
 `;
