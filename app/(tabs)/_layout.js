@@ -135,14 +135,10 @@ export default function TabLayout() {
         name="neighborhoods/bubbles/bublic"
         options={{ href: null }}
       />
-      <Tabs.Screen
-        name="bubbles/bublic"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="bubbles/global"
-        options={{ href: null }}
-      />
+   
+      <Tabs.Screen name="bubbles/bublic" options={{ href: null }} />
+      <Tabs.Screen name="setup/personal/myGallery" options={{ href: null }} />
+      <Tabs.Screen name="bubbles/global" options={{ href: null }} />
       <Tabs.Screen
         name="neighborhoods/bubbles/neighborhood-postfeed"
         options={{ href: null }}
