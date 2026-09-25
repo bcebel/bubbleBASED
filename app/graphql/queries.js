@@ -7,9 +7,25 @@ export const GET_PUBLIC_BUBBLES = gql`
       id
       name
       description
-      type
       bubblePhotoCid
+      type
+      owner {
+        id
+        username
+        profilePhoto
+      }
+      members {
+        user {
+          id
+          username
+          profilePhoto
+        }
+        role
+        joinedAt
+      }
+      rules
       createdAt
+      updatedAt
     }
   }
 `;
@@ -17,15 +33,32 @@ export const GET_PUBLIC_BUBBLES = gql`
 export const GET_GLOBAL_BUBBLES = gql`
   query DiscoverGlobalNeighborhoods {
     discoverGlobalNeighborhoods {
-      id
+  id
       name
       description
-      type
       bubblePhotoCid
+      type 
+      owner {
+        id
+        username
+        profilePhoto
+      }
+      members {
+        user {
+          id
+          username
+          profilePhoto
+        }
+        role
+        joinedAt
+      }
+      rules
       createdAt
+      updatedAt
     }
   }
 `;
+
 
 export const MY_PERSONAL_BUBBLES = gql`
   query MyPersonalBubbles {
