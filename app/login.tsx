@@ -68,7 +68,7 @@ export default function LoginScreen() {
         await AsyncStorage.setItem("userId", user.id);
 
         Alert.alert("Success", `Welcome back, ${user.username}!`);
-        router.replace("/(tabs)/neighborhoods");
+        router.replace("/bubbles");
 
         // ✅ CRITICAL: Save token and username to AsyncStorage
         await AsyncStorage.setItem("token", token);
@@ -82,7 +82,7 @@ export default function LoginScreen() {
         console.log("✅ Username saved:", user.username);
 
         Alert.alert("Success", `Welcome back, ${user.username}!`);
-        router.replace("/(tabs)/neighborhoods"); // Use replace so they can't go back to login
+        router.replace("/bubbles"); // Use replace so they can't go back to login
       } else {
         const errorMessage = data.errors?.[0]?.message || "Login failed";
         Alert.alert("Error", errorMessage);
