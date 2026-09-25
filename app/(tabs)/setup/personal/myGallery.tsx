@@ -11,17 +11,17 @@ import {
   Platform,
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
-import WebTorrentMedia from "../components/WebTorrentMedia";
+import WebTorrentMedia from "../../../../components/WebTorrentMedia";
 import { Image } from "expo-image";
-import AdMessage from "./AdMessage";
-import { updatePriorityWindow } from "../components/torrentmanager";
+import AdMessage from "../../../../components/AdMessage";
+import { updatePriorityWindow } from "../../../../components/torrentmanager";
 
 
 import {
   GET_MY_NEIGHBORHOODS_POSTS,
   GET_NEIGHBORHOOD_POSTS,
   GET_MY_POSTS,
-} from "../app/graphql/queries";
+} from "../../../graphql/queries";
 
 
 
@@ -306,7 +306,7 @@ export default function AllNeighborhoodsGallery({
     : GET_MY_ALL_NEIGHBORHOODS_GALLERY;
   const variables = neighborhoodId ? { neighborhoodId } : {};
 
-  const { data, loading, error, refetch } = useQuery(GET_MY_NEIGHBORHOODS_POSTS, {
+  const { data, loading, error, refetch } = useQuery(GET_MY_POSTS, {
     fetchPolicy: "cache-and-network",
   });
 
@@ -317,7 +317,7 @@ export default function AllNeighborhoodsGallery({
   const scrollRef = useRef(null);
 
  const mediaItems = React.useMemo(() => {
-   const posts = data?.myNeighborhoodsPosts || [];
+   const posts = data?.myPosts || [];
    const items = [];
 
    for (const post of posts) {

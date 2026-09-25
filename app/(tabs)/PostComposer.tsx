@@ -52,6 +52,10 @@ const GET_FEED_POSTS = gql`
         cid
         magnetURI
         mediaType
+        fileName
+        fileSize
+        mimeType
+        thumbnailUrl
       }
       createdAt
     }
@@ -68,7 +72,9 @@ interface SelectedMedia {
   uri: string;
   mediaType: "image" | "video";
   file?: File;
+  fileName?: string;
   fileSize?: number;
+  mimeType?: string;
 }
 
 export default function PostComposer({
@@ -119,7 +125,15 @@ export default function PostComposer({
         uri: asset.uri,
         mediaType: detectedType,
         file: asset.file,
+        fileName:
+          asset.fileName || // Expo's field
+          asset.file?.name || // web's File
+          `${detectedType}-${Date.now()}`, // fallback
         fileSize: asset.fileSize ?? asset.file?.size,
+        mimeType:
+          asset.mimeType || // Expo's field
+          asset.file?.type || // web's File
+          (detectedType === "video" ? "video/mp4" : "image/jpeg"), // fallback
       });
     }
   };
@@ -224,6 +238,9 @@ export default function PostComposer({
             url: finalMediaUrl,
             cid: extractedCid,
             mediaType: currentMediaType,
+            fileName: selectedMedia.fileName,
+            fileSize: selectedMedia.fileSize,
+            mimeType: selectedMedia.mimeType,
           };
 
           if (magnetLink) {
