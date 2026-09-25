@@ -21,11 +21,11 @@ import Head from "expo-router/head";
 import { Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-    GET_NEIGHBORHOODS,
-    GET_GLOBAL_BUBBLES,
-    JOIN_NEIGHBORHOOD,
-    LEAVE_NEIGHBORHOOD,
-} from "../app/graphql/queries";
+  GET_NEIGHBORHOODS,
+  GET_GLOBAL_BUBBLES,
+  JOIN_NEIGHBORHOOD,
+  LEAVE_NEIGHBORHOOD,
+} from "../../graphql/queries";
 import WebTorrentMedia from "@/components/TorrentOnlyMedia";
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
@@ -156,7 +156,9 @@ export default function NeighborhoodsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>🌍 Global Town Circle</Text>
+  
+
+   
 
       <View style={styles.actions}>
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
@@ -244,6 +246,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#00ffff",
+    marginBottom: 8,
+  },
+  headerButtons: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#ff00ff",
     marginBottom: 8,
   },
   scrollView: {

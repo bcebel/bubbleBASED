@@ -30,7 +30,6 @@ export default function TabLayout() {
     <Tabs
       key={wakeKey}
       // ✅ Tells web browsers this entire bar is a navigation zone
-      role="navigation"
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
@@ -67,7 +66,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="neighborhoods/index"
+        name="bubbles"
         options={{
           tabBarIcon: () => (
             <View style={styles.bubbleGlass}>
@@ -130,6 +129,18 @@ export default function TabLayout() {
       <Tabs.Screen name="PostComposer" options={{ href: null }} />
       <Tabs.Screen
         name="neighborhoods/bubbles/PostFeed"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="neighborhoods/bubbles/bublic"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="bubbles/bublic"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="bubbles/global"
         options={{ href: null }}
       />
       <Tabs.Screen
