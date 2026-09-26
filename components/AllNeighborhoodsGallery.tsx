@@ -14,10 +14,7 @@ import { gql, useQuery } from "@apollo/client";
 import WebTorrentMedia from "../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "./AdMessage";
-import {
-  updatePriorityWindow,
-  releaseOutsideWindow,
-} from "../components/torrentmanager";
+import { releaseOutsideWindow, releaseAll } from "../components/torrentmanager";
 
 
 import {
@@ -309,9 +306,12 @@ export default function AllNeighborhoodsGallery({
     : GET_MY_ALL_NEIGHBORHOODS_GALLERY;
   const variables = neighborhoodId ? { neighborhoodId } : {};
 
-  const { data, loading, error, refetch } = useQuery(GET_MY_NEIGHBORHOODS_POSTS, {
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, loading, error, refetch } = useQuery(
+    GET_MY_NEIGHBORHOODS_POSTS,
+    {
+      fetchPolicy: "cache-and-network",
+    },
+  );
 
   const [refreshing, setRefreshing] = useState(false);
   const { data: adData } = useQuery(GET_RANDOM_AFFILIATE_LINK);
@@ -319,34 +319,34 @@ export default function AllNeighborhoodsGallery({
   const [mediaAspect, setMediaAspect] = useState(1);
   const scrollRef = useRef(null);
 
- const mediaItems = React.useMemo(() => {
-   const posts = data?.myNeighborhoodsPosts || [];
-   const items = [];
+  const mediaItems = React.useMemo(() => {
+    const posts = data?.myNeighborhoodsPosts || [];
+    const items = [];
 
-   for (const post of posts) {
-     for (const m of post.media || []) {
-       if (!m.cid) continue;
-       items.push({
-         // media identity
-         id: m._id,
-         cid: m.cid,
-         url: m.url,
-         magnetLink: m.magnetURI, // rename to match WebTorrentMedia's expected prop
-         fileType: m.mediaType, // "video" | "image"
-         fileName: `media-${m.cid}`, // or derive from url
+    for (const post of posts) {
+      for (const m of post.media || []) {
+        if (!m.cid) continue;
+        items.push({
+          // media identity
+          id: m._id,
+          cid: m.cid,
+          url: m.url,
+          magnetLink: m.magnetURI, // rename to match WebTorrentMedia's expected prop
+          fileType: m.mediaType, // "video" | "image"
+          fileName: `media-${m.cid}`, // or derive from url
 
-         // post context (for display)
-         postId: post.id,
-         content: post.content,
-         createdAt: post.createdAt,
-         author: post.author,
-         neighborhood: post.neighborhood,
-       });
-     }
-   }
+          // post context (for display)
+          postId: post.id,
+          content: post.content,
+          createdAt: post.createdAt,
+          author: post.author,
+          neighborhood: post.neighborhood,
+        });
+      }
+    }
 
-   return items;
- }, [data]);
+    return items;
+  }, [data]);
 
   // MUST BE HERE: Before any `if (loading)` or `if (error)` returns!
   /*
@@ -358,11 +358,17 @@ export default function AllNeighborhoodsGallery({
   }, [activeIndex, mediaItems]);
   */
 
- useEffect(() => {
-   if (mediaItems.length > 0) {
-     releaseOutsideWindow(mediaItems, activeIndex);
-   }
- }, [activeIndex, mediaItems]);
+  // release non-window torrents when the focus moves
+  useEffect(() => {
+    if (mediaItems.length > 0) {
+      releaseOutsideWindow(mediaItems, activeIndex);
+    }
+  }, [activeIndex, mediaItems]);
+
+  // release everything when leaving the gallery
+  useEffect(() => {
+    return () => releaseAll();
+  }, []);
   
   const handleRefresh = async () => {
     setRefreshing(true);

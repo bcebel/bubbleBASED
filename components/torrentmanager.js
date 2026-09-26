@@ -3,14 +3,13 @@ import idbChunkStore from "@thaunknown/idb-chunk-store";
 import { getMedia } from "../components/mediaCache";
 import { webtorrentService } from "../utils/webtorrentService";
 import parseTorrent from "parse-torrent";
+
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
-
-
-// Global WebTorrent client instance
 let client = null;
 const activeDownloads = new Map();
 
+// ─── internal: release one torrent ────────────────────────
 function releaseTorrent(cid) {
   const record = activeDownloads.get(cid);
   if (!record) return;
@@ -18,6 +17,7 @@ function releaseTorrent(cid) {
   if (record.torrent && client) {
     try {
       client.remove(record.torrent.infoHash, { destroyStore: false });
+      // destroyStore: false keeps IDB chunks so re-attach is instant
     } catch (err) {
       console.warn("release failed", cid, err);
     }
@@ -30,6 +30,7 @@ function releaseTorrent(cid) {
   activeDownloads.delete(cid);
 }
 
+// ─── exported: release everything outside [i-1, i, i+1] ───
 export const releaseOutsideWindow = (mediaList, currentIndex) => {
   const keep = new Set();
   for (let i = currentIndex - 1; i <= currentIndex + 1; i++) {
@@ -42,49 +43,45 @@ export const releaseOutsideWindow = (mediaList, currentIndex) => {
   }
 };
 
+// ─── exported: release everything (call on gallery unmount) ─
+export const releaseAll = () => {
+  for (const cid of Array.from(activeDownloads.keys())) {
+    releaseTorrent(cid);
+  }
+};
 
+// ─── exported: start or return a torrent record ───────────
 export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
   if (typeof window === "undefined") return null;
-console.log("[torrent] add", magnetLink);
-if (!client) {
-  if (typeof window !== "undefined" && window.globalWebTorrentClient) {
-    client = window.globalWebTorrentClient;
-  } else {
-    // Fallback: create one if +html hasn't yet (rare, but covers dev edge cases)
-    const WebTorrent = window.WebTorrent;
-    client = new WebTorrent();
-    if (typeof window !== "undefined") {
+
+  if (!client) {
+    if (window.globalWebTorrentClient) {
+      client = window.globalWebTorrentClient;
+    } else {
+      const WebTorrent = window.WebTorrent;
+      client = new WebTorrent();
       window.globalWebTorrentClient = client;
     }
   }
-}
 
-  // 1. Return immediately if already tracked in-memory
+  // already tracked
   if (activeDownloads.has(cid)) {
     return activeDownloads.get(cid);
   }
 
-  // 2. Evict before adding (prevents unbounded growth)
-  evictOldestIfNeeded();
-
-  // 3. Parse infoHash so we can check if client already has it
   const infoHash = parseTorrent(magnetLink).infoHash;
-
   let torrent = await client.get(infoHash);
 
   if (!torrent) {
-  torrent = await client.add(magnetLink, {
-    store: idbChunkStore,
-    storeOpts: { name: `media-${cid}` },
-    announce: window.enhancedTrackers || webtorrentService.trackers,
-    strategy: media.fileType === "image" ? "rarest" : "sequential",
-//    urlList: [`${BACKEND_URL}/api/webseed/${cid}`],
-  });
+    torrent = await client.add(magnetLink, {
+      store: idbChunkStore,
+      storeOpts: { name: `media-${cid}` },
+      announce: window.enhancedTrackers || webtorrentService.trackers,
+      strategy: media.fileType === "image" ? "rarest" : "sequential",
+      urlList: [`${BACKEND_URL}/api/webseed/${cid}`],
+    });
   }
 
-  
-
-  
   const record = {
     torrent,
     blobUrl: null,
@@ -94,7 +91,7 @@ if (!client) {
   activeDownloads.set(cid, record);
 
   console.log("[torrent] added", torrent.infoHash);
-  // 4. Handle chunk assembly without dying on React unmount
+
   torrent.on("done", async () => {
     try {
       const file = torrent.files[0];
@@ -111,140 +108,21 @@ if (!client) {
   return record;
 };
 
-// -------------------------------------------------------------
-// Central Queue & Priority Window Management
-// -------------------------------------------------------------
+// ─── exported: get a record without starting anything ─────
+export const getRecord = (cid) => activeDownloads.get(cid);
 
-/**
- * Call this from Gallery/Feed when current focused index changes.
- * @param {Array} mediaList - Array of media objects [{ cid, magnetLink, ... }]
- * @param {number} currentIndex - Index of current focused item
- */
-export const updatePriorityWindow = (mediaList = [], currentIndex = 0) => {
-  if (!mediaList.length) return;
-
-  // Window bounds: 1 behind (-1), current (0), 3 ahead (+1, +2, +3)
-  const LOOK_BEHIND = 1;
-  const LOOK_AHEAD = 3;
-
-  const startIndex = Math.max(0, currentIndex - LOOK_BEHIND);
-  const endIndex = Math.min(mediaList.length - 1, currentIndex + LOOK_AHEAD);
-
-  const activeCids = new Set();
-  const nextQueue = [];
-
-  for (let i = startIndex; i <= endIndex; i++) {
-    const item = mediaList[i];
-    if (!item || !item.cid) continue;
-
-    activeCids.add(item.cid);
-
-    // Assign numeric priority (0 = focused, lower number = higher priority)
-    let priority = 10;
-    if (i === currentIndex)
-      priority = 0; // Focus
-    else if (i === currentIndex + 1)
-      priority = 1; // Next (+1)
-    else if (i === currentIndex + 2)
-      priority = 2; // Next (+2)
-    else if (i === currentIndex + 3)
-      priority = 3; // Next (+3)
-    else if (i === currentIndex - 1) priority = 4; // Previous (-1)
-
-    // Update in active map if exists
-    if (activeDownloads.has(item.cid)) {
-      const record = activeDownloads.get(item.cid);
-      record.priority = priority;
-      record.isFocused = priority === 0;
-    }
-
-    nextQueue.push({ ...item, priority });
-  }
-
-  // Sort queue by priority ascending (0 first)
-  queue = nextQueue.sort((a, b) => a.priority - b.priority);
-
-  // Pause or remove torrents outside window to conserve memory/network
-  for (const [cid, record] of activeDownloads.entries()) {
-    if (!activeCids.has(cid) && !record.isDone) {
-      // Pause torrent download if outside window
-      if (record.torrent) {
-        record.torrent.pause();
-      }
-    } else if (activeCids.has(cid) && record.torrent?.paused) {
-      record.torrent.resume();
-    }
-  }
-
-  processQueue();
-};
-
-const processQueue = async () => {
-  if (isQueueProcessing || queue.length === 0) return;
-  isQueueProcessing = true;
-
-  while (queue.length > 0) {
-    const item = queue.shift();
-    if (!item.cid) continue;
-
-    try {
-      // 1. Skip if already cached in IndexedDB
-      const cached = await getMedia(item.cid);
-      if (cached?.blob) continue;
-
-      // 2. Skip if already downloaded in WebTorrent memory
-      if (
-        activeDownloads.has(item.cid) &&
-        activeDownloads.get(item.cid).isDone
-      ) {
-        continue;
-      }
-
-      // 3. Start background torrent fetch calmly (serial execution)
-      if (item.magnetLink) {
-        const record = await getOrStartTorrent(item.magnetLink, item.cid, item);
-
-        // Wait until we get at least some initial chunks or completion before starting next item
-        await new Promise((resolve) => {
-          if (record.isDone || record.torrent.progress > 0.15) {
-            resolve();
-            return;
-          }
-
-          const onProgress = () => {
-            if (record.torrent.progress > 0.15 || record.isDone) {
-              record.torrent.removeListener("download", onProgress);
-              record.torrent.removeListener("done", onProgress);
-              resolve();
-            }
-          };
-
-          record.torrent.on("download", onProgress);
-          record.torrent.on("done", onProgress);
-
-          // Timeout safety: don't block the queue forever if seeds are slow
-          setTimeout(resolve, 3000);
-        });
-      }
-    } catch (err) {
-      console.warn("Queue prefetch skipped item:", item.cid, err);
-    }
-  }
-
-  isQueueProcessing = false;
-};
-
-// -------------------------------------------------------------
-// Component Streaming Fetcher
-// -------------------------------------------------------------
-
+// ─── exported: resolve a URL for the component to render ──
 export const getMediaWithFallback = async (media, onStatusChange) => {
   const { magnetLink, cid, ipfsUrl, fallbackUrl } = media;
 
-  console.log("[fallback] start", media.cid, media.magnetLink);
-  const httpUrl = ipfsUrl || fallbackUrl || `${BACKEND_URL}/api/webseed/${cid}`;
+  console.log("[fallback] start", cid, magnetLink);
 
-  // 1. Check IndexedDB first (Fastest path)
+  // Prefer the proxy if we have a cid, otherwise use whatever URL we have
+  const httpUrl = cid
+    ? `${BACKEND_URL}/api/webseed/${cid}`
+    : ipfsUrl || fallbackUrl || "";
+
+  // 1. IndexedDB cache
   try {
     const cached = await getMedia(cid);
     if (cached?.blob) {
@@ -252,10 +130,10 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
       return { url: URL.createObjectURL(cached.blob), source: "cache" };
     }
   } catch (err) {
-    console.log("Cache miss, proceeding to network:", err);
+    console.log("Cache miss:", err);
   }
 
-  // 2. Check if already active/completed in memory queue
+  // 2. Already in-flight and complete
   if (activeDownloads.has(cid)) {
     const record = activeDownloads.get(cid);
     if (record.isDone && record.blobUrl) {
@@ -264,13 +142,13 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
     }
   }
 
-  // 3. If no magnet link, return HTTP URL directly
+  // 3. No magnet — return the HTTP URL directly
   if (!magnetLink) {
     onStatusChange?.("fallback_http");
     return { url: httpUrl, source: "http" };
   }
 
-  // 4. Race P2P against 4-second HTTP Fallback Timer
+  // 4. Race P2P against the 4s HTTP fallback
   return new Promise(async (resolve) => {
     let resolved = false;
 
@@ -285,7 +163,8 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
     try {
       onStatusChange?.("connecting_p2p");
       const record = await getOrStartTorrent(magnetLink, cid, media);
-  console.log("[fallback] torrent result", typeof record, record);
+      console.log("[fallback] torrent result", typeof record, record);
+
       const checkProgress = () => {
         if (!resolved && (record.torrent.progress > 0 || record.isDone)) {
           resolved = true;
@@ -310,7 +189,7 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
         record.torrent.on("done", checkProgress);
       }
     } catch (err) {
-        console.log("[fallback] error", err);
+      console.log("[fallback] error", err);
       if (!resolved) {
         resolved = true;
         clearTimeout(fallbackTimer);
@@ -320,6 +199,3 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
     }
   });
 };
-
-export const getRecord = (cid) => activeDownloads.get(cid);
-

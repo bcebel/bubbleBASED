@@ -14,10 +14,7 @@ import { gql, useQuery } from "@apollo/client";
 import WebTorrentMedia from "../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "../components/AdMessage";
-import {
-  updatePriorityWindow,
-  releaseOutsideWindow,
-} from "../components/torrentmanager";
+import { releaseOutsideWindow, releaseAll } from "../components/torrentmanager";
 
 
 import {
@@ -215,45 +212,45 @@ export default function AllNeighborhoodsGallery({
 }: {
   neighborhoodId?: string;
 }) {
- 
-const { data, loading, error, refetch } = useQuery(GET_NEIGHBORHOOD_POSTS, {
-  variables: { neighborhoodId },
-  skip: !neighborhoodId,
-  fetchPolicy: "cache-and-network",
-});
+  const { data, loading, error, refetch } = useQuery(GET_NEIGHBORHOOD_POSTS, {
+    variables: { neighborhoodId },
+    skip: !neighborhoodId,
+    fetchPolicy: "cache-and-network",
+  });
   const [refreshing, setRefreshing] = useState(false);
   const { data: adData } = useQuery(GET_RANDOM_AFFILIATE_LINK);
   const [activeIndex, setActiveIndex] = useState(0);
   const [mediaAspect, setMediaAspect] = useState(1);
   const scrollRef = useRef(null);
 
- const mediaItems = React.useMemo(() => {
-const posts = data?.posts || [];   const items = [];
+  const mediaItems = React.useMemo(() => {
+    const posts = data?.posts || [];
+    const items = [];
 
-   for (const post of posts) {
-     for (const m of post.media || []) {
-       if (!m.cid) continue;
-items.push({
-  id: m._id,
-  cid: m.cid,
-  url: m.url,
-  magnetLink: m.magnetURI,
-  fileType: m.mediaType,
-  fileName: m.fileName || `media-${m.cid}`,
-  fileSize: m.fileSize,
-  mimeType: m.mimeType,
+    for (const post of posts) {
+      for (const m of post.media || []) {
+        if (!m.cid) continue;
+        items.push({
+          id: m._id,
+          cid: m.cid,
+          url: m.url,
+          magnetLink: m.magnetURI,
+          fileType: m.mediaType,
+          fileName: m.fileName || `media-${m.cid}`,
+          fileSize: m.fileSize,
+          mimeType: m.mimeType,
 
-  postId: post.id,
-  content: post.content,
-  createdAt: post.createdAt,
-  author: post.author,
-  neighborhood: post.neighborhood,
-});
-     }
-   }
+          postId: post.id,
+          content: post.content,
+          createdAt: post.createdAt,
+          author: post.author,
+          neighborhood: post.neighborhood,
+        });
+      }
+    }
 
-   return items;
- }, [data]);
+    return items;
+  }, [data]);
 
   // MUST BE HERE: Before any `if (loading)` or `if (error)` returns!
   /*
@@ -264,18 +261,18 @@ items.push({
     }
   }, [activeIndex, mediaItems]);
   */
-  
-useEffect(() => {
-  if (mediaItems.length > 0) {
-    releaseOutsideWindow(mediaItems, activeIndex);
-  }
-}, [activeIndex, mediaItems]);
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
-  };
+  // release non-window torrents when the focus moves
+  useEffect(() => {
+    if (mediaItems.length > 0) {
+      releaseOutsideWindow(mediaItems, activeIndex);
+    }
+  }, [activeIndex, mediaItems]);
+
+  // release everything when leaving the gallery
+  useEffect(() => {
+    return () => releaseAll();
+  }, []);
 
   const handleScroll = (e: any) => {
     const newIndex = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);

@@ -15,8 +15,8 @@ import WebTorrentMedia from "../../../../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "../../../../components/AdMessage";
 import {
-  updatePriorityWindow,
   releaseOutsideWindow,
+  releaseAll,
 } from "../../../../components/torrentmanager";
 
 
@@ -215,8 +215,6 @@ export default function AllNeighborhoodsGallery({
 }: {
   neighborhoodId?: string;
 }) {
-
-
   const { data, loading, error, refetch } = useQuery(GET_MY_POSTS, {
     fetchPolicy: "cache-and-network",
   });
@@ -227,34 +225,34 @@ export default function AllNeighborhoodsGallery({
   const [mediaAspect, setMediaAspect] = useState(1);
   const scrollRef = useRef(null);
 
- const mediaItems = React.useMemo(() => {
-   const posts = data?.myPosts || [];
-   const items = [];
+  const mediaItems = React.useMemo(() => {
+    const posts = data?.myPosts || [];
+    const items = [];
 
-   for (const post of posts) {
-     for (const m of post.media || []) {
-       if (!m.cid) continue;
-items.push({
-  id: m._id,
-  cid: m.cid,
-  url: m.url,
-  magnetLink: m.magnetURI,
-  fileType: m.mediaType,
-  fileName: m.fileName || `media-${m.cid}`,
-  fileSize: m.fileSize,
-  mimeType: m.mimeType,
+    for (const post of posts) {
+      for (const m of post.media || []) {
+        if (!m.cid) continue;
+        items.push({
+          id: m._id,
+          cid: m.cid,
+          url: m.url,
+          magnetLink: m.magnetURI,
+          fileType: m.mediaType,
+          fileName: m.fileName || `media-${m.cid}`,
+          fileSize: m.fileSize,
+          mimeType: m.mimeType,
 
-  postId: post.id,
-  content: post.content,
-  createdAt: post.createdAt,
-  author: post.author,
-  neighborhood: post.neighborhood,
-});
-     }
-   }
+          postId: post.id,
+          content: post.content,
+          createdAt: post.createdAt,
+          author: post.author,
+          neighborhood: post.neighborhood,
+        });
+      }
+    }
 
-   return items;
- }, [data]);
+    return items;
+  }, [data]);
 
   // MUST BE HERE: Before any `if (loading)` or `if (error)` returns!
   /*
@@ -265,12 +263,19 @@ items.push({
     }
   }, [activeIndex, mediaItems]);
   */
+
+  // release non-window torrents when the focus moves
+  useEffect(() => {
+    if (mediaItems.length > 0) {
+      releaseOutsideWindow(mediaItems, activeIndex);
+    }
+  }, [activeIndex, mediaItems]);
+
+  // release everything when leaving the gallery
+  useEffect(() => {
+    return () => releaseAll();
+  }, []);
   
-useEffect(() => {
-  if (mediaItems.length > 0) {
-    releaseOutsideWindow(mediaItems, activeIndex);
-  }
-}, [activeIndex, mediaItems]);
   const handleRefresh = async () => {
     setRefreshing(true);
     await refetch();
