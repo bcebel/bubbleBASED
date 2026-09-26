@@ -39,6 +39,41 @@ const DELETE_NEIGHBORHOOD = gql`
     deleteNeighborhood(neighborhoodId: $neighborhoodId)
   }
 `;
+function PreviewView({ neighborhood }) {
+  const bubblePhotoSource = neighborhood.bubblePhotoCid
+    ? {
+        uri: `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${neighborhood.bubblePhotoCid}`,
+      }
+    : require("@/assets/images/bbl.jpg");
+
+  return (
+    <View style={styles.container}>
+      <ImageBackground
+        source={bubblePhotoSource}
+        style={styles.bubbleHeader}
+        resizeMode="cover"
+      >
+        <LinearGradient
+          colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.2)"]}
+          style={styles.gradientOverlay}
+        >
+          <View style={styles.headerContent}>
+            <Text style={styles.bubbleName}>{neighborhood.name}</Text>
+            <Text style={styles.bubbleDescription}>
+              {neighborhood.description}
+            </Text>
+          </View>
+        </LinearGradient>
+      </ImageBackground>
+
+      <View style={styles.previewBody}>
+        <Text style={styles.previewText}>
+          Join this bubble to see posts, chat, and members.
+        </Text>
+      </View>
+    </View>
+  );
+}
 
 export default function NeighborhoodDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -71,6 +106,14 @@ export default function NeighborhoodDetailScreen() {
         <Text style={styles.error}>Neighborhood not found</Text>
       </View>
     );
+  }
+
+  const isMember = neighborhood.members?.some(
+    (m) => m.user?.username === username,
+  );
+
+  if (!isMember && neighborhood.type !== "personal") {
+    return <PreviewView neighborhood={neighborhood} />;
   }
 
   const handleLeaveBubble = async () => {
@@ -338,5 +381,18 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingVertical: 15,
     paddingHorizontal: 20,
+  },
+  previewBody: {
+    flex: 1,
+    padding: 30,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewText: {
+    color: "#F5F2FA",
+    fontSize: 18,
+    textAlign: "center",
+    opacity: 0.8,
+    marginBottom: 20,
   },
 });
