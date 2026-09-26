@@ -194,7 +194,7 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
 
         resolve({ url: httpUrl, source: "http_fallback" });
       }
-    }, 4000);
+    }, 1000);
 
     try {
       onStatusChange?.("connecting_p2p");
