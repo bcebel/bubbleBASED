@@ -9,41 +9,39 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 // Global WebTorrent client instance
 let client = null;
-const activeDownloads = new Map(); // CID -> { torrent, blobUrl, isDone, priority }
+const activeDownloads = new Map();
 
-const MAX_ACTIVE_TORRENTS = 8; // Reduced from 15 to keep memory footprint light
+function releaseTorrent(cid) {
+  const record = activeDownloads.get(cid);
+  if (!record) return;
 
-// Internal Queue State
-let queue = [];
-let isQueueProcessing = false;
-
-// Eviction helper — call this before adding a new torrent
-const evictOldestIfNeeded = () => {
-  if (activeDownloads.size < MAX_ACTIVE_TORRENTS) return;
-  if (!client) return;
-
-  // Find lowest priority or oldest item to evict
-  let lowestPriorityCid = null;
-  let maxPriority = -1;
-
-  for (const [cid, record] of activeDownloads.entries()) {
-    if (record.priority > maxPriority && !record.isFocused) {
-      maxPriority = record.priority;
-      lowestPriorityCid = cid;
+  if (record.torrent && client) {
+    try {
+      client.remove(record.torrent.infoHash, { destroyStore: false });
+    } catch (err) {
+      console.warn("release failed", cid, err);
     }
   }
 
-  const targetCid = lowestPriorityCid || activeDownloads.keys().next().value;
-  const item = activeDownloads.get(targetCid);
+  if (record.blobUrl) {
+    URL.revokeObjectURL(record.blobUrl);
+  }
 
-  if (item?.torrent) {
-    client.remove(item.torrent.infoHash);
+  activeDownloads.delete(cid);
+}
+
+export const releaseOutsideWindow = (mediaList, currentIndex) => {
+  const keep = new Set();
+  for (let i = currentIndex - 1; i <= currentIndex + 1; i++) {
+    const item = mediaList[i];
+    if (item?.cid) keep.add(item.cid);
   }
-  if (item?.blobUrl) {
-    URL.revokeObjectURL(item.blobUrl);
+
+  for (const cid of Array.from(activeDownloads.keys())) {
+    if (!keep.has(cid)) releaseTorrent(cid);
   }
-  activeDownloads.delete(targetCid);
 };
+
 
 export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
   if (typeof window === "undefined") return null;

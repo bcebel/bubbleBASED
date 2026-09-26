@@ -14,7 +14,10 @@ import { gql, useQuery } from "@apollo/client";
 import WebTorrentMedia from "../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "./AdMessage";
-import { updatePriorityWindow } from "../components/torrentmanager";
+import {
+  updatePriorityWindow,
+  releaseOutsideWindow,
+} from "../components/torrentmanager";
 
 
 import {
@@ -355,6 +358,12 @@ export default function AllNeighborhoodsGallery({
   }, [activeIndex, mediaItems]);
   */
 
+ useEffect(() => {
+   if (mediaItems.length > 0) {
+     releaseOutsideWindow(mediaItems, activeIndex);
+   }
+ }, [activeIndex, mediaItems]);
+  
   const handleRefresh = async () => {
     setRefreshing(true);
     await refetch();
