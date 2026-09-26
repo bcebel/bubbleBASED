@@ -1,6 +1,6 @@
 // torrentManager.js
 import idbChunkStore from "@thaunknown/idb-chunk-store";
-import { getMedia } from "../components/mediaCache";
+import { getMedia, saveMedia } from "../components/mediaCache";
 import { webtorrentService } from "../utils/webtorrentService";
 import parseTorrent from "parse-torrent";
 
@@ -92,18 +92,26 @@ export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
 
   console.log("[torrent] added", torrent.infoHash);
 
-  torrent.on("done", async () => {
-    try {
-      const file = torrent.files[0];
-      if (file) {
-        const blob = await file.blob();
-        record.blobUrl = URL.createObjectURL(blob);
-        record.isDone = true;
+torrent.on("done", async () => {
+  try {
+    const file = torrent.files[0];
+    if (file) {
+      const blob = await file.blob();
+      record.blobUrl = URL.createObjectURL(blob);
+      record.isDone = true;
+
+      // persist to IDB so next visit is instant
+      try {
+        await saveMedia(cid, blob);
+        console.log("[torrent] cached to IDB:", cid);
+      } catch (err) {
+        console.warn("[torrent] IDB save failed:", cid, err);
       }
-    } catch (err) {
-      console.error("Failed to generate blob:", err);
     }
-  });
+  } catch (err) {
+    console.error("Failed to generate blob:", err);
+  }
+});
 
   return record;
 };
