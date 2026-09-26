@@ -165,87 +165,131 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
   };
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-useEffect(() => {
-  if (!isFocused || !media) return;
 
-  let isMounted = true;
-  let unsubscribeProgress = null;
-  let objectUrl = null;
+  useEffect(() => {
+    if (!isFocused || !media) return;
 
-  const load = async () => {
-    try {
-      setStatus("checking_cache");
+    let isMounted = true;
+    let unsubscribeProgress = null;
+    let objectUrl = null;
 
-      // 1. Cache first — fastest possible path
-      if (media.cid) {
-        try {
-          const cached = await getMedia(media.cid);
-          if (cached?.blob && isMounted) {
-            objectUrl = URL.createObjectURL(cached.blob);
-            currentUrlRef.current = objectUrl;
-            setVideoSrc(objectUrl);
-            setStatus("cached");
-            setProgress(100);
-            setIsReady(true);
-            return;
+    const load = async () => {
+      try {
+        setStatus("checking_cache");
+
+        // 1. Cache first
+        if (media.cid) {
+          try {
+            const cached = await getMedia(media.cid);
+            if (cached?.blob && isMounted) {
+              objectUrl = URL.createObjectURL(cached.blob);
+              currentUrlRef.current = objectUrl;
+              setVideoSrc(objectUrl);
+              setStatus("cached");
+              setProgress(100);
+              setIsReady(true);
+              return;
+            }
+          } catch (_) {}
+        }
+
+        // 2. Not cached — start the torrent and get the record
+        setStatus("connecting_p2p");
+        const record = await getOrStartTorrent(
+          media.magnetLink,
+          media.cid,
+          media,
+        ).catch(() => null);
+
+        if (!isMounted) return;
+
+        // 3a. Video + torrent available → renderTo (streams from pieces)
+        if (!isImage && record?.torrent) {
+          const attachRender = () => {
+            const file = record.torrent.files?.[0];
+            const el = videoRef.current;
+            if (!file || !el) return;
+
+            file.renderTo(el, { autoplay: true, controls: false }, (err) => {
+              if (err) {
+                console.warn("[renderTo] failed:", err);
+                // fall back to proxy URL
+                const proxyUrl = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`;
+                setVideoSrc(proxyUrl);
+                setIsReady(true);
+              } else {
+                setStatus("p2p_streaming");
+                setIsReady(true);
+              }
+            });
+          };
+
+          if (record.torrent.ready) {
+            attachRender();
+          } else {
+            record.torrent.once("ready", attachRender);
+            // if ready never fires, fall back after 5s
+            const timeout = setTimeout(() => {
+              if (isMounted && !record.torrent.ready) {
+                console.warn("[renderTo] metadata timeout, using proxy");
+                const proxyUrl = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`;
+                setVideoSrc(proxyUrl);
+                setIsReady(true);
+              }
+            }, 5000);
+
+            unsubscribeProgress = () => {
+              clearTimeout(timeout);
+              record.torrent.removeListener("ready", attachRender);
+            };
           }
-        } catch (_) {}
+
+          // wire up progress for the loader UI
+          const updateStats = () => {
+            if (!isMounted) return;
+            setProgress(Math.floor((record.torrent.progress || 0) * 100));
+            setPeerCount(record.torrent.numPeers || 0);
+          };
+          record.torrent.on("download", updateStats);
+          const prevUnsub = unsubscribeProgress;
+          unsubscribeProgress = () => {
+            if (prevUnsub) prevUnsub();
+            record.torrent.removeListener("download", updateStats);
+          };
+
+          return;
+        }
+
+        // 3b. Everything else → use the manager's URL (cache/proxy/blob)
+        const result = await getMediaWithFallback(media, (s) => {
+          if (isMounted) setStatus(s);
+        });
+
+        if (!isMounted) return;
+
+        const url = typeof result === "string" ? result : result?.url;
+        if (!url) throw new Error("No media URL returned");
+
+        currentUrlRef.current = url;
+        setVideoSrc(url);
+        setIsReady(true);
+      } catch (err) {
+        if (isMounted) setStatus("error");
+        console.error("Media load failed:", err);
       }
+    };
 
-      // 2. Proxy / fallback / torrent — delegate to manager
-      //    (this is the path that knows about /api/webseed)
-      setStatus("connecting_p2p");
-      const result = await getMediaWithFallback(media, (s) => {
-        if (isMounted) setStatus(s);
-      });
+    load();
 
-      if (!isMounted) return;
-
-      // Manager returns either a string URL or { url, ... }
-      const url = typeof result === "string" ? result : result?.url;
-      if (!url) throw new Error("No media URL returned");
-
-      currentUrlRef.current = url;
-      setVideoSrc(url);
-      setIsReady(true);
-
-      // If the manager started a torrent, wire up progress + blob swap
-      if (result?.torrent) {
-        const record = getRecord?.(media.cid);
-        const updateStats = () => {
-          if (!isMounted) return;
-          setProgress(Math.floor((result.torrent.progress || 0) * 100));
-          setPeerCount(result.torrent.numPeers || 0);
-          if (record?.blobUrl) {
-            setVideoSrc(record.blobUrl);
-            setStatus("p2p_streaming");
-          }
-        };
-        result.torrent.on("download", updateStats);
-        result.torrent.on("done", updateStats);
-        unsubscribeProgress = () => {
-          result.torrent.removeListener("download", updateStats);
-          result.torrent.removeListener("done", updateStats);
-        };
+    return () => {
+      isMounted = false;
+      if (unsubscribeProgress) unsubscribeProgress();
+      if (objectUrl && objectUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(objectUrl);
       }
-    } catch (err) {
-      if (isMounted) setStatus("error");
-      console.error("Media load failed:", err);
-    }
-  };
-
-  load();
-
-  return () => {
-    isMounted = false;
-    if (unsubscribeProgress) unsubscribeProgress();
-    if (objectUrl && objectUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(objectUrl);
-    }
-    currentUrlRef.current = null;
-  };
-}, [isFocused, media?.cid, media?.magnetLink, media?.ipfsUrl]);
-
+      currentUrlRef.current = null;
+    };
+  }, [isFocused, media?.cid, media?.magnetLink, media?.ipfsUrl]);
   if (!isFocused) return null;
 
   if (!videoSrc || !isReady) {

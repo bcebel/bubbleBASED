@@ -55,36 +55,39 @@ export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
   if (typeof window === "undefined") return null;
 
   // Check if our cached client is dead, and if so, recreate it
-if (!client || client.destroyed) {
-  if (
-    window.globalWebTorrentClient &&
-    !window.globalWebTorrentClient.destroyed
-  ) {
-    client = window.globalWebTorrentClient;
-  } else {
-    const WebTorrent = window.WebTorrent;
-    client = new WebTorrent();
-    window.globalWebTorrentClient = client;
+  if (!client || client.destroyed) {
+    if (
+      window.globalWebTorrentClient &&
+      !window.globalWebTorrentClient.destroyed
+    ) {
+      client = window.globalWebTorrentClient;
+    } else {
+      const WebTorrent = window.WebTorrent;
+      client = new WebTorrent();
+      window.globalWebTorrentClient = client;
+    }
   }
-}
 
   // already tracked
   if (activeDownloads.has(cid)) {
     return activeDownloads.get(cid);
   }
 
-  const infoHash = parseTorrent(magnetLink).infoHash;
-  let torrent = await client.get(infoHash);
+  // strip any webseed from the magnet — we'll pass our own via urlList
+const cleanMagnet = magnetLink.replace(/&ws=[^&]*/g, "");
+const infoHash = parseTorrent(cleanMagnet).infoHash;
+let torrent = await client.get(infoHash);
 
-  if (!torrent) {
-    torrent = await client.add(magnetLink, {
-      store: idbChunkStore,
-      storeOpts: { name: `media-${cid}` },
-      announce: window.enhancedTrackers || webtorrentService.trackers,
-      strategy: media.fileType === "image" ? "rarest" : "sequential",
-      urlList: [`${BACKEND_URL}/api/webseed/${cid}`],
-    });
-  }
+if (!torrent) {
+  torrent = await client.add(cleanMagnet, {
+    // ← must be cleanMagnet
+    store: idbChunkStore,
+    storeOpts: { name: `media-${cid}` },
+    announce: window.enhancedTrackers || webtorrentService.trackers,
+    strategy: media.fileType === "image" ? "rarest" : "sequential",
+    urlList: [`${BACKEND_URL}/api/webseed/${cid}`],
+  });
+}
 
   const record = {
     torrent,
@@ -107,12 +110,13 @@ if (!client || client.destroyed) {
 
       // this is the piece that was missing
       try {
-await saveMedia(
-  cid,
-  blob,
-  media.mimeType || "application/octet-stream",
-  media.fileName || `media-${cid}`,
-);        console.log("[cache] wrote to IDB:", cid);
+        await saveMedia(
+          cid,
+          blob,
+          media.mimeType || "application/octet-stream",
+          media.fileName || `media-${cid}`,
+        );
+        console.log("[cache] wrote to IDB:", cid);
       } catch (err) {
         console.warn("[cache] write failed:", cid, err);
       }
@@ -122,7 +126,9 @@ await saveMedia(
   });
 
   return record;
-};
+};;
+
+
 
 // ─── exported: get a record without starting anything ─────
 export const getRecord = (cid) => activeDownloads.get(cid);
