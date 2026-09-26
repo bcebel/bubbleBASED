@@ -13,6 +13,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Platform, View } from "react-native";
 import { inject } from "@vercel/analytics";
+import  Head  from "expo-router/head";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -43,6 +44,10 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <Head>
+        <title>"bubbleBASED 🫧</title>
+        <meta name="description" content="Welcome to my Expo Web app" />
+      </Head>
       <ApolloProviderWrapper>
         <ThemeProvider
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}

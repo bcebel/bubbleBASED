@@ -3,7 +3,7 @@ import { type PropsWithChildren } from "react";
 import VerificationText from "../components/verification";
 
 export default function Root({ children }: PropsWithChildren) {
-  const title = "BubbleBased - Digital Neighborhoods, Not Just Feeds";
+  const title = "BubbleBased 🫧";
   const description =
     "Join bubblebased.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based.";
   const url = "https://bubblebased.com";
@@ -50,7 +50,7 @@ export default function Root({ children }: PropsWithChildren) {
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={url} />
-        <meta property="og:title" content={title} />
+        <meta property="og:title" content="bubbleBASED" />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={image} />
         <meta
@@ -69,7 +69,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@bubbleBASED_" />
         <meta name="twitter:creator" content="@bubbleBASED_" />
-        <meta name="twitter:title" content={title} />
+        <meta name="twitter:title" content="bubbleBASED" />
         <meta name="twitter:description" content={description} />
         <meta
           name="twitter:image"
