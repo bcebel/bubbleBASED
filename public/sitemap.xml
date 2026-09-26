@@ -31,7 +31,12 @@
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://bubblebased.com/neighborhoods</loc>
+    <loc>https://bubblebased.com/bubbles</loc>
+    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
+    <priority>0.80</priority>
+  </url>
+   <url>
+    <loc>https://bubblebased.com/bubbles/global</loc>
     <lastmod>2026-09-19T22:30:06+00:00</lastmod>
     <priority>0.80</priority>
   </url>
