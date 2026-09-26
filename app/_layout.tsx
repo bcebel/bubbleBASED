@@ -45,7 +45,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <Head>
-        <title>"bubbleBASED 🫧</title>
+        <title>bubbleBASED 🫧</title>
         <meta name="description" content="Welcome to my Expo Web app" />
       </Head>
       <ApolloProviderWrapper>
