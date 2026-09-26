@@ -277,9 +277,48 @@ window.WebTorrent = WebTorrent;
           >
             🫧 BubbleBased 🫧
           </h1>
+
           <p style={{ fontSize: "1.2rem", color: "#ccc", maxWidth: "500px" }}>
             Digital Bubbles 🫧 For Everyone
           </p>
+          <nav
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "10px",
+              justifyContent: "center",
+              marginTop: "1.5rem",
+              maxWidth: "600px",
+            }}
+          >
+            {[
+              { label: "Global", href: "/bubbles/global" },
+              { label: "Login", href: "/login" },
+              { label: "Gallery", href: "/gallery" },
+              { label: "Livestream", href: "/livestream" },
+              { label: "Inbox", href: "/inbox" },
+              { label: "Setup", href: "/setup" },
+              { label: "Sitemap", href: "/sitemap.xml" },
+            ].map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#ffffff",
+                  textDecoration: "none",
+                  padding: "8px 16px",
+                  borderRadius: "20px",
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  backdropFilter: "blur(5px)",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
         </div>
 
         <div id="root">{children}</div>
