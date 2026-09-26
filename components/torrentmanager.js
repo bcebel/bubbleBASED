@@ -54,15 +54,19 @@ export const releaseAll = () => {
 export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
   if (typeof window === "undefined") return null;
 
-  if (!client) {
-    if (window.globalWebTorrentClient) {
-      client = window.globalWebTorrentClient;
-    } else {
-      const WebTorrent = window.WebTorrent;
-      client = new WebTorrent();
-      window.globalWebTorrentClient = client;
-    }
+  // Check if our cached client is dead, and if so, recreate it
+if (!client || client.destroyed) {
+  if (
+    window.globalWebTorrentClient &&
+    !window.globalWebTorrentClient.destroyed
+  ) {
+    client = window.globalWebTorrentClient;
+  } else {
+    const WebTorrent = window.WebTorrent;
+    client = new WebTorrent();
+    window.globalWebTorrentClient = client;
   }
+}
 
   // already tracked
   if (activeDownloads.has(cid)) {
@@ -92,26 +96,30 @@ export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
 
   console.log("[torrent] added", torrent.infoHash);
 
-torrent.on("done", async () => {
-  try {
-    const file = torrent.files[0];
-    if (file) {
+  torrent.on("done", async () => {
+    try {
+      const file = torrent.files[0];
+      if (!file) return;
+
       const blob = await file.blob();
       record.blobUrl = URL.createObjectURL(blob);
       record.isDone = true;
 
-      // persist to IDB so next visit is instant
+      // this is the piece that was missing
       try {
-        await saveMedia(cid, blob);
-        console.log("[torrent] cached to IDB:", cid);
+await saveMedia(
+  cid,
+  blob,
+  media.mimeType || "application/octet-stream",
+  media.fileName || `media-${cid}`,
+);        console.log("[cache] wrote to IDB:", cid);
       } catch (err) {
-        console.warn("[torrent] IDB save failed:", cid, err);
+        console.warn("[cache] write failed:", cid, err);
       }
+    } catch (err) {
+      console.error("Failed to generate blob:", err);
     }
-  } catch (err) {
-    console.error("Failed to generate blob:", err);
-  }
-});
+  });
 
   return record;
 };
@@ -120,25 +128,24 @@ torrent.on("done", async () => {
 export const getRecord = (cid) => activeDownloads.get(cid);
 
 // ─── exported: resolve a URL for the component to render ──
+
 export const getMediaWithFallback = async (media, onStatusChange) => {
   const { magnetLink, cid, ipfsUrl, fallbackUrl } = media;
-
-  console.log("[fallback] start", cid, magnetLink);
-
-  // Prefer the proxy if we have a cid, otherwise use whatever URL we have
   const httpUrl = cid
     ? `${BACKEND_URL}/api/webseed/${cid}`
     : ipfsUrl || fallbackUrl || "";
 
-  // 1. IndexedDB cache
+  // cache check first
   try {
     const cached = await getMedia(cid);
     if (cached?.blob) {
+      console.log("[cache] HIT", cid);
       onStatusChange?.("cached");
       return { url: URL.createObjectURL(cached.blob), source: "cache" };
     }
+    console.log("[cache] miss", cid);
   } catch (err) {
-    console.log("Cache miss:", err);
+    console.log("[cache] lookup error:", err);
   }
 
   // 2. Already in-flight and complete
@@ -153,6 +160,15 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
   // 3. No magnet — return the HTTP URL directly
   if (!magnetLink) {
     onStatusChange?.("fallback_http");
+
+       if (cid) {
+         fetch(httpUrl)
+           .then((res) => res.blob())
+           .then((blob) => saveMedia(cid, blob, media.mimeType, media.fileName))
+           .then(() => console.log("[cache] filled from proxy:", cid))
+           .catch((err) => console.warn("[cache] fill failed:", cid, err));
+       }
+    
     return { url: httpUrl, source: "http" };
   }
 
@@ -164,6 +180,18 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
       if (!resolved) {
         resolved = true;
         onStatusChange?.("fallback_http");
+
+
+        if (cid) {
+          fetch(httpUrl)
+            .then((res) => res.blob())
+            .then((blob) =>
+              saveMedia(cid, blob, media.mimeType, media.fileName),
+            )
+            .then(() => console.log("[cache] filled from proxy:", cid))
+            .catch((err) => console.warn("[cache] fill failed:", cid, err));
+        }
+
         resolve({ url: httpUrl, source: "http_fallback" });
       }
     }, 4000);
@@ -202,6 +230,18 @@ export const getMediaWithFallback = async (media, onStatusChange) => {
         resolved = true;
         clearTimeout(fallbackTimer);
         onStatusChange?.("fallback_http");
+
+          if (cid) {
+            fetch(httpUrl)
+              .then((res) => res.blob())
+              .then((blob) =>
+                saveMedia(cid, blob, media.mimeType, media.fileName),
+              )
+              .then(() => console.log("[cache] filled from proxy:", cid))
+              .catch((err) => console.warn("[cache] fill failed:", cid, err));
+          }
+
+
         resolve({ url: httpUrl, source: "http_fallback" });
       }
     }

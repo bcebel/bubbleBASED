@@ -12,12 +12,6 @@ export default function TabLayout() {
   useEffect(() => {
  const onVisible = () => {
    if (document.visibilityState !== "visible") return;
-   if (window.globalWebTorrentClient) {
-     try {
-       window.globalWebTorrentClient.destroy();
-     } catch {}
-     window.globalWebTorrentClient = null;
-   }
    setWakeKey((k) => k + 1);
  };
     document.addEventListener("visibilitychange", onVisible);
