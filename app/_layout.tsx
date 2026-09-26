@@ -46,7 +46,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <Head>
         <title>bubbleBASED 🫧</title>
-        <meta name="description" content="Welcome to my Expo Web app" />
+        <meta
+          name="description"
+          content="Join bubblebased.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based."
+        />
       </Head>
       <ApolloProviderWrapper>
         <ThemeProvider
