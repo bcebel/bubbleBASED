@@ -256,9 +256,6 @@ export default function AllNeighborhoodsGallery({
           magnetLink: m.magnetURI,
           fileType: m.mediaType,
           fileName: m.fileName || `media-${m.cid}`,
-          fileSize: m.fileSize,
-          mimeType: m.mimeType,
-
           postId: post.id,
           content: post.content,
           createdAt: post.createdAt,
@@ -268,8 +265,21 @@ export default function AllNeighborhoodsGallery({
       }
     }
 
-    return items;
-  }, [data]);
+    // Inject an ad every 8 media items
+    const withAds = [];
+    items.forEach((item, index) => {
+      withAds.push(item);
+      if ((index + 1) % 8 === 0 && adData?.randomAffiliateLink) {
+        withAds.push({
+          isAd: true,
+          id: `ad-${index}`,
+          ...adData.randomAffiliateLink,
+        });
+      }
+    });
+
+    return withAds;
+  }, [data, adData]);
 
   // MUST BE HERE: Before any `if (loading)` or `if (error)` returns!
   /*

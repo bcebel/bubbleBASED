@@ -338,34 +338,44 @@ export default function AllNeighborhoodsGallery({
   const [mediaAspect, setMediaAspect] = useState(1);
   const scrollRef = useRef(null);
 
-  const mediaItems = React.useMemo(() => {
-    const posts = data?.myNeighborhoodsPosts || [];
-    const items = [];
+const mediaItems = React.useMemo(() => {
+  const posts = data?.myNeighborhoodsPosts || [];
+  const rawItems = [];
 
-    for (const post of posts) {
-      for (const m of post.media || []) {
-        if (!m.cid) continue;
-        items.push({
-          // media identity
-          id: m._id,
-          cid: m.cid,
-          url: m.url,
-          magnetLink: m.magnetURI, // rename to match WebTorrentMedia's expected prop
-          fileType: m.mediaType, // "video" | "image"
-          fileName: `media-${m.cid}`, // or derive from url
-
-          // post context (for display)
-          postId: post.id,
-          content: post.content,
-          createdAt: post.createdAt,
-          author: post.author,
-          neighborhood: post.neighborhood,
-        });
-      }
+  for (const post of posts) {
+    for (const m of post.media || []) {
+      if (!m.cid) continue;
+      rawItems.push({
+        id: m._id,
+        cid: m.cid,
+        url: m.url,
+        magnetLink: m.magnetURI,
+        fileType: m.mediaType,
+        fileName: m.fileName || `media-${m.cid}`,
+        postId: post.id,
+        content: post.content,
+        createdAt: post.createdAt,
+        author: post.author,
+        neighborhood: post.neighborhood,
+      });
     }
+  }
 
-    return items;
-  }, [data]);
+  // Inject an ad every 8 media items
+  const withAds = [];
+  rawItems.forEach((item, index) => {
+    withAds.push(item);
+    if ((index + 1) % 8 === 0 && adData?.randomAffiliateLink) {
+      withAds.push({
+        isAd: true,
+        id: `ad-${index}`,
+        ...adData.randomAffiliateLink,
+      });
+    }
+  });
+
+  return withAds;
+}, [data, adData]);
 
   // MUST BE HERE: Before any `if (loading)` or `if (error)` returns!
   /*
