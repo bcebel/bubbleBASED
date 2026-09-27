@@ -101,6 +101,9 @@ const MediaDisplay = ({
 
   const displayUrl = getDisplayUrl();
 
+  console.log("item in MediaDisplay:", item);
+  console.log("getFileType result:", getFileType(item));
+
   if (!displayUrl) {
     return (
       <View style={styles.noMedia}>
@@ -126,6 +129,25 @@ const MediaDisplay = ({
       </View>
     );
   }
+
+   if ( isVideo) {
+     return (
+       <View style={styles.magnetContainer}>
+         <WebTorrentMedia
+           media={{
+             ...item,
+             imageUrl: isImage ? displayUrl : null,
+             videoUrl: isVideo ? displayUrl : null,
+             fileType: fileType,
+             isGif: isGif,
+           }}
+           isFocused={isFocused}
+           isAlmostFocused={isAlmostFocused}
+         />
+       </View>
+     );
+   }
+
 
   if (isGif) {
     return (
@@ -176,19 +198,6 @@ const MediaDisplay = ({
     );
   }
 
-  if (isVideo) {
-    return (
-      <TouchableOpacity
-        style={styles.videoContainer}
-        onPress={() => Linking.openURL(displayUrl)}
-      >
-        <View style={styles.videoThumbnail}>
-          <Text style={styles.playIcon}>▶</Text>
-        </View>
-        <Text style={styles.videoLabel}>Tap to play video</Text>
-      </TouchableOpacity>
-    );
-  }
 
   return (
     <TouchableOpacity

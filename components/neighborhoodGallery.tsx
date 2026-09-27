@@ -124,6 +124,24 @@ const MediaDisplay = ({
     );
   }
 
+   if ( isVideo) {
+       return (
+         <View style={styles.magnetContainer}>
+           <WebTorrentMedia
+             media={{
+               ...item,
+               imageUrl: isImage ? displayUrl : null,
+               videoUrl: isVideo ? displayUrl : null,
+               fileType: fileType,
+               isGif: isGif,
+             }}
+             isFocused={isFocused}
+             isAlmostFocused={isAlmostFocused}
+           />
+         </View>
+       );
+     }
+
   if (isGif) {
     return (
       <TouchableOpacity
