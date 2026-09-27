@@ -130,7 +130,7 @@ const MediaDisplay = ({
     );
   }
 
-   if ( isVideo) {
+   if (isVideo && item.cid) {
      return (
        <View style={styles.magnetContainer}>
          <WebTorrentMedia
