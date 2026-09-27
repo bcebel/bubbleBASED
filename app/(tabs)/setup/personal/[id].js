@@ -102,7 +102,7 @@ export default function NeighborhoodDetailScreen() {
   const isPersonal = neighborhood.type === "personal";
 
   const canInvite = (() => {
-    if (!neighborhood || !username) return false;
+    if (!neighborhood || !username || isPersonal) return false;
     const member = neighborhood.members?.find(
       (m) => m.user?.username === username,
     );
@@ -254,7 +254,7 @@ export default function NeighborhoodDetailScreen() {
           </TouchableOpacity>
         </BlurView>
 
-        {canInvite && (
+        {canInvite &&  (
           <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
             <TouchableOpacity
               onPress={() =>

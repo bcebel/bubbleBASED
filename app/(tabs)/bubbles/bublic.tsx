@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
     overflow: "scroll",
     justifyContent: "flex-end",
     borderWidth: 2,
-    borderColor: "#008888",
+    borderColor: "#888800",
     borderRadius: 48,
   },
   neighborhoodCardOverlay: {
