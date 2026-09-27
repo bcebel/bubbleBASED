@@ -249,6 +249,7 @@ const MediaDisplay = ({
           source={{ uri: displayUrl }}
           style={styles.standardImage}
           contentFit="contain"
+          cachePolicy="memory-disk"
           transition={300}
           onLoad={(e) => {
             const source = e.source;

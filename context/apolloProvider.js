@@ -42,8 +42,9 @@ export async function clearApolloStore() {
 export function useApolloClient() {
   const [client, setClient] = useState(null);
   const [cacheReady, setCacheReady] = useState(false);
-  console.log("🔌 [WS] Connecting to:", `wss://${WS_URL}/graphql`);
+ 
   useEffect(() => {
+     console.log("🔌 [WS] Connecting to:", `wss://${WS_URL}/graphql`);
     const initializeClient = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
@@ -140,6 +141,18 @@ export function useApolloClient() {
         const newClient = new ApolloClient({
           link: splitLink,
           cache: cache,
+          defaultOptions: {
+            watchQuery: {
+              fetchPolicy: "cache-and-network",
+              nextFetchPolicy: "cache-first", // see note below
+            },
+            query: {
+              fetchPolicy: "cache-and-network",
+            },
+            mutate: {
+              // mutations always go to network by default, no change needed
+            },
+          },
         });
 
         globalApolloClient = newClient;

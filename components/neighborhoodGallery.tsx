@@ -161,6 +161,7 @@ const MediaDisplay = ({
           style={styles.standardImage}
           contentFit="contain"
           transition={300}
+          cachePolicy="memory-disk"
           onLoad={(e) => {
             const source = e.source;
             if (source && source.width && source.height) {
