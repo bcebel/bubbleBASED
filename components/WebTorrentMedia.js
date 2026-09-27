@@ -203,16 +203,16 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
 
         if (!isMounted) return;
 
-        // 3a. Video + torrent available → renderTo (streams from pieces)
+        // 3a. Video + torrent available → streamTo (streams from pieces)
         if (!isImage && record?.torrent) {
           const attachRender = () => {
             const file = record.torrent.files?.[0];
             const el = videoRef.current;
             if (!file || !el) return;
 
-            file.renderTo(el, { autoplay: true, controls: false }, (err) => {
+            file.streamTo(el, { autoplay: true, controls: false }, (err) => {
               if (err) {
-                console.warn("[renderTo] failed:", err);
+                console.warn("[streamTo] failed:", err);
                 // fall back to proxy URL
                 const proxyUrl = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`;
                 setVideoSrc(proxyUrl);
@@ -231,12 +231,12 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
             // if ready never fires, fall back after 5s
             const timeout = setTimeout(() => {
               if (isMounted && !record.torrent.ready) {
-                console.warn("[renderTo] metadata timeout, using proxy");
+                console.warn("[streamTo] metadata timeout, using proxy");
                 const proxyUrl = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`;
                 setVideoSrc(proxyUrl);
                 setIsReady(true);
               }
-            }, 5000);
+            }, 6000);
 
             unsubscribeProgress = () => {
               clearTimeout(timeout);

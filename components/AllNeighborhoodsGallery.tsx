@@ -445,7 +445,7 @@ export default function AllNeighborhoodsGallery({
           const neighborhoodName =
             item.neighborhood?.name || "Unknown Neighborhood";
           const isFocused = Math.abs(index - activeIndex) <= 1;
-          const isAlmostFocused = Math.abs(index - activeIndex) <= 4;
+          const isAlmostFocused = Math.abs(index - activeIndex) <= 5;
           const uniqueKey = `${item.id}-${index}`;
 
           if (item.isAd) {
