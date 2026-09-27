@@ -42,7 +42,7 @@ const DELETE_NEIGHBORHOOD = gql`
 function PreviewView({ neighborhood }) {
   const bubblePhotoSource = neighborhood.bubblePhotoCid
     ? {
-        uri: `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${neighborhood.bubblePhotoCid}`,
+        uri: `${PINATA_GATEWAY}/api/webseed/${neighborhood.bubblePhotoCid}`,
       }
     : require("@/assets/images/bbl.jpg");
 
