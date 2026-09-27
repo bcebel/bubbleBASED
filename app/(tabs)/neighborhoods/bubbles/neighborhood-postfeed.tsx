@@ -90,7 +90,7 @@ export default function NeighborhoodGalleryScreen() {
 
   // ✅ Logged in: Render the actual feed
   return <PostFeed neighborhoodId={neighborhoodId} />;
-}
+} 
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

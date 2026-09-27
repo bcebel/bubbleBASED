@@ -121,7 +121,7 @@ export default function NeighborhoodsScreen() {
 
   const renderItem = ({ item }) => {
     return (
-      <Link href={`/neighborhoods/bubbles/${item.id}`} asChild>
+      <Link href={`/bubbles/${item.id}`} asChild>
         <View style={styles.neighborhoodItem}>
           <ImageBackground
             source={

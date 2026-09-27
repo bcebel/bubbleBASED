@@ -17,7 +17,7 @@ import {
   GET_NEIGHBORHOOD,
   UPDATE_BUBBLE_PHOTO,
   LEAVE_NEIGHBORHOOD,
-} from "../../../graphql/queries";
+} from "../../../app/graphql/queries";
 import { ImageBackground } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
@@ -249,7 +249,7 @@ export default function NeighborhoodDetailScreen() {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
+                `/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -257,48 +257,16 @@ export default function NeighborhoodDetailScreen() {
           </TouchableOpacity>
         </BlurView>
 
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>💬 Chat</Text>
-          </TouchableOpacity>
-        </BlurView>
 
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/neighborhoods/bubbles/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>🖼️ Gallery</Text>
-          </TouchableOpacity>
-        </BlurView>
 
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/neighborhoods/bubbles/neighborhood-members?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>👥 Members</Text>
-          </TouchableOpacity>
-        </BlurView>
+    
 
         {canInvite && (
           <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
             <TouchableOpacity
               onPress={() =>
                 router.replace(
-                  `/neighborhoods/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
+                  `/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
                 )
               }
             >
@@ -306,15 +274,7 @@ export default function NeighborhoodDetailScreen() {
             </TouchableOpacity>
           </BlurView>
         )}
-        {!isOwner && !isPersonal && (
-          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-            <TouchableOpacity onPress={handleLeaveBubble}>
-              <Text style={[styles.button, { color: "#ff375f" }]}>
-                🚪 Leave Bubble
-              </Text>
-            </TouchableOpacity>
-          </BlurView>
-        )}
+    
 
         {isOwner && !isPersonal && (
           <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
