@@ -79,7 +79,7 @@ export default function PostFeed({
           return item.id ? `post-${item.id}` : `item-${index}`;
         }}
         renderItem={({ item, index }) => {
-          if ((index + 1) % 5 === 0) {
+          if ((index + 1) % 10 === 0) {
             return <RandomAd />;
           }
           return (
