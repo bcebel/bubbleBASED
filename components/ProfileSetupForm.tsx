@@ -9,6 +9,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Switch,
 } from "react-native";
 import { useMutation, useQuery, gql } from "@apollo/client";
 import * as ImagePicker from "expo-image-picker";
@@ -35,16 +36,19 @@ const UPDATE_PROFILE = gql`
     $bio: String
     $profilePhoto: String
     $affiliateLinks: [AffiliateLinkInput]
+    $isPublic: Boolean
   ) {
     updateProfile(
       bio: $bio
       profilePhoto: $profilePhoto
       affiliateLinks: $affiliateLinks
+      isPublic: $isPublic
     ) {
       id
       username
       bio
       profilePhoto
+      isPublic
       affiliateLinks {
         id
         url
@@ -234,41 +238,57 @@ export default function ProfileSetupScreen() {
 
   // --- SAVE LOGIC (FIXED) ---
   const handleSave = async () => {
-    try {
-      setSaving(true);
+    
+   try {
+     setSaving(true);
 
-      // Format links as the old working code did
-      const validLinks = affiliateLinks
-        .filter((link) => link.rawHtml && link.rawHtml.trim())
-        .map((link) => ({
-          url: link.rawHtml, // Send raw HTML as url
-          title: "", // Empty title - backend will extract
-        }));
+     const validLinks = affiliateLinks
+       .filter((link) => link.rawHtml && link.rawHtml.trim())
+       .map((link) => ({
+         url: link.rawHtml,
+         title: "",
+       }));
 
-      console.log("Sending to backend:", validLinks);
+     // 1. Update profile (bio + photo + affiliate links)
+     const { data, errors } = await updateProfile({
+       variables: {
+         bio: bio || "",
+         profilePhoto: profilePhotoCid || "",
+         affiliateLinks: validLinks,
+         isPublic,
+       },
+     });
 
-      const { data, errors } = await updateProfile({
-        variables: {
-          bio: bio || "",
-          profilePhoto: profilePhotoCid || "",
-          affiliateLinks: validLinks,
-        },
-      });
+     if (errors && errors.length > 0) {
+       throw new Error(errors[0].message);
+     }
 
-      if (errors && errors.length > 0) {
-        throw new Error(errors[0].message);
-      }
+     // 2. Update visibility (separate mutation)
+console.log("About to send isPublic:", isPublic, typeof isPublic);
 
-      if (data?.updateProfile) {
-        Alert.alert("Success", "Profile saved successfully!");
-        refetchProfile();
-      }
-    } catch (err) {
-      Alert.alert("Error", err.message);
-    } finally {
-      setSaving(false);
-    }
-  };
+const { errors: visErrors, data: visData } = await updateVisibility({
+  variables: { isPublic },
+  context: {
+    headers: {
+      Authorization: `Bearer ${await AsyncStorage.getItem("token")}`,
+    },
+  },
+});
+console.log("Server returned:", visData?.updateVisibility?.isPublic);
+     
+
+     if (visErrors && visErrors.length > 0) {
+       throw new Error(visErrors[0].message);
+     }
+
+     Alert.alert("Success", "Profile saved successfully!");
+     refetchProfile();
+   } catch (err) {
+     Alert.alert("Error", err.message);
+   } finally {
+     setSaving(false);
+   }
+ };
   // --- RENDER LOGIC (Minor Fixes) ---
 
   if (loadingProfile) {
@@ -323,6 +343,15 @@ export default function ProfileSetupScreen() {
             <Text style={styles.currentBio}>{bio}</Text>
           ) : (
             <Text style={styles.noData}>No bio set</Text>
+          )}
+        </View>
+
+        <View style={styles.bioSection}>
+          <Text style={styles.label}>Privacy:</Text>
+          {!isPublic ? (
+            <Text style={styles.currentBio}>Private</Text>
+          ) : (
+            <Text style={styles.noData}>Public</Text>
           )}
         </View>
 
@@ -387,7 +416,8 @@ export default function ProfileSetupScreen() {
       </View>
 
       <View style={styles.formSection}>
-        <Text style={styles.sectionTitle}>Update Profile Settings</Text><TouchableOpacity
+        <Text style={styles.sectionTitle}>Update Profile Settings</Text>
+        <TouchableOpacity
           style={styles.uploadButton}
           onPress={pickImage}
           disabled={uploading}
@@ -414,6 +444,21 @@ export default function ProfileSetupScreen() {
           maxLength={500}
         />
         <Text style={styles.charCount}>{bio.length}/500</Text>
+
+        <View style={styles.toggleRow}>
+          <Text style={styles.label}>{isPublic ? "Public" : "Private"}</Text>
+          <Switch
+            value={isPublic}
+            onValueChange={setIsPublic}
+            trackColor={{ false: "#333", true: "#591155" }}
+            thumbColor="#F5F2FA"
+          />
+        </View>
+        <Text style={styles.helperText}>
+          {isPublic
+            ? "Anyone can see your profile and posts"
+            : "Only you and your bubbles can see your content"}
+        </Text>
 
         <Text style={styles.label}>Paste Affiliate HTML Code Snippet:</Text>
         {affiliateLinks.map((link, index) => (
@@ -684,5 +729,21 @@ const styles = StyleSheet.create({
     color: "#F5F2FA",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#1C0A2E",
+    padding: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#333",
+    marginBottom: 8,
+  },
+  helperText: {
+    color: "#8A829E",
+    fontSize: 12,
+    marginBottom: 20,
   },
 });
