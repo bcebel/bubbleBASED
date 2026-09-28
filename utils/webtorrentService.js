@@ -13,7 +13,6 @@ class WebTorrentService {
             "wss://tracker.files.fm:7073/announce",
             "wss://tracker.webtorrent.dev",
             "wss://tracker.openwebtorrent.com",
-            "wss://tracker.btorrent.xyz",
           ];
 
     // Caching layer
