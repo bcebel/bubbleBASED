@@ -11,8 +11,6 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { Link } from "expo-router";
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import {
@@ -52,12 +50,6 @@ function PreviewView({ neighborhood, onJoin, onBrowse }) {
 
   return (
     <View style={styles.container}>
-      <Link href={`/bubbles/global`} replace asChild>
-        <TouchableOpacity style={styles.backButton}>
-          <Text style={styles.bubbleName}>← Back to Global Bubbles</Text>
-        </TouchableOpacity>
-      </Link>
-
       <ImageBackground
         source={bubblePhotoSource}
         style={styles.bubbleHeader}
@@ -101,7 +93,9 @@ export default function NeighborhoodDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  // ✅ ALL HOOKS AT THE TOP
+  const [isLoggedIn, setIsLoggedIn] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
   const { loading, error, data, refetch } = useQuery(GET_NEIGHBORHOOD, {
     variables: { id },
     fetchPolicy: "network-only",
@@ -118,8 +112,18 @@ export default function NeighborhoodDetailScreen() {
     AsyncStorage.getItem("username").then((saved) => setUsername(saved || ""));
   }, []);
 
-  // ✅ NOW early returns are safe
-  if (loading) return <ActivityIndicator size="large" style={styles.loading} />;
+  useEffect(() => {
+    const checkLogin = async () => {
+      const token = await AsyncStorage.getItem("token");
+      setIsLoggedIn(!!token);
+      setAuthLoading(false);
+    };
+    checkLogin();
+  }, []);
+
+  if (loading || authLoading) {
+    return <ActivityIndicator size="large" style={styles.loading} />;
+  }
   if (error) return <Text style={styles.error}>Error: {error.message}</Text>;
 
   const neighborhood = data?.neighborhood;
@@ -136,7 +140,6 @@ export default function NeighborhoodDetailScreen() {
     (m) => m.user?.username === username,
   );
 
-  // ✅ HANDLERS BEFORE ANY EARLY RETURN THAT USES THEM
   const handleJoin = async () => {
     try {
       await joinNeighborhood({
@@ -232,7 +235,6 @@ export default function NeighborhoodDetailScreen() {
     }
   };
 
-  // ✅ Derived values (no hooks)
   const bubblePhotoSource = neighborhood.bubblePhotoCid
     ? { uri: `https://${PINATA_GATEWAY}/ipfs/${neighborhood.bubblePhotoCid}` }
     : require("@/assets/images/bbl.jpg");
@@ -250,17 +252,57 @@ export default function NeighborhoodDetailScreen() {
     return isOwner || isModerator;
   })();
 
-  // ✅ PREVIEW EARLY RETURN (after handlers are defined)
-if (!isMember && neighborhood.type !== "personal" && previewing) {
-  return (
-    <PreviewView
-      neighborhood={neighborhood}
-      onJoin={handleJoin}
-      onBrowse={() => setPreviewing(false)}
-    />
-  );
-}
-  // ✅ Render full view
+  // Logged out: Posts-only preview
+  if (isLoggedIn === false) {
+    return (
+      <View style={styles.container}>
+        <ImageBackground
+          source={bubblePhotoSource}
+          style={styles.bubbleHeader}
+          resizeMode="cover"
+        >
+          <LinearGradient
+            colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.2)"]}
+            style={styles.gradientOverlay}
+          >
+            <View style={styles.headerContent}>
+              <Text style={styles.bubbleName}>{neighborhood.name}</Text>
+              <Text style={styles.bubbleDescription}>
+                {neighborhood.description}
+              </Text>
+            </View>
+          </LinearGradient>
+        </ImageBackground>
+
+        <ScrollView style={styles.menu}>
+          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+            <TouchableOpacity
+              onPress={() =>
+                router.replace(
+                  `/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
+                )
+              }
+            >
+              <Text style={styles.button}>📝 Posts</Text>
+            </TouchableOpacity>
+          </BlurView>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // Logged in, non-member, preview mode
+  if (!isMember && neighborhood.type !== "personal" && previewing) {
+    return (
+      <PreviewView
+        neighborhood={neighborhood}
+        onJoin={handleJoin}
+        onBrowse={() => setPreviewing(false)}
+      />
+    );
+  }
+
+  // Full view
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -294,7 +336,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
+                `/neighborhoods/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -302,7 +344,66 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           </TouchableOpacity>
         </BlurView>
 
-       
+        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+          <TouchableOpacity
+            onPress={() =>
+              router.replace(
+                `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
+              )
+            }
+          >
+            <Text style={styles.button}>💬 Chat</Text>
+          </TouchableOpacity>
+        </BlurView>
+
+        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+          <TouchableOpacity
+            onPress={() =>
+              router.replace(
+                `/neighborhoods/bubbles/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
+              )
+            }
+          >
+            <Text style={styles.button}>🖼️ Gallery</Text>
+          </TouchableOpacity>
+        </BlurView>
+
+        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+          <TouchableOpacity
+            onPress={() =>
+              router.replace(
+                `/neighborhoods/bubbles/neighborhood-members?neighborhoodId=${neighborhood.id}`,
+              )
+            }
+          >
+            <Text style={styles.button}>👥 Members</Text>
+          </TouchableOpacity>
+        </BlurView>
+
+        {canInvite && (
+          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+            <TouchableOpacity
+              onPress={() =>
+                router.replace(
+                  `/neighborhoods/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
+                )
+              }
+            >
+              <Text style={styles.button}>📧 Invite</Text>
+            </TouchableOpacity>
+          </BlurView>
+        )}
+
+        {!isOwner && !isPersonal && (
+          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+            <TouchableOpacity onPress={handleLeaveBubble}>
+              <Text style={[styles.button, { color: "#ff375f" }]}>
+                🚪 Leave Bubble
+              </Text>
+            </TouchableOpacity>
+          </BlurView>
+        )}
+
         {isOwner && !isPersonal && (
           <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
             <TouchableOpacity onPress={handleDeleteBubble}>
