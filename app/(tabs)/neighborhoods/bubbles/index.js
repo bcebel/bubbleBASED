@@ -28,7 +28,7 @@ import WebTorrentMedia from "@/components/TorrentOnlyMedia";
 
 // Import your sibling tab components (Adjust relative paths if needed)
 import BublicScreen from "./bublic";
-import GlobalScreen from "../../bubbles/global";
+import GlobalScreen from "./global";
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 
