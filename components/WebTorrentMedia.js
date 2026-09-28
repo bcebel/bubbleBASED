@@ -12,6 +12,7 @@ import idbChunkStore from "@thaunknown/idb-chunk-store";
 import webtorrentService from "../utils/webtorrentService";
 import { Platform } from "react-native";
 import * as FileSystem from "expo-file-system";
+import { getMagnetForCid } from "../utils/magnetCache";
 import {
   getOrStartTorrent,
   getMediaWithFallback,
@@ -183,6 +184,14 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
 
         // 1. Cache first
         if (media.cid) {
+          let magnetLink =
+            media.magnetLink || (await getMagnetForCid(media.cid));
+          if (!magnetLink && media.cid) {
+            magnetLink = await getMagnetForCid(media.cid);
+          }
+
+          // then pass magnetLink to whatever you call next
+      
           try {
             const cached = await getMedia(media.cid);
             if (cached?.blob && isMounted) {
@@ -280,9 +289,12 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
           };
         }
         // 3b. Everything else → use the manager's URL (cache/proxy/blob)
-        const result = await getMediaWithFallback(media, (s) => {
-          if (isMounted) setStatus(s);
-        });
+const result = await getMediaWithFallback({ ...media, magnetLink }, (s) => {
+  if (isMounted) setStatus(s);
+});
+setVideoSrc(result.url);
+        
+        
 
         if (!isMounted) return;
 
