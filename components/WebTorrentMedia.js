@@ -223,7 +223,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
               if (err) {
                 console.warn("[streamTo] failed:", err);
                 // fall back to proxy URL
-                const proxyUrl = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`;
+                const proxyUrl = `https://bubblebased.com/api/webseed/${media.cid}`;
                 setVideoSrc(proxyUrl);
                 setIsReady(true);
               } else {
@@ -237,7 +237,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
           let timeout = null;
 
           const tryAttach = () => {
-            if (record.torrent.progress > 25 && !attached) {
+            if (record.torrent.progress > 50 && !attached) {
               attached = true;
               record.torrent.removeListener("download", tryAttach);
               if (timeout) clearTimeout(timeout);

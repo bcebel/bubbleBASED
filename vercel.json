@@ -51,6 +51,14 @@
           "value": "1"
         }
       ]
-    }
+    },
+    {
+  "source": "/api/media/:path*",
+  "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/media/:path*"
+},
+{
+  "source": "/api/media/:path*",
+  "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }]
+}
   ]
 }
