@@ -14,7 +14,11 @@ import { gql, useQuery } from "@apollo/client";
 import WebTorrentMedia from "../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "./AdMessage";
-import { releaseOutsideWindow, releaseAll } from "../components/torrentmanager";
+import {
+  releaseOutsideWindow,
+  cancelScheduledRelease,
+  scheduleReleaseAll,
+} from "../components/torrentmanager";
 
 
 import {
@@ -395,10 +399,13 @@ const mediaItems = React.useMemo(() => {
   }, [activeIndex, mediaItems]);
 
   // release everything when leaving the gallery
-  useEffect(() => {
-    return () => releaseAll();
-  }, []);
-  
+useEffect(() => {
+  cancelScheduledRelease();
+  return () => {
+    // on unmount, don't release — just schedule
+    scheduleReleaseAll(5 * 60 * 1000); // 5 minutes
+  };
+}, []);
   const handleRefresh = async () => {
     setRefreshing(true);
     await refetch();
@@ -473,8 +480,8 @@ const mediaItems = React.useMemo(() => {
           const isInWindow = index >= startIndex && index <= endIndex;
           const neighborhoodName =
             item.neighborhood?.name || "Unknown Neighborhood";
-          const isFocused = Math.abs(index - activeIndex) <= 1;
-          const isAlmostFocused = Math.abs(index - activeIndex) <= 5;
+          const isFocused = Math.abs(index - activeIndex) <= 3;
+          const isAlmostFocused = Math.abs(index - activeIndex) <= 7;
           const uniqueKey = `${item.id}-${index}`;
 
           if (item.isAd) {

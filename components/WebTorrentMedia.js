@@ -242,7 +242,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
         setVideoSrc(proxyUrl);
         setIsReady(true);
       }
-    }, 5000);
+    }, 4000);
 
     unsubscribeProgress = () => {
       clearTimeout(timeout);

@@ -33,7 +33,7 @@ function releaseTorrent(cid) {
 // ─── exported: release everything outside [i-1, i, i+1] ───
 export const releaseOutsideWindow = (mediaList, currentIndex) => {
   const keep = new Set();
-  for (let i = currentIndex - 1; i <= currentIndex + 1; i++) {
+  for (let i = currentIndex - 2; i <= currentIndex + 5; i++) {
     const item = mediaList[i];
     if (item?.cid) keep.add(item.cid);
   }
@@ -43,6 +43,23 @@ export const releaseOutsideWindow = (mediaList, currentIndex) => {
   }
 };
 
+
+let releaseTimer = null;
+
+export const scheduleReleaseAll = (delayMs = 5 * 60 * 1000) => {
+  if (releaseTimer) clearTimeout(releaseTimer);
+  releaseTimer = setTimeout(() => {
+    releaseAll();
+    releaseTimer = null;
+  }, delayMs);
+};
+
+export const cancelScheduledRelease = () => {
+  if (releaseTimer) {
+    clearTimeout(releaseTimer);
+    releaseTimer = null;
+  }
+};
 // ─── exported: release everything (call on gallery unmount) ─
 export const releaseAll = () => {
   for (const cid of Array.from(activeDownloads.keys())) {
