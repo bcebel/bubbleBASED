@@ -232,7 +232,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
           let timeout = null;
 
           const tryAttach = () => {
-            if (record.torrent.progress > 0.5 && !attached) {
+            if (record.torrent.progress > 25 && !attached) {
               attached = true;
               record.torrent.removeListener("download", tryAttach);
               if (timeout) clearTimeout(timeout);
