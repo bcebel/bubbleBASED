@@ -22,7 +22,7 @@ import {
 const CACHE_FOLDER = `${FileSystem.cacheDirectory}webtorrent_media/`;
 
 const ensureCacheDir = async () => {
-  x;
+
   if (Platform.OS !== "web") {
     const dirInfo = await FileSystem.getInfoAsync(CACHE_FOLDER);
     if (!dirInfo.exists) {
@@ -182,15 +182,11 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
       try {
         setStatus("checking_cache");
 
+        const magnetLink =
+          media.magnetLink || (await getMagnetForCid(media.cid));
+
         // 1. Cache first
         if (media.cid) {
-          let magnetLink =
-            media.magnetLink || (await getMagnetForCid(media.cid));
-          if (!magnetLink && media.cid) {
-            magnetLink = await getMagnetForCid(media.cid);
-          }
-
-          // then pass magnetLink to whatever you call next
       
           try {
             const cached = await getMedia(media.cid);
@@ -209,7 +205,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
         // 2. Not cached — start the torrent and get the record
         setStatus("connecting_p2p");
         const record = await getOrStartTorrent(
-          media.magnetLink,
+         magnetLink,
           media.cid,
           media,
         ).catch(() => null);
