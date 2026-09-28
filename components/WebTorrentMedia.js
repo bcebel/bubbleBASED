@@ -224,25 +224,31 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
             });
           };
 
-          if (record.torrent.ready) {
-            attachRender();
-          } else {
-            record.torrent.once("ready", attachRender);
-            // if ready never fires, fall back after 5s
-            const timeout = setTimeout(() => {
-              if (isMounted && !record.torrent.ready) {
-                console.warn("[streamTo] metadata timeout, using proxy");
-                const proxyUrl = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`;
-                setVideoSrc(proxyUrl);
-                setIsReady(true);
-              }
-            }, 6000);
+  const tryAttach = () => {
+    if (record.torrent.progress >= 0.02) {
+      attachRender();
+      return true;
+    }
+    return false;
+  };
 
-            unsubscribeProgress = () => {
-              clearTimeout(timeout);
-              record.torrent.removeListener("ready", attachRender);
-            };
-          }
+  if (!tryAttach()) {
+    record.torrent.on("download", tryAttach);
+    // if ready never fires, fall back after 5s
+    const timeout = setTimeout(() => {
+      if (isMounted && !record.torrent.ready && record.torrent.progress === 0) {
+        console.warn("[streamTo] metadata timeout, using proxy");
+        const proxyUrl = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`;
+        setVideoSrc(proxyUrl);
+        setIsReady(true);
+      }
+    }, 5000);
+
+    unsubscribeProgress = () => {
+      clearTimeout(timeout);
+      record.torrent.removeListener("ready", attachRender);
+    };
+  }
 
           // wire up progress for the loader UI
           const updateStats = () => {
