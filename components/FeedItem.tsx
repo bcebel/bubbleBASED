@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   feedItemContainer: {
     backgroundColor: "#1E1035",
     borderRadius: 12,
-    padding: 7,
+    padding: 1,
     marginBottom: 6,
     borderWidth: 1,
     borderColor: "rgba(255,128,0,0.15)", // 🧡 Orange accent
@@ -207,13 +207,13 @@ const styles = StyleSheet.create({
     borderRadius: 48,
     backgroundColor: "#130720",
     borderWidth: 2,
-    borderColor: "#00ffff", // 
+    borderColor: "#00ffff", //
   },
   headerTextContainer: {
     marginLeft: 10,
   },
   username: {
-    color: "#00ffff", // 
+    color: "#00ffff", //
     fontSize: 18,
     fontWeight: "700",
   },
@@ -232,11 +232,11 @@ const styles = StyleSheet.create({
   mediaContainer: {
     borderRadius: 8,
     overflow: "hidden",
-    gap: 4,
+    gap: 1,
   },
   mediaWrapper: {
     width: "100%",
-    height: 240,
+    aspectRatio: 4 / 3,
     backgroundColor: "#130720",
     borderRadius: 8,
     overflow: "hidden",

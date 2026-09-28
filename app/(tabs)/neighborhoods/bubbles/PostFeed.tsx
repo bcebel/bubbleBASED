@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#130720",
-    padding: 20,
+    padding: 1,
   },
   loadingText: {
     color: "#8A829E",
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   emptyContainer: {
-    padding: 30,
+    padding: 1,
     alignItems: "center",
   },
   emptyText: {
