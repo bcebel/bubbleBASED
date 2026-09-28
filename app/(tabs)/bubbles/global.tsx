@@ -25,7 +25,7 @@ import {
   GET_GLOBAL_BUBBLES,
   JOIN_NEIGHBORHOOD,
   LEAVE_NEIGHBORHOOD,
-} from "../../../graphql/queries";
+} from "../../graphql/queries";
 import WebTorrentMedia from "@/components/TorrentOnlyMedia";
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
@@ -72,7 +72,6 @@ export default function NeighborhoodsScreen() {
     data,
     refetch,
   } = useQuery(GET_GLOBAL_BUBBLES, {
- 
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "network-only",
   });
@@ -113,7 +112,6 @@ export default function NeighborhoodsScreen() {
   // 🚨 Loading state (only after login check)
   if (loading) return <ActivityIndicator size="large" style={styles.loading} />;
 
-
   // 🚨 Query error state
   if (error) return <Text style={styles.error}>Error: {error.message}</Text>;
 
@@ -121,7 +119,7 @@ export default function NeighborhoodsScreen() {
 
   const renderItem = ({ item }) => {
     return (
-      <Link href={`/neighborhoods/bubbles/${item.id}`} asChild>
+      <Link href={`/bubbles/${item.id}`} asChild>
         <View style={styles.neighborhoodItem}>
           <ImageBackground
             source={
@@ -156,10 +154,6 @@ export default function NeighborhoodsScreen() {
 
   return (
     <View style={styles.container}>
-  
-
-   
-
       <View style={styles.actions}>
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
           <TouchableOpacity

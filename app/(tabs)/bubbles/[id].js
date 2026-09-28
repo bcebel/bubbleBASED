@@ -18,7 +18,7 @@ import {
   UPDATE_BUBBLE_PHOTO,
   LEAVE_NEIGHBORHOOD,
   JOIN_NEIGHBORHOOD,
-} from "../../../graphql/queries";
+} from "../../graphql/queries";
 import { ImageBackground } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
@@ -286,7 +286,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
+                `/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -298,7 +298,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
+                `/bubbles/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -310,7 +310,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
+                `/bubbles/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -322,7 +322,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-members?neighborhoodId=${neighborhood.id}`,
+                `/bubbles/neighborhood-members?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -335,7 +335,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
             <TouchableOpacity
               onPress={() =>
                 router.replace(
-                  `/neighborhoods/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
+                  `/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
                 )
               }
             >
