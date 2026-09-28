@@ -11,6 +11,8 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
+import { Link } from "expo-router";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import {
@@ -50,6 +52,12 @@ function PreviewView({ neighborhood, onJoin, onBrowse }) {
 
   return (
     <View style={styles.container}>
+      <Link href={`/bubbles/global`} replace asChild>
+        <TouchableOpacity style={styles.backButton}>
+          <Text style={styles.bubbleName}>← Back to Global Bubbles</Text>
+        </TouchableOpacity>
+      </Link>
+
       <ImageBackground
         source={bubblePhotoSource}
         style={styles.bubbleHeader}
@@ -294,65 +302,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           </TouchableOpacity>
         </BlurView>
 
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/bubbles/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>💬 Chat</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/bubbles/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>🖼️ Gallery</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/bubbles/neighborhood-members?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>👥 Members</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        {canInvite && (
-          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-            <TouchableOpacity
-              onPress={() =>
-                router.replace(
-                  `/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
-                )
-              }
-            >
-              <Text style={styles.button}>📧 Invite</Text>
-            </TouchableOpacity>
-          </BlurView>
-        )}
-        {!isOwner && !isPersonal && (
-          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-            <TouchableOpacity onPress={handleLeaveBubble}>
-              <Text style={[styles.button, { color: "#ff375f" }]}>
-                🚪 Leave Bubble
-              </Text>
-            </TouchableOpacity>
-          </BlurView>
-        )}
-
+       
         {isOwner && !isPersonal && (
           <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
             <TouchableOpacity onPress={handleDeleteBubble}>

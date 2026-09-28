@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter, Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import PostFeed from "../neighborhoods/bubbles/PostFeed"; // Adjust path if needed
+import PostFeed from "./PostFeed"; // Adjust path if needed
 
 export default function NeighborhoodGalleryScreen() {
   const params = useLocalSearchParams();
