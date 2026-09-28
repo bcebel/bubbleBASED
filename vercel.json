@@ -17,6 +17,10 @@
       "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/upload"
     },
     {
+      "source": "/api/media/:path*",
+      "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/media/:path*"
+    },
+    {
       "source": "/api/webseed/:path*",
       "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/webseed/:path*"
     },
@@ -44,7 +48,7 @@
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
     },
     {
-      "source": "/api/webseed/:path*",
+      "source": "/api/media/:path*",
       "headers": [
         {
           "key": "x-vercel-enable-rewrite-caching",
@@ -53,12 +57,13 @@
       ]
     },
     {
-  "source": "/api/media/:path*",
-  "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/media/:path*"
-},
-{
-  "source": "/api/media/:path*",
-  "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }]
-}
+      "source": "/api/webseed/:path*",
+      "headers": [
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "1"
+        }
+      ]
+    }
   ]
 }
