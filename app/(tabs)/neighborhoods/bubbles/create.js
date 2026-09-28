@@ -17,12 +17,19 @@ const CREATE_NEIGHBORHOOD = gql`
     $name: String!
     $description: String
     $type: String!
+    $joinPolicy: String!
   ) {
-    createNeighborhood(name: $name, description: $description, type: $type) {
+    createNeighborhood(
+      name: $name
+      description: $description
+      type: $type
+      joinPolicy: $joinPolicy
+    ) {
       id
       name
       description
       type
+      joinPolicy
     }
   }
 `;
@@ -33,6 +40,7 @@ export default function CreateNeighborhoodScreen() {
   const [description, setDescription] = useState("");
   const [type, setType] = useState("private");
   const [createNeighborhood] = useMutation(CREATE_NEIGHBORHOOD);
+const [joinPolicy, setJoinPolicy] = useState("invite_only");
 
   const handleCreate = async () => {
     if (!name.trim()) {
@@ -41,13 +49,14 @@ export default function CreateNeighborhoodScreen() {
     }
 
     try {
-      const { data } = await createNeighborhood({
-        variables: {
-          name: name.trim(),
-          description: description.trim(),
-          type,
-        },
-      });
+   const { data } = await createNeighborhood({
+     variables: {
+       name: name.trim(),
+       description: description.trim(),
+       type,
+       joinPolicy,
+     },
+   });
 
       alert(`Neighborhood "${data.createNeighborhood.name}" created!`);
       router.replace(`neighborhoods/bubbles/${data.createNeighborhood.id}`);
@@ -104,6 +113,36 @@ export default function CreateNeighborhoodScreen() {
                   "👥 BUBLIC - Visible to Users of bubbleBASED Only"}
                 {option === "global" &&
                   "🌍 GLOBAL Visible to The Entire Internet"}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.label}>How do people join?</Text>
+        <View style={styles.typeContainer}>
+          {[
+            { key: "open", label: "🌐 OPEN - Anyone can join immediately" },
+            { key: "request", label: "✋ REQUEST - Owner approves each join" },
+            {
+              key: "invite_only",
+              label: "✉️ INVITE ONLY - Members only, invite required",
+            },
+          ].map((option) => (
+            <TouchableOpacity
+              key={option.key}
+              style={[
+                styles.typeOption,
+                joinPolicy === option.key && styles.typeOptionSelected,
+              ]}
+              onPress={() => setJoinPolicy(option.key)}
+            >
+              <Text
+                style={[
+                  styles.typeText,
+                  joinPolicy === option.key && styles.typeTextSelected,
+                ]}
+              >
+                {option.label}
               </Text>
             </TouchableOpacity>
           ))}

@@ -473,6 +473,7 @@ export const JOIN_NEIGHBORHOOD = gql`
   }
 `;
 
+
 export const LEAVE_NEIGHBORHOOD = gql`
   mutation LeaveNeighborhood($neighborhoodId: ID!) {
     leaveNeighborhood(neighborhoodId: $neighborhoodId)

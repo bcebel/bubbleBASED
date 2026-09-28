@@ -17,6 +17,7 @@ import {
   GET_NEIGHBORHOOD,
   UPDATE_BUBBLE_PHOTO,
   LEAVE_NEIGHBORHOOD,
+  JOIN_NEIGHBORHOOD,
 } from "../../../graphql/queries";
 import { ImageBackground } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -39,10 +40,11 @@ const DELETE_NEIGHBORHOOD = gql`
     deleteNeighborhood(neighborhoodId: $neighborhoodId)
   }
 `;
-function PreviewView({ neighborhood }) {
+
+function PreviewView({ neighborhood, onJoin }) {
   const bubblePhotoSource = neighborhood.bubblePhotoCid
     ? {
-        uri: `${PINATA_GATEWAY}/api/webseed/${neighborhood.bubblePhotoCid}`,
+        uri: `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${neighborhood.bubblePhotoCid}`,
       }
     : require("@/assets/images/bbl.jpg");
 
@@ -70,6 +72,10 @@ function PreviewView({ neighborhood }) {
         <Text style={styles.previewText}>
           Join this bubble to see posts, chat, and members.
         </Text>
+
+        <TouchableOpacity style={styles.joinButton} onPress={onJoin}>
+          <Text style={styles.joinButtonText}>Join {neighborhood.name}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -85,10 +91,11 @@ export default function NeighborhoodDetailScreen() {
     fetchPolicy: "network-only",
   });
   const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
-  const { data: userData } = useQuery(GET_CURRENT_USER);
-  const [username, setUsername] = useState("");
   const [updateBubblePhoto] = useMutation(UPDATE_BUBBLE_PHOTO);
   const [deleteNeighborhood] = useMutation(DELETE_NEIGHBORHOOD);
+  const [joinNeighborhood] = useMutation(JOIN_NEIGHBORHOOD);
+  const { data: userData } = useQuery(GET_CURRENT_USER);
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
     AsyncStorage.getItem("username").then((saved) => setUsername(saved || ""));
@@ -111,12 +118,23 @@ export default function NeighborhoodDetailScreen() {
   const isMember = neighborhood.members?.some(
     (m) => m.user?.username === username,
   );
-  
-  if (neighborhood.type !== "global") {
-    if (!isMember && neighborhood.type !== "personal") {
-      return <PreviewView neighborhood={neighborhood} />;
+
+  // ✅ HANDLERS BEFORE ANY EARLY RETURN THAT USES THEM
+  const handleJoin = async () => {
+    try {
+      await joinNeighborhood({
+        variables: { neighborhoodId: neighborhood.id },
+      });
+      await refetch();
+    } catch (err) {
+      if (err.message.includes("already a member")) {
+        await refetch();
+      } else {
+        alert(`Join failed: ${err.message}`);
+      }
     }
-  }
+  };
+
   const handleLeaveBubble = async () => {
     const confirmed = window.confirm(
       `Leave "${neighborhood.name}"? You'll need to be re-invited to rejoin.`,
@@ -137,25 +155,7 @@ export default function NeighborhoodDetailScreen() {
       }
     }
   };
-  // ✅ Derived values (no hooks)
-  const bubblePhotoSource = neighborhood.bubblePhotoCid
-    ? { uri: `https://${PINATA_GATEWAY}/ipfs/${neighborhood.bubblePhotoCid}` }
-    : require("@/assets/images/bbl.jpg");
 
-  const isOwner = neighborhood.owner?.username === username;
-  const isPersonal = neighborhood.type === "personal";
-
-  const canInvite = (() => {
-    if (!neighborhood || !username) return false;
-    const member = neighborhood.members?.find(
-      (m) => m.user?.username === username,
-    );
-    const isModerator =
-      member?.role === "moderator" || member?.role === "admin";
-    return isOwner || isModerator;
-  })();
-
-  // ✅ Handlers (no hooks)
   const handleDeleteBubble = async () => {
     const confirmed = window.confirm(
       `Delete "${neighborhood.name}"? This will remove all posts, messages, and media in this bubble. This cannot be undone.`,
@@ -215,7 +215,32 @@ export default function NeighborhoodDetailScreen() {
     }
   };
 
-  // ✅ Render
+  // ✅ Derived values (no hooks)
+  const bubblePhotoSource = neighborhood.bubblePhotoCid
+    ? { uri: `https://${PINATA_GATEWAY}/ipfs/${neighborhood.bubblePhotoCid}` }
+    : require("@/assets/images/bbl.jpg");
+
+  const isOwner = neighborhood.owner?.username === username;
+  const isPersonal = neighborhood.type === "personal";
+
+  const canInvite = (() => {
+    if (!neighborhood || !username) return false;
+    const member = neighborhood.members?.find(
+      (m) => m.user?.username === username,
+    );
+    const isModerator =
+      member?.role === "moderator" || member?.role === "admin";
+    return isOwner || isModerator;
+  })();
+
+  // ✅ PREVIEW EARLY RETURN (after handlers are defined)
+  if (neighborhood.type !== "global") {
+    if (!isMember && neighborhood.type !== "personal") {
+      return <PreviewView neighborhood={neighborhood} onJoin={handleJoin} />;
+    }
+  }
+
+  // ✅ Render full view
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -395,5 +420,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     opacity: 0.8,
     marginBottom: 20,
+  },
+  joinButton: {
+    backgroundColor: "#FF0081",
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 32,
+    marginTop: 10,
+  },
+  joinButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
