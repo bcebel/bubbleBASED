@@ -12,11 +12,16 @@ import idbChunkStore from "@thaunknown/idb-chunk-store";
 import webtorrentService from "../utils/webtorrentService";
 import { Platform } from "react-native";
 import * as FileSystem from "expo-file-system";
-import { getOrStartTorrent, getMediaWithFallback, getRecord } from "./torrentmanager";
+import {
+  getOrStartTorrent,
+  getMediaWithFallback,
+  getRecord,
+} from "./torrentmanager";
 
 const CACHE_FOLDER = `${FileSystem.cacheDirectory}webtorrent_media/`;
 
-const ensureCacheDir = async () => {x
+const ensureCacheDir = async () => {
+  x;
   if (Platform.OS !== "web") {
     const dirInfo = await FileSystem.getInfoAsync(CACHE_FOLDER);
     if (!dirInfo.exists) {
@@ -32,7 +37,6 @@ const PINATA_GATEWAY =
 
 // Move cache OUTSIDE the component
 const pinataCache = new Map();
-
 
 if (typeof window !== "undefined") {
   window.__pinataCache = pinataCache;
@@ -224,48 +228,57 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
             });
           };
 
-  const tryAttach = () => {
-    if (record.torrent.progress >= 0.02) {
-      attachRender();
-      return true;
-    }
-    return false;
-  };
+          let attached = false;
+          let timeout = null;
 
-  if (!tryAttach()) {
-    record.torrent.on("download", tryAttach);
-    // if ready never fires, fall back after 5s
-    const timeout = setTimeout(() => {
-      if (isMounted && !record.torrent.ready && record.torrent.progress === 0) {
-        console.warn("[streamTo] metadata timeout, using proxy");
-        const proxyUrl = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`;
-        setVideoSrc(proxyUrl);
-        setIsReady(true);
-      }
-    }, 4000);
-
-    unsubscribeProgress = () => {
-      clearTimeout(timeout);
-      record.torrent.removeListener("ready", attachRender);
-    };
-  }
-
-          // wire up progress for the loader UI
-          const updateStats = () => {
-            if (!isMounted) return;
-            setProgress(Math.floor((record.torrent.progress || 0) * 100));
-            setPeerCount(record.torrent.numPeers || 0);
-          };
-          record.torrent.on("download", updateStats);
-          const prevUnsub = unsubscribeProgress;
-          unsubscribeProgress = () => {
-            if (prevUnsub) prevUnsub();
-            record.torrent.removeListener("download", updateStats);
+          const tryAttach = () => {
+            if (record.torrent.progress > 0.5 && !attached) {
+              attached = true;
+              record.torrent.removeListener("download", tryAttach);
+              if (timeout) clearTimeout(timeout);
+              attachRender();
+              return true;
+            }
+            return false;
           };
 
-          return;
+          timeout = setTimeout(() => {
+            if (isMounted && !attached && record.torrent.progress === 0) {
+              record.torrent.removeListener("download", tryAttach);
+              const proxyUrl = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`;
+              setVideoSrc(proxyUrl);
+              setIsReady(true);
+            }
+          }, 2000);
+
+          if (!tryAttach()) {
+            record.torrent.on("download", tryAttach);
+          }
+
+          // cleanup
+          return () => {
+            isMounted = false;
+            if (timeout) clearTimeout(timeout);
+            if (record?.torrent) {
+              record.torrent.removeListener("download", tryAttach);
+            }
+
+            // wire up progress for the loader UI
+            const updateStats = () => {
+              if (!isMounted) return;
+              setProgress(Math.floor((record.torrent.progress || 0) * 100));
+              setPeerCount(record.torrent.numPeers || 0);
+            };
+            record.torrent.on("download", updateStats);
+            const prevUnsub = unsubscribeProgress;
+            unsubscribeProgress = () => {
+              if (prevUnsub) prevUnsub();
+              record.torrent.removeListener("download", updateStats);
+            };
+
+            return;
+          };
         }
-
         // 3b. Everything else → use the manager's URL (cache/proxy/blob)
         const result = await getMediaWithFallback(media, (s) => {
           if (isMounted) setStatus(s);
