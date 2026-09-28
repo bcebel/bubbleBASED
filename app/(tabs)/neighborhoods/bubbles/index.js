@@ -23,7 +23,7 @@ import {
   MY_NEIGHBORHOODS,
   JOIN_NEIGHBORHOOD,
   LEAVE_NEIGHBORHOOD,
-} from "../../graphql/queries";
+} from "../../../graphql/queries";
 import WebTorrentMedia from "@/components/TorrentOnlyMedia";
 
 // Import your sibling tab components (Adjust relative paths if needed)

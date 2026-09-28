@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
   ScrollView,
   Platform,
-  Pressable
+  Pressable,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useQuery, useMutation } from "@apollo/client";
@@ -22,16 +22,14 @@ import { Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   GET_NEIGHBORHOODS,
-  GET_PUBLIC_BUBBLES,
+  GET_GLOBAL_BUBBLES,
   JOIN_NEIGHBORHOOD,
   LEAVE_NEIGHBORHOOD,
-} from "../../graphql/queries";
+} from "../../../graphql/queries";
 import WebTorrentMedia from "@/components/TorrentOnlyMedia";
-
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-
 
 function NavButton({ title }: { title: string }) {
   const [hovered, setHovered] = useState(false);
@@ -48,12 +46,11 @@ function NavButton({ title }: { title: string }) {
   );
 }
 
-
 export default function NeighborhoodsScreen() {
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
   const router = useRouter();
-    const isDesktop = width >= 768;
+  const isDesktop = width >= 768;
 
   // ✅ Login state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -61,7 +58,7 @@ export default function NeighborhoodsScreen() {
 
   useEffect(() => {
     const checkLogin = async () => {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem("token");
       setIsLoggedIn(!!token);
       setLoading(false);
     };
@@ -69,24 +66,25 @@ export default function NeighborhoodsScreen() {
   }, []);
 
   // ✅ Queries (skipped until logged in)
-  const { loading: loadingNeighborhoods, error, data, refetch } = useQuery(
-    GET_PUBLIC_BUBBLES,
-    {
-      skip: !isLoggedIn,
-      fetchPolicy: "cache-and-network",
-      nextFetchPolicy: "network-only",
-    }
-  );
+  const {
+    loading: loadingNeighborhoods,
+    error,
+    data,
+    refetch,
+  } = useQuery(GET_GLOBAL_BUBBLES, {
+ 
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "network-only",
+  });
 
   const [joinNeighborhood] = useMutation(JOIN_NEIGHBORHOOD);
   const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
 
-
-const handleJoinNeighborhood = async (neighborhoodId) => {
+  const handleJoinNeighborhood = async (neighborhoodId) => {
     try {
       await joinNeighborhood({
         variables: { neighborhoodId },
-        refetchQueries: [{ query: GET_PUBLIC_BUBBLES }],
+        refetchQueries: [{ query: GET_GLOBAL_BUBBLES }],
       });
       alert("✅ Joined neighborhood!");
     } catch (err) {
@@ -104,7 +102,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
     try {
       await leaveNeighborhood({
         variables: { neighborhoodId },
-        refetchQueries: [{ query: GET_PUBLIC_BUBBLES }],
+        refetchQueries: [{ query: GET_GLOBAL_BUBBLES }],
       });
       alert("👋 Left neighborhood");
     } catch (err) {
@@ -112,232 +110,55 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
     }
   };
 
-  
-
   // 🚨 Loading state (only after login check)
   if (loading) return <ActivityIndicator size="large" style={styles.loading} />;
 
-  // 🚨 Logged out: Show the preview
-  if (!isLoggedIn) {
-    return (
-      <>
-        <Head>
-          <title>bubbleBASED - bubblehub</title>
-          <meta
-            name="description"
-            content="🫧  Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always."
-          />
-        </Head>
- 
-      <View style={styles.container}>
-          <ImageBackground
-            source={require("@/assets/images/bbl.jpg")}
-            style={styles.heroBubble}
-            resizeMode="cover"
-          />
-    
-          {/* NAV HEADER */}
-          <View
-            style={[
-              styles.navContainer,
-              isDesktop ? styles.navDesktop : styles.navMobile,
-            ]}
-          >
-            <View style={styles.brandContainer}>
-              <View style={styles.logoBadge}>
-                <Text style={styles.logoBadgeText}>bB</Text>
-              </View>
-              <Text style={styles.brandTitle}>bubbleBASED</Text>
-            </View>
-    
-            <View style={styles.navLinks}>
-              <NavButton title="" />
-              <NavButton title="" />
-              <NavButton title="" />
-    
-              <BlurView
-                intensity={50}
-                tint="dark"
-                style={styles.bubbleGlassCompact}
-              >
-                <TouchableOpacity
-                  style={styles.navActionButton}
-                  onPress={() => router.replace("/login")}
-                >
-                  <Text style={styles.navActionButtonText}>Sign In</Text>
-                </TouchableOpacity>
-              </BlurView>
-            </View>
-          </View>
-    
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* HERO SECTION */}
-            <View
-              style={[styles.heroSection, isDesktop && styles.heroSectionDesktop]}
-            >
-              <View
-                style={[
-                  styles.heroTextContainer,
-                  isDesktop && styles.heroTextDesktop,
-                ]}
-              >
-                <View style={styles.tagBadge}>
-                  <Text style={styles.tagBadgeText}>
-                    Your Own Social Network
-                  </Text>
-                </View>
-    
-                <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                  Make your own feed  🫧
-                </Text>
-     
-                <Text style={styles.heroSub}>
-                 "Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always.  Meet new people, or chill with your best friends.  All good.  Different bubbles for different parts of your life.  Assemble your perfect team. 
-                </Text>
-    
-                {/* ACTION BUTTONS (Login / Logout / Join) */}
-                <View style={styles.actionsRow}>
-                  <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-                    <TouchableOpacity
-                      style={styles.primaryButton}
-                      onPress={() => router.replace("/register")}
-                    >
-                      <Text style={styles.actionButtonText}>Join bubbleBASED</Text>
-                    </TouchableOpacity>
-                  </BlurView>
-    
-                  <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-                    <TouchableOpacity
-                      style={styles.secondaryButton}
-                      onPress={() => router.replace("/login")}
-                    >
-                      <Text style={styles.actionButtonText}>Log in to make one.</Text>
-                    </TouchableOpacity>
-                  </BlurView>
-    
-                  <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-               
-                
-                  </BlurView>
-                </View>
-              </View>
-    
-              {/* CODE / PEER STATUS CARD */}
-              <View
-                style={[
-                  styles.heroVisualCard,
-                  isDesktop && styles.heroVisualDesktop,
-                ]}
-              >
-                <BlurView intensity={30} tint="dark" style={styles.demoGlassCard}>
-                  {/* 1. WebTorrent Live Media Player */}
-                  <View style={styles.mediaFrame}>
-                    <WebTorrentMedia
-                      media={{
-                        cid: "QmdBW11LZ34UUwNK5oMSqFdaehLap9gFEGTinhh3WUwYyV",
-                        magnetLink:
-                          "magnet:?xt=urn:btih:c24538ae212eb0ec480bb190dcd9fd08bb581820&dn=video-QmdBW11LZ34UUwNK5oMSqFdaehLap9gFEGTinhh3WUwYyV&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Ffuchsia-solid-parrot-571.mypinata.cloud%2Fipfs%2FQmdBW11LZ34UUwNK5oMSqFdaehLap9gFEGTinhh3WUwYyV",
-                        fileName: "post_1789941035452.mp4",
-                        fileType: "video",
-                      }}
-                      isFocused={true}
-                    />
-                    <View style={styles.peerBadge}>
-                      <View style={styles.liveDot} />
-                      <Text style={styles.peerBadgeText}></Text>
-                    </View>
-                  </View>
-    
-                  {/* 2. Mock Terminal Status Box */}
-                  <View style={styles.mockTerminalBox}>
-                    <View style={styles.terminalHeader}>
-                      <View style={[styles.dot, { backgroundColor: "#FF5F56" }]} />
-                      <View style={[styles.dot, { backgroundColor: "#FFBD2E" }]} />
-                      <View style={[styles.dot, { backgroundColor: "#27C93F" }]} />
-                      <Text style={styles.terminalTitle}></Text>
-                    </View>
-                    <View style={styles.mockContentBox}>
-                      <Text style={styles.mockCodeText}>// bubbleBASED</Text>
-                      <Text style={styles.mockCodeTextAccent}>invitation: "based" </Text>
-                      <Text style={styles.mockCodeText}>privacy: "based" </Text>
-                      <Text style={styles.mockCodeText}>context: "based" </Text>
-                      <Text style={styles.mockCodeText}>bubble: "based" </Text>
-                    </View>
-                  </View>
-                </BlurView>
-              </View>
-            </View>
-    
-            {/* MARGARET MEAD QUOTE */}
-            <View style={styles.quoteSection}>
-              <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
-                <Text style={styles.quoteText}>
-                  "It's a beautiful day in the neighborhood"
-                </Text>
-                <Text style={styles.quoteAuthor}>— Mr. Rogers </Text>
-              </BlurView>
-            </View>
-    
-            {/* FOOTER */}
-            <View style={styles.footerContainer}>
-              <Text style={styles.footerText}>
-                © {new Date().getFullYear()} bubbleBASED. Click tabs for more info.
-              </Text>
-            </View>
-          </ScrollView>
-          </View>
-      </>
-    );
-  }
 
   // 🚨 Query error state
   if (error) return <Text style={styles.error}>Error: {error.message}</Text>;
 
-  const neighborhoods = data?.discoverNeighborhoods || [];
+  const neighborhoods = data?.discoverGlobalNeighborhoods || [];
 
- const renderItem = ({ item }) => {
-   return (
-     <Link href={`/neighborhoods/bubbles/${item.id}`} asChild>
-       <View style={styles.neighborhoodItem}>
-         <ImageBackground
-           source={
-             item.bubblePhotoCid
-               ? {
-                   uri: `https://${PINATA_GATEWAY}/ipfs/${item.bubblePhotoCid}`,
-                 }
-               : {
-                   uri: "/bbl.jpg",
-                 }
-           }
-           style={styles.neighborhoodCardImage}
-           resizeMode="cover"
-         >
-           <LinearGradient
-             colors={["rgba(0,0,0,0.9)", "rgba(0,0,0,0.1)"]}
-             style={styles.neighborhoodCardOverlay}
-           >
-             <Text style={styles.neighborhoodName}>{item.name}</Text>
-             <Text style={styles.neighborhoodType}>
-               {item.type} • {item.members?.length || 0} members
-             </Text>
-             <Text style={styles.neighborhoodDescription}>
-               About: {item.description}
-             </Text>
-           </LinearGradient>
-         </ImageBackground>
-       </View>
-     </Link>
-   );
+  const renderItem = ({ item }) => {
+    return (
+      <Link href={`/neighborhoods/bubbles/${item.id}`} asChild>
+        <View style={styles.neighborhoodItem}>
+          <ImageBackground
+            source={
+              item.bubblePhotoCid
+                ? {
+                    uri: `https://${PINATA_GATEWAY}/ipfs/${item.bubblePhotoCid}`,
+                  }
+                : {
+                    uri: "/bbl.jpg",
+                  }
+            }
+            style={styles.neighborhoodCardImage}
+            resizeMode="cover"
+          >
+            <LinearGradient
+              colors={["rgba(0,0,0,0.9)", "rgba(0,0,0,0.1)"]}
+              style={styles.neighborhoodCardOverlay}
+            >
+              <Text style={styles.neighborhoodName}>{item.name}</Text>
+              <Text style={styles.neighborhoodType}>
+                {item.type} • {item.members?.length || 0} members
+              </Text>
+              <Text style={styles.neighborhoodDescription}>
+                About: {item.description}
+              </Text>
+            </LinearGradient>
+          </ImageBackground>
+        </View>
+      </Link>
+    );
   };
 
   return (
     <View style={styles.container}>
+  
+
    
- 
 
       <View style={styles.actions}>
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
@@ -382,8 +203,6 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
     </View>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   heroTextContainer: {
@@ -738,7 +557,7 @@ const styles = StyleSheet.create({
     overflow: "scroll",
     justifyContent: "flex-end",
     borderWidth: 2,
-    borderColor: "#888800",
+    borderColor: "#880088",
     borderRadius: 48,
   },
   neighborhoodCardOverlay: {

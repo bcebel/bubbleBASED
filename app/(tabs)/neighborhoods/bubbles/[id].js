@@ -41,7 +41,7 @@ const DELETE_NEIGHBORHOOD = gql`
   }
 `;
 
-function PreviewView({ neighborhood, onJoin }) {
+function PreviewView({ neighborhood, onJoin, onBrowse }) {
   const bubblePhotoSource = neighborhood.bubblePhotoCid
     ? {
         uri: `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${neighborhood.bubblePhotoCid}`,
@@ -70,12 +70,20 @@ function PreviewView({ neighborhood, onJoin }) {
 
       <View style={styles.previewBody}>
         <Text style={styles.previewText}>
-          Join this bubble to see posts, chat, and members.
+          Browse what's here, or join to post and chat.
         </Text>
 
-        <TouchableOpacity style={styles.joinButton} onPress={onJoin}>
-          <Text style={styles.joinButtonText}>Join {neighborhood.name}</Text>
-        </TouchableOpacity>
+        <View style={styles.previewButtonRow}>
+          <TouchableOpacity style={styles.browseButton} onPress={onBrowse}>
+            <Text style={styles.browseButtonText}>👀 Browse</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.joinButton} onPress={onJoin}>
+            <Text style={styles.joinButtonText}>
+              ✨ Join {neighborhood.name}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -96,6 +104,7 @@ export default function NeighborhoodDetailScreen() {
   const [joinNeighborhood] = useMutation(JOIN_NEIGHBORHOOD);
   const { data: userData } = useQuery(GET_CURRENT_USER);
   const [username, setUsername] = useState("");
+  const [previewing, setPreviewing] = useState(true);
 
   useEffect(() => {
     AsyncStorage.getItem("username").then((saved) => setUsername(saved || ""));
@@ -234,12 +243,15 @@ export default function NeighborhoodDetailScreen() {
   })();
 
   // ✅ PREVIEW EARLY RETURN (after handlers are defined)
-  if (neighborhood.type !== "global") {
-    if (!isMember && neighborhood.type !== "personal") {
-      return <PreviewView neighborhood={neighborhood} onJoin={handleJoin} />;
-    }
-  }
-
+if (!isMember && neighborhood.type !== "personal" && previewing) {
+  return (
+    <PreviewView
+      neighborhood={neighborhood}
+      onJoin={handleJoin}
+      onBrowse={() => setPreviewing(false)}
+    />
+  );
+}
   // ✅ Render full view
   return (
     <View style={styles.container}>
