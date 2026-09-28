@@ -118,7 +118,7 @@ export default function PostFeed({
 
 const styles = StyleSheet.create({
   listContent: {
-    padding: 12,
+    padding: 1,
     paddingBottom: 120,
     backgroundColor: "#130720",
     flexGrow: 1,
