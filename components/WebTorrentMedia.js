@@ -7,6 +7,7 @@ import { getMagnetForCid } from "../utils/magnetCache";
 import { getOrStartTorrent } from "./torrentmanager";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const DEBUG = true;
 
 function FocusedVideo({ src }) {
   const player = useVideoPlayer(src, (p) => {
@@ -30,9 +31,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
   const [isReady, setIsReady] = useState(false);
   const [status, setStatus] = useState("idle");
 
-  // track every blob URL we mint so we can revoke on cleanup
   const ownedBlobsRef = useRef([]);
-  const currentUrlRef = useRef(null);
 
   const isImage =
     media?.fileType === "image" ||
@@ -47,11 +46,11 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
     const makeBlobUrl = (blob) => {
       const url = URL.createObjectURL(blob);
       ownedBlobsRef.current.push(url);
+      if (DEBUG) console.log("[wtm] minted", url, "for", media.cid);
       return url;
     };
 
     const load = async () => {
-      // reset state for this item
       setIsReady(false);
       setVideoSrc(null);
 
@@ -60,9 +59,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
         const cached = await getMedia(media.cid);
         if (cancelled) return;
         if (cached?.blob) {
-          const url = makeBlobUrl(cached.blob);
-          currentUrlRef.current = url;
-          setVideoSrc(url);
+          setVideoSrc(makeBlobUrl(cached.blob));
           setStatus("cached");
           setIsReady(true);
           return;
@@ -74,9 +71,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
       if (cancelled) return;
 
       if (!magnetLink) {
-        const url = `${BACKEND_URL}/api/webseed/${media.cid}`;
-        currentUrlRef.current = url;
-        setVideoSrc(url);
+        setVideoSrc(`https://bubblebased.com/api/webseed/${media.cid}`);
         setStatus("fallback_http");
         setIsReady(true);
         return;
@@ -98,7 +93,6 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
       const file = record?.torrent?.files?.[0];
 
       if (!isImage && hasServer && hasMetadata && file) {
-        currentUrlRef.current = file.streamURL;
         setVideoSrc(file.streamURL);
         setStatus("p2p_streaming");
         setIsReady(true);
@@ -106,9 +100,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
       }
 
       // 4. fallback
-      const url = `${BACKEND_URL}/api/webseed/${media.cid}`;
-      currentUrlRef.current = url;
-      setVideoSrc(url);
+      setVideoSrc(`https://bubblebased.com/api/webseed/${media.cid}`);
       setStatus("fallback_http");
       setIsReady(true);
     };
@@ -117,17 +109,14 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
 
     return () => {
       cancelled = true;
-
-      // revoke every blob URL this mount created
-      for (const url of ownedBlobsRef.current) {
-        if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+      const urls = ownedBlobsRef.current;
+      for (const url of urls) {
+        if (url.startsWith("blob:")) {
+          URL.revokeObjectURL(url);
+          if (DEBUG) console.log("[wtm] revoked", url, "for", media.cid);
+        }
       }
       ownedBlobsRef.current = [];
-      currentUrlRef.current = null;
-
-      // if the item being dismissed owned a torrent, release it.
-      // torrentManager keeps a window, so this only nukes the leaving item.
-      // (skip if your gallery already calls releaseOutsideWindow)
     };
   }, [isFocused, media?.cid, media?.magnetLink]);
 
