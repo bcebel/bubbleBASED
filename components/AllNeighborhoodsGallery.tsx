@@ -15,11 +15,7 @@ import WebTorrentMedia from "../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "./AdMessage";
 
-import {
-  enqueueDownload,
-  cancelBelowPriority,
-
-} from "./downloadQueue";
+import { enqueueDownload, cancelOutsideSet } from "./downloadQueue";
 
 
 import {
@@ -407,6 +403,9 @@ useEffect(() => {
     jobs.push({ cid: item.cid, media: item, priority: 20 + Math.abs(offset) });
   }
 
+  // the exact set of cids the queue should contain after this effect runs
+  const keepCids = jobs.map((j) => j.cid);
+
   // stagger the enqueues so the backend doesn't get a stampede
   jobs.forEach((job, i) => {
     setTimeout(() => {
@@ -414,9 +413,9 @@ useEffect(() => {
     }, i * 100);
   });
 
-  cancelBelowPriority(25);
+  // cancel anything that isn't in the current window
+  cancelOutsideSet(keepCids);
 }, [activeIndex, mediaItems]);
-  // release everything when leaving the gallery
 
   const handleRefresh = async () => {
     setRefreshing(true);

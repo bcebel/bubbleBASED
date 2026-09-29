@@ -14,7 +14,7 @@ import { gql, useQuery } from "@apollo/client";
 import WebTorrentMedia from "../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "../components/AdMessage";
-import { releaseOutsideWindow, releaseAll } from "../components/torrentmanager";
+import { enqueueDownload, cancelOutsideSet } from "./downloadQueue";
 
 
 import {
@@ -291,17 +291,41 @@ export default function AllNeighborhoodsGallery({
   }, [activeIndex, mediaItems]);
   */
 
-  // release non-window torrents when the focus moves
-  useEffect(() => {
-    if (mediaItems.length > 0) {
-      releaseOutsideWindow(mediaItems, activeIndex);
-    }
-  }, [activeIndex, mediaItems]);
+useEffect(() => {
+  if (!mediaItems.length) return;
+  const here = activeIndex;
+  if (here < 0 || here >= mediaItems.length) return;
 
-  // release everything when leaving the gallery
-  useEffect(() => {
-    return () => releaseAll();
-  }, []);
+  const jobs = [];
+
+  // forward: +10 down to +5, priorities 0..5
+  for (let offset = 10; offset >= 5; offset--) {
+    const item = mediaItems[here + offset];
+    if (!item?.cid) continue;
+    jobs.push({ cid: item.cid, media: item, priority: 10 - offset });
+  }
+
+  // backward: -1 to -5, priorities 21..25
+  for (let offset = -1; offset >= -5; offset--) {
+    const item = mediaItems[here + offset];
+    if (!item?.cid) continue;
+    jobs.push({ cid: item.cid, media: item, priority: 20 + Math.abs(offset) });
+  }
+
+  // the exact set of cids the queue should contain after this effect runs
+  const keepCids = jobs.map((j) => j.cid);
+
+  // stagger the enqueues so the backend doesn't get a stampede
+  jobs.forEach((job, i) => {
+    setTimeout(() => {
+      enqueueDownload(job.cid, job.media, job.priority);
+    }, i * 100);
+  });
+
+  // cancel anything that isn't in the current window
+  cancelOutsideSet(keepCids);
+}, [activeIndex, mediaItems]);
+
 
   const handleScroll = (e: any) => {
     const newIndex = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);

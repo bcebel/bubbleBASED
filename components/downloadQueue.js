@@ -63,6 +63,18 @@ export function cancelBelowPriority(maxPriority) {
   }
 }
 
+export function cancelOutsideSet(keepCids) {
+  const keep = new Set(keepCids);
+  for (let i = queue.length - 1; i >= 0; i--) {
+    if (!keep.has(queue[i].cid)) {
+      try {
+        queue[i].resolve();
+      } catch (_) {}
+      queue.splice(i, 1);
+    }
+  }
+}
+
 // ─── internal: run one job ────────────────────────────────
 async function drain() {
   if (processing || !queue.length) return;
