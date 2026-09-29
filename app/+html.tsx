@@ -28,7 +28,7 @@ export default function Root({ children }: PropsWithChildren) {
         height: 100%;
         width: 100%;
         overscroll-behavior: none;
-          cursor: url('./16.png'), auto;
+          cursor: url('./16.png')8 8, auto;
       }
       body {
         background-color: #130720;

@@ -85,7 +85,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
 
       // fallback
       setVideoSrc(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`,
+        `$https://bubblebased.com/api/webseed/${media.cid}`,
       );
       setIsReady(true);
     };
