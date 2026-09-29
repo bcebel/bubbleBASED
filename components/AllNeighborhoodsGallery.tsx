@@ -391,21 +391,31 @@ useEffect(() => {
   const here = activeIndex;
   if (here < 0 || here >= mediaItems.length) return;
 
+  const jobs = [];
+
+  // forward: +10 down to +5, priorities 0..5
   for (let offset = 10; offset >= 5; offset--) {
     const item = mediaItems[here + offset];
     if (!item?.cid) continue;
-    enqueueDownload(item.cid, item, 10 - offset);
+    jobs.push({ cid: item.cid, media: item, priority: 10 - offset });
   }
 
+  // backward: -1 to -5, priorities 21..25
   for (let offset = -1; offset >= -5; offset--) {
     const item = mediaItems[here + offset];
     if (!item?.cid) continue;
-    enqueueDownload(item.cid, item, 20 + Math.abs(offset));
+    jobs.push({ cid: item.cid, media: item, priority: 20 + Math.abs(offset) });
   }
+
+  // stagger the enqueues so the backend doesn't get a stampede
+  jobs.forEach((job, i) => {
+    setTimeout(() => {
+      enqueueDownload(job.cid, job.media, job.priority);
+    }, i * 100);
+  });
 
   cancelBelowPriority(25);
 }, [activeIndex, mediaItems]);
-
   // release everything when leaving the gallery
 
   const handleRefresh = async () => {

@@ -1,5 +1,12 @@
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-const magnetCache = new Map();
+// magnetCache.js
+let magnetCache;
+try {
+  magnetCache = new Map(
+    JSON.parse(localStorage.getItem("magnetCache") || "[]"),
+  );
+} catch (_) {
+  magnetCache = new Map();
+}
 
 export async function getMagnetForCid(cid) {
   if (magnetCache.has(cid)) return magnetCache.get(cid);
@@ -10,5 +17,11 @@ export async function getMagnetForCid(cid) {
   const meta = await res.json();
   const magnet = meta.magnetLink || null;
   magnetCache.set(cid, magnet);
+
+  try {
+    localStorage.setItem("magnetCache", JSON.stringify([...magnetCache]));
+  } catch (_) {
+    // storage full or blocked — skip persistence, cache still works in-memory
+  }
   return magnet;
 }
