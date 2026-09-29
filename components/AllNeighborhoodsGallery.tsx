@@ -14,12 +14,12 @@ import { gql, useQuery } from "@apollo/client";
 import WebTorrentMedia from "../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "./AdMessage";
-import {
 
-  cancelScheduledRelease,
-  scheduleReleaseAll,
-} from "../components/torrentmanager";
-import { enqueueDownload, cancelBelowPriority } from "./downloadQueue";
+import {
+  enqueueDownload,
+  cancelBelowPriority,
+
+} from "./downloadQueue";
 
 
 import {
@@ -384,6 +384,8 @@ const mediaItems = React.useMemo(() => {
     }
   }, [activeIndex, mediaItems]);
   */
+
+
 useEffect(() => {
   if (!mediaItems.length) return;
   const here = activeIndex;
@@ -405,13 +407,7 @@ useEffect(() => {
 }, [activeIndex, mediaItems]);
 
   // release everything when leaving the gallery
-useEffect(() => {
-  cancelScheduledRelease();
-  return () => {
-    // on unmount, don't release — just schedule
-    scheduleReleaseAll(5 * 60 * 1000); // 5 minutes
-  };
-}, []);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await refetch();

@@ -24,6 +24,7 @@ function getClient() {
   return c;
 }
 
+
 // ─── public: enqueue a download ───────────────────────────
 // priority: lower = sooner. focused=0, +1=1, +2=2, etc.
 export function enqueueDownload(cid, media, priority = 10) {
@@ -138,9 +139,9 @@ function raceSources(cid, magnetLink, media) {
     const cleanups = [];
     const cleanup = () => {
       if (torrentHandle) {
-        try {
-          torrentHandle.torrent.destroy({ destroyStore: false });
-        } catch (_) {}
+   //     try {
+   //       torrentHandle.torrent.destroy({ destroyStore: false });
+   //     } catch (_) {}
       }
       cleanups.forEach((fn) => fn());
     };

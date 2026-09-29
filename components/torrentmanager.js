@@ -1,272 +1,316 @@
-// torrentManager.js
+// downloadQueue.js
 import idbChunkStore from "@thaunknown/idb-chunk-store";
-import { getMedia, saveMedia } from "../components/mediaCache";
+import { saveMedia, getMedia } from "../components/mediaCache";
 import { webtorrentService } from "../utils/webtorrentService";
 import parseTorrent from "parse-torrent";
+import { getMagnetForCid } from "../utils/magnetCache";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
-let client = null;
-const activeDownloads = new Map();
+const queue = [];
+let active = null;
+let processing = false;
 
-// ─── internal: release one torrent ────────────────────────
-function releaseTorrent(cid) {
-  const record = activeDownloads.get(cid);
-  if (!record) return;
-
-  if (record.torrent && client) {
-    try {
-      client.remove(record.torrent.infoHash, { destroyStore: false });
-      // destroyStore: false keeps IDB chunks so re-attach is instant
-    } catch (err) {
-      console.warn("release failed", cid, err);
-    }
+// ─── client singleton ─────────────────────────────────────
+function getClient() {
+  const c = window.globalWebTorrentClient;
+  if (!c) {
+    throw new Error("[queue] globalWebTorrentClient not ready");
   }
-
-  if (record.blobUrl) {
-    URL.revokeObjectURL(record.blobUrl);
+  if (c.destroyed) {
+    throw new Error("[queue] globalWebTorrentClient destroyed");
   }
-
-  activeDownloads.delete(cid);
+  return c;
 }
 
-// ─── exported: release everything outside [i-1, i, i+1] ───
-export const releaseOutsideWindow = (mediaList, currentIndex) => {
-  const keep = new Set();
-  for (let i = currentIndex - 1; i <= currentIndex + 3; i++) {
-    const item = mediaList[i];
-    if (item?.cid) keep.add(item.cid);
+// ─── public: enqueue a download ───────────────────────────
+export function enqueueDownload(cid, media, priority = 10) {
+  const existing = queue.find((j) => j.cid === cid);
+  if (existing) {
+    existing.priority = Math.min(existing.priority, priority);
+    sortQueue();
+    return existing.promise;
   }
 
-  for (const cid of Array.from(activeDownloads.keys())) {
-    if (!keep.has(cid)) releaseTorrent(cid);
-  }
-};
-
-
-let releaseTimer = null;
-
-export const scheduleReleaseAll = (delayMs = 5 * 60 * 1000) => {
-  if (releaseTimer) clearTimeout(releaseTimer);
-  releaseTimer = setTimeout(() => {
-    releaseAll();
-    releaseTimer = null;
-  }, delayMs);
-};
-
-export const cancelScheduledRelease = () => {
-  if (releaseTimer) {
-    clearTimeout(releaseTimer);
-    releaseTimer = null;
-  }
-};
-// ─── exported: release everything (call on gallery unmount) ─
-export const releaseAll = () => {
-  for (const cid of Array.from(activeDownloads.keys())) {
-    releaseTorrent(cid);
-  }
-};
-
-// ─── exported: start or return a torrent record ───────────
-export const getOrStartTorrent = async (magnetLink, cid, media = {}) => {
-  if (typeof window === "undefined") return null;
-
-  // Check if our cached client is dead, and if so, recreate it
-  if (!client || client.destroyed) {
-    if (
-      window.globalWebTorrentClient &&
-      !window.globalWebTorrentClient.destroyed
-    ) {
-      client = window.globalWebTorrentClient;
-    } else {
-      const WebTorrent = window.WebTorrent;
-      client = new WebTorrent();
-      window.globalWebTorrentClient = client;
-    }
-  }
-
-  // already tracked
-  if (activeDownloads.has(cid)) {
-    return activeDownloads.get(cid);
-  }
-
-  // strip any webseed from the magnet — we'll pass our own via urlList
-const cleanMagnet = magnetLink.replace(/&ws=[^&]*/g, "");
-const infoHash = parseTorrent(cleanMagnet).infoHash;
-let torrent = await client.get(infoHash);
-
-if (!torrent) {
-  torrent = await client.add(cleanMagnet, {
-    // ← must be cleanMagnet
-    store: idbChunkStore,
-    storeOpts: { name: `media-${cid}` },
-    announce: window.enhancedTrackers || webtorrentService.trackers,
-    strategy: media.fileType === "image" ? "rarest" : "sequential",
-    urlList: [`https://bubblebased.com/api/webseed/${cid}`],
+  let resolve, reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
   });
+  queue.push({ cid, media, priority, resolve, reject, promise });
+  sortQueue();
+  drain();
+  console.log("[queue] enqueue", cid?.slice(0, 12), "prio", priority);
+  return promise;
 }
 
-  const record = {
-    torrent,
-    blobUrl: null,
-    isDone: false,
-    priority: media.priority || 10,
-  };
-  activeDownloads.set(cid, record);
+function sortQueue() {
+  queue.sort((a, b) => a.priority - b.priority);
+}
 
-  console.log("[torrent] added", torrent.infoHash);
-
-  torrent.on("done", async () => {
-    try {
-      const file = torrent.files[0];
-      if (!file) return;
-
-      const blob = await file.blob();
-      record.blobUrl = URL.createObjectURL(blob);
-      record.isDone = true;
-
-      // this is the piece that was missing
-      try {
-        await saveMedia(
-          cid,
-          blob,
-          media.mimeType || "application/octet-stream",
-          media.fileName || `media-${cid}`,
-        );
-        console.log("[cache] wrote to IDB:", cid);
-      } catch (err) {
-        console.warn("[cache] write failed:", cid, err);
-      }
-    } catch (err) {
-      console.error("Failed to generate blob:", err);
+// ─── public: drop jobs the user scrolled past ─────────────
+export function cancelBelowPriority(maxPriority) {
+  for (let i = queue.length - 1; i >= 0; i--) {
+    if (queue[i].priority > maxPriority) {
+      queue[i].reject(new Error("cancelled"));
+      queue.splice(i, 1);
     }
-  });
+  }
+}
 
-  return record;
-};;
+// ─── internal: run one job ────────────────────────────────
+async function drain() {
+  if (processing || !queue.length) return;
+  processing = true;
+  sortQueue();
+  active = queue.shift();
+  console.log(
+    "[queue] START",
+    active.cid.slice(0, 12),
+    "prio",
+    active.priority,
+    "queue left:",
+    queue.length,
+  );
 
-
-
-// ─── exported: get a record without starting anything ─────
-export const getRecord = (cid) => activeDownloads.get(cid);
-
-// ─── exported: resolve a URL for the component to render ──
-
-export const getMediaWithFallback = async (media, onStatusChange) => {
-  const { magnetLink, cid, ipfsUrl, fallbackUrl } = media;
-  const httpUrl = cid
-    ? `${BACKEND_URL}/api/webseed/${cid}`
-    : ipfsUrl || fallbackUrl || "";
-
-  // cache check first
   try {
-    const cached = await getMedia(cid);
-    if (cached?.blob) {
-      console.log("[cache] HIT", cid);
-      onStatusChange?.("cached");
-      return { url: URL.createObjectURL(cached.blob), source: "cache" };
-    }
-    console.log("[cache] miss", cid);
+    await runJob(active);
+    active.resolve();
   } catch (err) {
-    console.log("[cache] lookup error:", err);
+    console.warn("[queue] job failed", active.cid, err);
+    active.reject(err);
+  } finally {
+    processing = false;
+    active = null;
+    drain();
   }
+}
 
-  // 2. Already in-flight and complete
-  if (activeDownloads.has(cid)) {
-    const record = activeDownloads.get(cid);
-    if (record.isDone && record.blobUrl) {
-      onStatusChange?.("p2p_streaming");
-      return { url: record.blobUrl, source: "p2p", torrent: record.torrent };
-    }
+async function runJob(job) {
+  const { cid, media } = job;
+  const cached = await getMedia(cid);
+  if (cached?.blob) {
+    console.log("[queue] cache hit", cid.slice(0, 12));
+    return;
   }
+  console.log("[queue] MISS", cid.slice(0, 12));
 
-  // 3. No magnet — return the HTTP URL directly
-  if (!magnetLink) {
-    onStatusChange?.("fallback_http");
+  const magnetLink = media.magnetLink || (await getMagnetForCid(cid));
 
-       if (cid) {
-         fetch(httpUrl)
-           .then((res) => res.blob())
-           .then((blob) => saveMedia(cid, blob, media.mimeType, media.fileName))
-           .then(() => console.log("[cache] filled from proxy:", cid))
-           .catch((err) => console.warn("[cache] fill failed:", cid, err));
-       }
-    
-    return { url: httpUrl, source: "http" };
-  }
+  const winner = await raceSources(cid, magnetLink, media);
 
-  // 4. Race P2P against the 4s HTTP fallback
-  return new Promise(async (resolve) => {
-    let resolved = false;
+  if (!winner) throw new Error("both sources failed");
 
-    const fallbackTimer = setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        onStatusChange?.("fallback_http");
+  await saveMedia(
+    cid,
+    winner.blob,
+    media.mimeType || "application/octet-stream",
+    media.fileName || `media-${cid}`,
+  );
+  console.log("[queue] cached", cid, "via", winner.source);
+}
 
+// ─── the race ─────────────────────────────────────────────
+function raceSources(cid, magnetLink, media) {
+  return new Promise((resolve) => {
+    let settled = false;
 
-        if (cid) {
-          fetch(httpUrl)
-            .then((res) => res.blob())
-            .then((blob) =>
-              saveMedia(cid, blob, media.mimeType, media.fileName),
-            )
-            .then(() => console.log("[cache] filled from proxy:", cid))
-            .catch((err) => console.warn("[cache] fill failed:", cid, err));
-        }
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      console.log(
+        "[queue] WINNER",
+        cid.slice(0, 12),
+        result?.source,
+        "size:",
+        result?.blob?.size,
+      );
+      cleanup();
+      resolve(result);
+    };
 
-        resolve({ url: httpUrl, source: "http_fallback" });
+    let torrentHandle = null;
+    const cleanups = [];
+    const cleanup = () => {
+      if (torrentHandle) {
+        try {
+          torrentHandle.torrent.destroy({ destroyStore: false });
+        } catch (_) {}
       }
-    }, 1000);
+      cleanups.forEach((fn) => fn());
+    };
 
-    try {
-      onStatusChange?.("connecting_p2p");
-      const record = await getOrStartTorrent(magnetLink, cid, media);
-      console.log("[fallback] torrent result", typeof record, record);
+    // ─── side A: HTTP ─────────────────────────────────────
+    const httpAbort = new AbortController();
+    cleanups.push(() => httpAbort.abort());
 
-      const checkProgress = () => {
-        if (!resolved && (record.torrent.progress > 0 || record.isDone)) {
-          resolved = true;
-          clearTimeout(fallbackTimer);
-          onStatusChange?.("p2p_streaming");
-          resolve({
-            url:
-              record.blobUrl ||
-              (record.torrent.files[0]
-                ? URL.createObjectURL(record.torrent.files[0])
-                : httpUrl),
-            source: "p2p",
-            torrent: record.torrent,
+    (async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/webseed/${cid}`, {
+          signal: httpAbort.signal,
+        });
+        if (!res.ok) throw new Error(`http ${res.status}`);
+        const blob = await res.blob();
+        if (blob.size === 0) throw new Error("empty blob");
+        finish({ blob, source: "http" });
+      } catch (err) {
+        if (!settled && err.name !== "AbortError") {
+          console.log(
+            "[queue] http side failed",
+            cid.slice(0, 12),
+            err.message,
+          );
+        }
+      }
+    })();
+
+    // ─── side B: P2P ──────────────────────────────────────
+    if (!magnetLink) {
+      const hardCap = setTimeout(() => finish(null), 120_000);
+      cleanups.push(() => clearTimeout(hardCap));
+      return;
+    }
+
+    (async () => {
+      try {
+        const c = getClient();
+        const cleanMagnet = magnetLink.replace(/&ws=[^&]*/g, "");
+        const infoHash = parseTorrent(cleanMagnet).infoHash;
+
+        let torrent = await c.get(infoHash);
+        if (!torrent) {
+          torrent = await c.add(cleanMagnet, {
+            store: idbChunkStore,
+            storeOpts: { name: `media-${cid}` },
+            announce: window.enhancedTrackers || webtorrentService.trackers,
+            strategy: media.fileType === "image" ? "rarest" : "sequential",
+            urlList: [`${BACKEND_URL}/api/webseed/${cid}`],
           });
         }
-      };
 
-      if (record.isDone || record.torrent.progress > 0) {
-        checkProgress();
-      } else {
-        record.torrent.on("download", checkProgress);
-        record.torrent.on("done", checkProgress);
-      }
-    } catch (err) {
-      console.log("[fallback] error", err);
-      if (!resolved) {
-        resolved = true;
-        clearTimeout(fallbackTimer);
-        onStatusChange?.("fallback_http");
+        if (!torrent || typeof torrent.once !== "function") {
+          throw new Error("got a non-torrent: " + typeof torrent);
+        }
 
-          if (cid) {
-            fetch(httpUrl)
-              .then((res) => res.blob())
-              .then((blob) =>
-                saveMedia(cid, blob, media.mimeType, media.fileName),
-              )
-              .then(() => console.log("[cache] filled from proxy:", cid))
-              .catch((err) => console.warn("[cache] fill failed:", cid, err));
+        torrentHandle = { torrent };
+
+        // ─── DIAGNOSTIC LISTENERS ─────────────────────────
+        const onWire = (wire) => {
+          console.log(
+            "[queue] WIRE CONNECTED",
+            cid.slice(0, 12),
+            "peer:",
+            wire.peerId?.slice(0, 8),
+            "type:",
+            wire.type,
+          );
+        };
+        const onNoPeers = (announceType) => {
+          console.log("[queue] noPeers", cid.slice(0, 12), announceType);
+        };
+        const onWarning = (err) => {
+          console.log(
+            "[queue] torrent warning",
+            cid.slice(0, 12),
+            err?.message || err,
+          );
+        };
+        const onError = (err) => {
+          console.log(
+            "[queue] torrent error",
+            cid.slice(0, 12),
+            err?.message || err,
+          );
+        };
+
+        torrent.on("wire", onWire);
+        torrent.on("noPeers", onNoPeers);
+        torrent.on("warning", onWarning);
+        torrent.on("error", onError);
+
+        cleanups.push(() => {
+          try {
+            torrent.removeListener("wire", onWire);
+          } catch (_) {}
+          try {
+            torrent.removeListener("noPeers", onNoPeers);
+          } catch (_) {}
+          try {
+            torrent.removeListener("warning", onWarning);
+          } catch (_) {}
+          try {
+            torrent.removeListener("error", onError);
+          } catch (_) {}
+        });
+
+        // periodic stats while racing
+        const statsInterval = setInterval(() => {
+          if (settled) {
+            clearInterval(statsInterval);
+            return;
           }
+          console.log(
+            "[queue] p2p stats",
+            cid.slice(0, 12),
+            "peers:",
+            torrent.numPeers,
+            "progress:",
+            (torrent.progress * 100).toFixed(1) + "%",
+            "speed:",
+            torrent.downloadSpeed,
+          );
+        }, 2000);
+        cleanups.push(() => clearInterval(statsInterval));
 
+        // if already done, just grab the blob
+        if (torrent.done) {
+          const file = torrent.files[0];
+          if (file) {
+            const blob = await file.blob();
+            if (blob.size > 0) finish({ blob, source: "p2p" });
+          }
+          return;
+        }
 
-        resolve({ url: httpUrl, source: "http_fallback" });
+        torrent.once("done", async () => {
+          console.log(
+            "[queue] p2p DONE",
+            cid.slice(0, 12),
+            "peers:",
+            torrent.numPeers,
+            "downloaded:",
+            torrent.downloaded,
+          );
+          try {
+            const file = torrent.files[0];
+            if (!file) return;
+            const blob = await file.blob();
+            if (blob.size > 0) finish({ blob, source: "p2p" });
+          } catch (err) {
+            console.warn("[queue] p2p blob failed", err);
+          }
+        });
+
+        const stallTimeout = setTimeout(() => {
+          if (!settled) {
+            console.log(
+              "[queue] p2p stalled, letting http win",
+              cid.slice(0, 12),
+            );
+            try {
+              torrent.destroy({ destroyStore: false });
+            } catch (_) {}
+          }
+        }, 60_000);
+        cleanups.push(() => clearTimeout(stallTimeout));
+      } catch (err) {
+        if (!settled) {
+          console.log("[queue] p2p side failed", cid.slice(0, 12), err.message);
+        }
       }
-    }
+    })();
+
+    const hardCap = setTimeout(() => finish(null), 120_000);
+    cleanups.push(() => clearTimeout(hardCap));
   });
-};
+}
