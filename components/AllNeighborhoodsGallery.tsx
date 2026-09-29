@@ -385,7 +385,6 @@ const items = posts
   }, [activeIndex, mediaItems]);
   */
 
-
 useEffect(() => {
   if (!mediaItems.length) return;
   const here = activeIndex;

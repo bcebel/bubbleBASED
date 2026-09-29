@@ -1,5 +1,6 @@
 // WebTorrentMedia.js
 import React, { useState, useEffect, useRef } from "react";
+import { useEventListener } from "expo";
 import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { getMedia } from "../components/mediaCache";
@@ -7,12 +8,28 @@ import { enqueueDownload } from "./downloadQueue";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const DEBUG = true;
+let globalMuted = true;
+let globalVolume = 1.0;
 
 function FocusedVideo({ src }) {
   const player = useVideoPlayer(src, (p) => {
     p.loop = true;
-    p.muted = true;
+    p.muted = globalMuted;
+    p.volume = globalVolume;
   });
+
+  useEventListener(player, "mutedChange", ({ muted }) => {
+    globalMuted = muted;
+  });
+
+  useEventListener(player, "volumeChange", ({ volume }) => {
+    globalVolume = volume;
+  });
+
+  useEffect(() => {
+    if (player) player.play();
+  }, [player]);
+
   return (
     <VideoView
       player={player}
@@ -36,6 +53,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
     media?.fileType === "image" ||
     media?.mediaType === "image" ||
     media?.fileName?.match(/\.(jpg|jpeg|png|gif|webp|avif|heic|heif|svg)$/i);
+
 
   useEffect(() => {
     if (!isFocused || !media?.cid) return;
