@@ -33,7 +33,7 @@ function releaseTorrent(cid) {
 // ─── exported: release everything outside [i-1, i, i+1] ───
 export const releaseOutsideWindow = (mediaList, currentIndex) => {
   const keep = new Set();
-  for (let i = currentIndex - 2; i <= currentIndex + 5; i++) {
+  for (let i = currentIndex - 1; i <= currentIndex + 3; i++) {
     const item = mediaList[i];
     if (item?.cid) keep.add(item.cid);
   }
