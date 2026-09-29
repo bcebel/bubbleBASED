@@ -334,30 +334,34 @@ export default function AllNeighborhoodsGallery({
 
 const mediaItems = React.useMemo(() => {
   const posts = data?.myNeighborhoodsPosts || [];
-  const rawItems = [];
 
-  for (const post of posts) {
-    for (const m of post.media || []) {
-      if (!m.cid) continue;
-      rawItems.push({
-        id: m._id,
-        cid: m.cid,
-        url: m.url,
-        magnetLink: m.magnetURI,
-        fileType: m.mediaType,
-        fileName: m.fileName || `media-${m.cid}`,
-        postId: post.id,
-        content: post.content,
-        createdAt: post.createdAt,
-        author: post.author,
-        neighborhood: post.neighborhood,
-      });
-    }
-  }
+const items = posts
+  .filter((post) => post.content || post.media?.length > 0)
+  .map((post) => {
+    const firstMedia = post.media?.[0] || null;
 
-  // Inject an ad every 8 media items
+    return {
+      id: post.id,
+      content: post.content,
+      createdAt: post.createdAt,
+      author: post.author,
+      neighborhood: post.neighborhood,
+      cid: firstMedia?.cid || null,
+      url: firstMedia?.url,
+      magnetLink: firstMedia?.magnetURI,
+      fileType: firstMedia?.mediaType,
+      fileName: firstMedia?.fileName,
+      fileSize: firstMedia?.fileSize,
+      mimeType: firstMedia?.mimeType,
+      thumbnailUrl: firstMedia?.thumbnailUrl,
+      media: post.media || [],
+      isTextOnly: !firstMedia,
+    };
+  });
+
+  // inject ads
   const withAds = [];
-  rawItems.forEach((item, index) => {
+  items.forEach((item, index) => {
     withAds.push(item);
     if ((index + 1) % 8 === 0 && adData?.randomAffiliateLink) {
       withAds.push({
@@ -539,12 +543,29 @@ const handleScroll = (e: any) => {
               <View
                 style={[styles.mediaContainer, { aspectRatio: mediaAspect }]}
               >
-                <MediaDisplay
-                  item={item}
-                  isFocused={isFocused}
-                  isAlmostFocused={isAlmostFocused}
-                  onMediaAspectChange={setMediaAspect}
-                />
+                {!item.cid ? (
+                  // text-only post
+                  <View style={styles.textPostContainer}>
+                    <Text style={styles.textPostContent}>{item.content}</Text>
+
+                    <View style={styles.textPostDivider} />
+
+                    <Text style={styles.textPostMeta}>
+                      @{item.author?.username || "unknown"}
+                    </Text>
+                    <Text style={styles.textPostNeighborhood}>
+                      {item.neighborhood?.name || ""}
+                    </Text>
+                  </View>
+                ) : (
+                  // media post
+                  <MediaDisplay
+                    item={item}
+                    isFocused={isFocused}
+                    isAlmostFocused={isAlmostFocused}
+                    onMediaAspectChange={setMediaAspect}
+                  />
+                )}
               </View>
             </View>
           );
@@ -731,4 +752,49 @@ const styles = StyleSheet.create({
   },
   gifBadgeText: { color: "#FFFFFF", fontSize: 10, fontWeight: "bold" },
   gifHint: { color: "#888", fontSize: 12, marginTop: 5, fontStyle: "italic" },
+  textPostContainer: {
+    width: "100%",
+    height: "100%",
+    paddingHorizontal: 32,
+    paddingVertical: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#130720",
+  },
+
+  textPostContent: {
+    color: "#F5F2FA",
+    fontSize: 24,
+    lineHeight: 34,
+    fontWeight: "400",
+    textAlign: "center",
+    maxWidth: 600,
+    letterSpacing: 0.2,
+  },
+
+  textPostMeta: {
+    marginTop: 32,
+    color: "#888",
+    fontSize: 13,
+    fontWeight: "600",
+    textAlign: "center",
+    letterSpacing: 0.5,
+  },
+
+  textPostNeighborhood: {
+    color: "#00ffff",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1.2,
+    marginTop: 8,
+  },
+
+  textPostDivider: {
+    width: 40,
+    height: 2,
+    backgroundColor: "#00ffff",
+    marginVertical: 24,
+    borderRadius: 1,
+  },
 });
