@@ -368,11 +368,10 @@ useEffect(() => {
     );
   }
 
-  const WINDOW = 2;
+  const WINDOW = 1;
   const startIndex = Math.max(0, activeIndex - WINDOW);
   const endIndex = Math.min(mediaItems.length - 1, activeIndex + WINDOW);
-  const visibleIndices = [];
-  for (let i = startIndex; i <= endIndex; i++) visibleIndices.push(i);
+
 
   return (
     <View style={styles.container}>
