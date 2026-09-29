@@ -30,9 +30,15 @@ function FocusedVideo({ src }) {
     globalVolume = volume;
   });
 
-  useEffect(() => {
-    if (player) player.play();
-  }, [player]);
+ useEffect(() => {
+   if (!player) return;
+   try {
+     player.muted = true;
+     player.play();
+   } catch (err) {
+     console.log("[video] play failed:", err);
+   }
+ }, [player]);
 
   return (
     <VideoView
