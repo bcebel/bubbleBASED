@@ -3,8 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { getMedia } from "../components/mediaCache";
-import { getMagnetForCid } from "../utils/magnetCache";
-import { getOrStartTorrent } from "./torrentmanager";
+import { enqueueDownload } from "./downloadQueue";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const DEBUG = true;
@@ -39,7 +38,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
     media?.fileName?.match(/\.(jpg|jpeg|png|gif|webp|avif|heic|heif|svg)$/i);
 
   useEffect(() => {
-    if (!isFocused || !media) return;
+    if (!isFocused || !media?.cid) return;
 
     let cancelled = false;
 
@@ -54,7 +53,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
       setIsReady(false);
       setVideoSrc(null);
 
-      // 1. cache
+      // 1. cache hit → play from blob, done.
       try {
         const cached = await getMedia(media.cid);
         if (cancelled) return;
@@ -66,51 +65,26 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
         }
       } catch (_) {}
 
-      // 2. magnet
-      const magnetLink = media.magnetLink || (await getMagnetForCid(media.cid));
       if (cancelled) return;
 
-      if (!magnetLink) {
-        setVideoSrc(`https://bubblebased.com/api/webseed/${media.cid}`);
-        setStatus("fallback_http");
-        setIsReady(true);
-        return;
-      }
-
-      // 3. torrent
-      setStatus("connecting_p2p");
-      const record = await getOrStartTorrent(
-        magnetLink,
-        media.cid,
-        media,
-      ).catch(() => null);
-      if (cancelled) return;
-
-      const client =
-        typeof window !== "undefined" ? window.globalWebTorrentClient : null;
-      const hasServer = !!client?._server;
-      const hasMetadata = record?.torrent?.ready;
-      const file = record?.torrent?.files?.[0];
-
-      if (!isImage && hasServer && hasMetadata && file) {
-        setVideoSrc(file.streamURL);
-        setStatus("p2p_streaming");
-        setIsReady(true);
-        return;
-      }
-
-      // 4. fallback
-      setVideoSrc(`https://bubblebased.com/api/webseed/${media.cid}`);
+      // 2. miss → play HTTP fallback immediately, enqueue background cache
+      setVideoSrc(`${BACKEND_URL}/api/webseed/${media.cid}`);
       setStatus("fallback_http");
       setIsReady(true);
+
+      // fire-and-forget; queue handles P2P + HTTP race internally
+      const priority = isFocused ? 0 : isAlmostFocused ? 2 : 5;
+      enqueueDownload(media.cid, media, priority).catch((err) => {
+        if (DEBUG)
+          console.log("[wtm] enqueue rejected", media.cid, err.message);
+      });
     };
 
     load();
 
     return () => {
       cancelled = true;
-      const urls = ownedBlobsRef.current;
-      for (const url of urls) {
+      for (const url of ownedBlobsRef.current) {
         if (url.startsWith("blob:")) {
           URL.revokeObjectURL(url);
           if (DEBUG) console.log("[wtm] revoked", url, "for", media.cid);
@@ -118,7 +92,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
       }
       ownedBlobsRef.current = [];
     };
-  }, [isFocused, media?.cid, media?.magnetLink]);
+  }, [isFocused, media?.cid]);
 
   if (!isFocused) return null;
 

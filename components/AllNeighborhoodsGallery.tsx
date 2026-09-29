@@ -15,10 +15,11 @@ import WebTorrentMedia from "../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "./AdMessage";
 import {
-  releaseOutsideWindow,
+
   cancelScheduledRelease,
   scheduleReleaseAll,
 } from "../components/torrentmanager";
+import { enqueueDownload, cancelBelowPriority } from "./downloadQueue";
 
 
 import {
@@ -383,13 +384,25 @@ const mediaItems = React.useMemo(() => {
     }
   }, [activeIndex, mediaItems]);
   */
+useEffect(() => {
+  if (!mediaItems.length) return;
+  const here = activeIndex;
+  if (here < 0 || here >= mediaItems.length) return;
 
-  // release non-window torrents when the focus moves
-  useEffect(() => {
-    if (mediaItems.length > 0) {
-      releaseOutsideWindow(mediaItems, activeIndex);
-    }
-  }, [activeIndex, mediaItems]);
+  for (let offset = 10; offset >= 5; offset--) {
+    const item = mediaItems[here + offset];
+    if (!item?.cid) continue;
+    enqueueDownload(item.cid, item, 10 - offset);
+  }
+
+  for (let offset = -1; offset >= -5; offset--) {
+    const item = mediaItems[here + offset];
+    if (!item?.cid) continue;
+    enqueueDownload(item.cid, item, 20 + Math.abs(offset));
+  }
+
+  cancelBelowPriority(25);
+}, [activeIndex, mediaItems]);
 
   // release everything when leaving the gallery
 useEffect(() => {
@@ -405,13 +418,11 @@ useEffect(() => {
     setRefreshing(false);
   };
 
-  const handleScroll = (e: any) => {
-    const newIndex = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);
-    if (newIndex !== activeIndex) {
-      setActiveIndex(newIndex);
-    }
-  };
-
+const handleScroll = (e: any) => {
+  const newIndex = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);
+  if (newIndex !== activeIndex) setActiveIndex(newIndex);
+};
+  
   if (loading)
     return (
       <View style={styles.center}>
@@ -473,7 +484,7 @@ useEffect(() => {
           const isInWindow = index >= startIndex && index <= endIndex;
           const neighborhoodName =
             item.neighborhood?.name || "Unknown Neighborhood";
-          const isFocused = Math.abs(index - activeIndex) <= 1;
+          const isFocused = index === activeIndex;
           const isAlmostFocused = Math.abs(index - activeIndex) <= 4;
           const uniqueKey = `${item.id}-${index}`;
 

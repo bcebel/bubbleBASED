@@ -24,7 +24,7 @@ if (isBrowser()) {
     }
 
     async #initDB() {
-      return openDB(DB_NAME, DB_VERSION, {
+      const db = await openDB(DB_NAME, DB_VERSION, {
         upgrade(db) {
           if (!db.objectStoreNames.contains(STORE_NAME)) {
             const store = db.createObjectStore(STORE_NAME, { keyPath: "cid" });
@@ -35,47 +35,71 @@ if (isBrowser()) {
         console.warn("⚠️ IndexedDB blocked or failed to init:", err.name);
         return null;
       });
+
+      if (db) {
+        // if the browser closes the connection, drop our reference so the
+        // next call re-opens it
+        db.addEventListener("close", () => {
+          console.warn("⚠️ IDB connection closed, will reconnect on next call");
+          this.dbPromise = null;
+        });
+        db.addEventListener("versionchange", () => {
+          console.warn("⚠️ IDB versionchange, closing");
+          db.close();
+          this.dbPromise = null;
+        });
+      }
+
+      return db;
     }
 
-     
-  
-
-  async saveMedia(cid, blob, mimeType, fileName, isPublic = true) {
-    if (!blob) return false;
-
-    try {
-      const arrayBuffer = await blob.arrayBuffer();
-      const db = await this.dbPromise;
-      if (!db) return false;
-
-      const tx = db.transaction(STORE_NAME, "readwrite");
-      const store = tx.objectStore(STORE_NAME);
-
-      await store.put({
-        cid,
-        data: arrayBuffer,
-        mimeType,
-        fileName,
-        isPublic,
-        lastAccessed: new Date(),
-        storedAt: new Date(),
-      });
-      await tx.done;
-
-      console.log(`✅ Saved to Cache: ${cid}`);
-      return true;
-    } catch (error) {
-      // Just log it, don't permanently disable!
-      console.warn("❌ Save failed (will retry later):", error.name);
-      return false;
+    async #getDB() {
+      if (!this.dbPromise) {
+        this.dbPromise = this.#initDB();
+      }
+      let db = await this.dbPromise;
+      if (!db) {
+        // try once more, in case the previous failure was transient
+        this.dbPromise = this.#initDB();
+        db = await this.dbPromise;
+      }
+      return db;
     }
-  }
 
-        
+    async saveMedia(cid, blob, mimeType, fileName, isPublic = true) {
+      if (!blob) return false;
+
+      try {
+        const arrayBuffer = await blob.arrayBuffer();
+        const db = await this.dbPromise;
+        if (!db) return false;
+
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+
+        await store.put({
+          cid,
+          data: arrayBuffer,
+          mimeType,
+          fileName,
+          isPublic,
+          lastAccessed: new Date(),
+          storedAt: new Date(),
+        });
+        await tx.done;
+
+        console.log(`✅ Saved to Cache: ${cid}`);
+        return true;
+      } catch (error) {
+        // Just log it, don't permanently disable!
+        console.warn("❌ Save failed (will retry later):", error.name);
+        return false;
+      }
+    }
 
     async getMedia(cid) {
       try {
-        const db = await this.dbPromise;
+        const db = await this.#getDB();
         if (!db) return null;
 
         const tx = db.transaction(STORE_NAME, "readonly");
@@ -96,6 +120,7 @@ if (isBrowser()) {
         return null;
       } catch (error) {
         console.warn(`❌ Cache retrieval failed for ${cid}:`, error.name);
+           this.dbPromise = null;
         return null;
       }
     }
