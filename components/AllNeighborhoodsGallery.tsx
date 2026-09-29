@@ -546,16 +546,21 @@ const handleScroll = (e: any) => {
                 {!item.cid ? (
                   // text-only post
                   <View style={styles.textPostContainer}>
-                    <Text style={styles.textPostContent}>{item.content}</Text>
+                    <ScrollView
+                      contentContainerStyle={styles.textScrollContent}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      <Text style={styles.textPostContent}>{item.content}</Text>
+                    </ScrollView>
 
-                    <View style={styles.textPostDivider} />
-
-                    <Text style={styles.textPostMeta}>
-                      @{item.author?.username || "unknown"}
-                    </Text>
-                    <Text style={styles.textPostNeighborhood}>
-                      {item.neighborhood?.name || ""}
-                    </Text>
+                    <View style={styles.textPostFooter}>
+                      <Text style={styles.textPostMeta}>
+                        @{item.author?.username || "unknown"}
+                      </Text>
+                      <Text style={styles.textPostNeighborhood}>
+                        {item.neighborhood?.name || ""}
+                      </Text>
+                    </View>
                   </View>
                 ) : (
                   // media post
@@ -755,11 +760,19 @@ const styles = StyleSheet.create({
   textPostContainer: {
     width: "100%",
     height: "100%",
+    backgroundColor: "#130720",
     paddingHorizontal: 32,
-    paddingVertical: 60,
+    paddingTop: 80,
+    paddingBottom: 120,
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+
+  textScrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#130720",
+    paddingVertical: 20,
   },
 
   textPostContent: {
@@ -772,29 +785,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  textPostMeta: {
-    marginTop: 32,
-    color: "#888",
-    fontSize: 13,
-    fontWeight: "600",
-    textAlign: "center",
-    letterSpacing: 0.5,
-  },
-
-  textPostNeighborhood: {
-    color: "#00ffff",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
-    marginTop: 8,
-  },
-
-  textPostDivider: {
-    width: 40,
-    height: 2,
-    backgroundColor: "#00ffff",
-    marginVertical: 24,
-    borderRadius: 1,
+  textPostFooter: {
+    alignItems: "center",
+    paddingTop: 20,
   },
 });
