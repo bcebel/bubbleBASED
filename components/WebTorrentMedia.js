@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useEventListener } from "expo";
 import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
-import { useVideoPlayer, VideoView } from "expo-video";
+import { useVideoPlayer, VideoView, useCaching } from "expo-video";
 import { getMedia } from "../components/mediaCache";
 import { enqueueDownload } from "./downloadQueue";
 
@@ -12,7 +12,11 @@ let globalMuted = true;
 let globalVolume = 1.0;
 
 function FocusedVideo({ src }) {
-  const player = useVideoPlayer(src, (p) => {
+  const videoSource = {
+    uri: src,
+    useCaching: true,
+  };
+  const player = useVideoPlayer(videoSource, (p) => {
     p.loop = true;
     p.muted = globalMuted;
     p.volume = globalVolume;
