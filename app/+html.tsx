@@ -219,7 +219,12 @@ window.WebTorrent = WebTorrent;
               });
               window.__canStream = true;
               console.log("🎬 Service worker registered and server created");
+              setTimeout(() => {
+  console.log("server:", !!window.globalWebTorrentClient?._server);
+  console.log("SW controller:", navigator.serviceWorker.controller);
+}, 3000);
             })
+
             .catch((e) => {
               console.error("🎬 Service worker failed:", e);
               window.__canStream = false;

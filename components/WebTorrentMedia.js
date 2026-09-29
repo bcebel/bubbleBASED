@@ -178,133 +178,44 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
     let unsubscribeProgress = null;
     let objectUrl = null;
 
-    const load = async () => {
-      try {
-        setStatus("checking_cache");
+ const load = async () => {
+   // 1. Cache first
+   const cached = await getMedia(media.cid);
+   if (cached?.blob) {
+     setVideoSrc(URL.createObjectURL(cached.blob));
+     setIsReady(true);
+     return;
+   }
 
-        const magnetLink =
-          media.magnetLink || (await getMagnetForCid(media.cid));
+   // 2. Get the torrent record (starts it if needed)
+   const magnetLink = media.magnetLink || (await getMagnetForCid(media.cid));
+   const record = await getOrStartTorrent(magnetLink, media.cid, media).catch(
+     () => null,
+   );
 
-        // 1. Cache first
-        if (media.cid) {
-      
-          try {
-            const cached = await getMedia(media.cid);
-            if (cached?.blob && isMounted) {
-              objectUrl = URL.createObjectURL(cached.blob);
-              currentUrlRef.current = objectUrl;
-              setVideoSrc(objectUrl);
-              setStatus("cached");
-              setProgress(100);
-              setIsReady(true);
-              return;
-            }
-          } catch (_) {}
-        }
+   if (!isMounted) return;
 
-        // 2. Not cached — start the torrent and get the record
-        setStatus("connecting_p2p");
-        const record = await getOrStartTorrent(
-         magnetLink,
-          media.cid,
-          media,
-        ).catch(() => null);
+   // 3. Try streamURL if the server exists and the torrent has metadata
+   const client = window.globalWebTorrentClient;
+   const hasServer = !!client?._server;
+   const hasMetadata = record?.torrent?.ready;
+   const hasFile = record?.torrent?.files?.[0];
 
-        if (!isMounted) return;
+   if (!isImage && hasServer && hasMetadata && hasFile) {
+     const url = record.torrent.files[0].streamURL;
+     if (url) {
+       setVideoSrc(url);
+       setIsReady(true);
+       return;
+     }
+   }
 
-        // 3a. Video + torrent available → streamTo (streams from pieces)
-        if (!isImage && record?.torrent) {
-          const attachRender = () => {
-            const file = record.torrent.files?.[0];
-            const el = videoRef.current;
-            if (!file || !el) return;
-
-            file.streamTo(el, { autoplay: true, controls: false }, (err) => {
-              if (err) {
-                console.warn("[streamTo] failed:", err);
-                // fall back to proxy URL
-                const proxyUrl = `https://bubblebased.com/api/webseed/${media.cid}`;
-                setVideoSrc(proxyUrl);
-                setIsReady(true);
-              } else {
-                setStatus("p2p_streaming");
-                setIsReady(true);
-              }
-            });
-          };
-
-          let attached = false;
-          let timeout = null;
-
-          const tryAttach = () => {
-            if (record.torrent.progress > 50 && !attached) {
-              attached = true;
-              record.torrent.removeListener("download", tryAttach);
-              if (timeout) clearTimeout(timeout);
-              attachRender();
-              return true;
-            }
-            return false;
-          };
-
-          timeout = setTimeout(() => {
-            if (isMounted && !attached && record.torrent.progress === 0) {
-              record.torrent.removeListener("download", tryAttach);
-              const proxyUrl = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`;
-              setVideoSrc(proxyUrl);
-              setIsReady(true);
-            }
-          }, 2000);
-
-          if (!tryAttach()) {
-            record.torrent.on("download", tryAttach);
-          }
-
-          // cleanup
-          return () => {
-            isMounted = false;
-            if (timeout) clearTimeout(timeout);
-            if (record?.torrent) {
-              record.torrent.removeListener("download", tryAttach);
-            }
-
-            // wire up progress for the loader UI
-            const updateStats = () => {
-              if (!isMounted) return;
-              setProgress(Math.floor((record.torrent.progress || 0) * 100));
-              setPeerCount(record.torrent.numPeers || 0);
-            };
-            record.torrent.on("download", updateStats);
-            const prevUnsub = unsubscribeProgress;
-            unsubscribeProgress = () => {
-              if (prevUnsub) prevUnsub();
-              record.torrent.removeListener("download", updateStats);
-            };
-
-            return;
-          };
-        }
-        // 3b. Everything else → use the manager's URL (cache/proxy/blob)
-const result = await getMediaWithFallback({ ...media, magnetLink }, (s) => {
-  if (isMounted) setStatus(s);
-});
-setVideoSrc(result.url);
-        
-        
-
-        if (!isMounted) return;
-
-        const url = typeof result === "string" ? result : result?.url;
-        if (!url) throw new Error("No media URL returned");
-
-        currentUrlRef.current = url;
-        setVideoSrc(url);
-        setIsReady(true);
-      } catch (err) {
-        if (isMounted) setStatus("error");
-        console.error("Media load failed:", err);
-      }
-    };
+   // 4. Fall back to proxy
+   setVideoSrc(
+     `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`,
+   );
+   setIsReady(true);
+ };
 
     load();
 
