@@ -7,6 +7,7 @@ import { useFonts } from "expo-font";
 import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { useEffect } from "react";
 import { ApolloProviderWrapper } from "../context/apolloProvider";
 import { useColorScheme } from "@/hooks/useColorScheme";

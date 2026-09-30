@@ -24,6 +24,7 @@
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@thaunknown/idb-chunk-store": "^1.0.4",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "apollo3-cache-persist": "0.15.0",
     "expo": "~57.0.21",
     "expo-blur": "~57.0.2",
