@@ -21,7 +21,7 @@ import { useQuery, useMutation } from "@apollo/client";
 import { BlurView } from "expo-blur";
 
 import Head from "expo-router/head";
-import WebTorrentMedia from "@/components/TorrentOnlyMedia";
+import WebTorrentMedia from "@/components/WebTorrentMedia";
 
 import { Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";

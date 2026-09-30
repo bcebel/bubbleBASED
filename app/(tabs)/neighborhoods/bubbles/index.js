@@ -24,7 +24,7 @@ import {
   JOIN_NEIGHBORHOOD,
   LEAVE_NEIGHBORHOOD,
 } from "../../../graphql/queries";
-import WebTorrentMedia from "@/components/TorrentOnlyMedia";
+import WebTorrentMedia from "@/components/WebTorrentMedia";
 
 // Import your sibling tab components (Adjust relative paths if needed)
 import BublicScreen from "./bublic";
@@ -179,16 +179,62 @@ const handleScroll = (event) => {
                   <WebTorrentMedia
                     media={{
                       cid: "QmdBW11LZ34UUwNK5oMSqFdaehLap9gFEGTinhh3WUwYyV",
-                      magnetLink: "magnet:?xt=urn:btih:c24538ae212eb0ec480bb190dcd9fd08bb581820...",
+                      magnetLink: "magnet:?xt=urn:btih:c24538ae212eb0ec480bb190dcd9fd08bb581820&dn=video-QmdBW11LZ34UUwNK5oMSqFdaehLap9gFEGTinhh3WUwYyV&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Fminnowspacebackend-e6635e46c3d0.herokuapp.com%2Fapi%2Fwebseed%2FQmdBW11LZ34UUwNK5oMSqFdaehLap9gFEGTinhh3WUwYyV",
                       fileName: "post_1789941035452.mp4",
                       fileType: "video",
                     }}
                     isFocused={true}
                   />
-                </View>
-              </BlurView>
-            </View>
-          </View>
+                  <View style={styles.peerBadge}>
+                                    <View style={styles.liveDot} />
+                                    <Text style={styles.peerBadgeText}></Text>
+                                  </View>
+                                </View>
+                
+                                {/* 2. Mock Terminal Status Box */}
+                                <View style={styles.mockTerminalBox}>
+                                  <View style={styles.terminalHeader}>
+                                    <View
+                                      style={[styles.dot, { backgroundColor: "#FF5F56" }]}
+                                    />
+                                    <View
+                                      style={[styles.dot, { backgroundColor: "#FFBD2E" }]}
+                                    />
+                                    <View
+                                      style={[styles.dot, { backgroundColor: "#27C93F" }]}
+                                    />
+                                    <Text style={styles.terminalTitle}></Text>
+                                  </View>
+                                  <View style={styles.mockContentBox}>
+                                    <Text style={styles.mockCodeText}>// bubbleBASED</Text>
+                                    <Text style={styles.mockCodeTextAccent}>
+                                      invitation: "BASED"{" "}
+                                    </Text>
+                                    <Text style={styles.mockCodeText}>privacy: "BASED" </Text>
+                                    <Text style={styles.mockCodeText}>context: "BASED" </Text>
+                                    <Text style={styles.mockCodeText}>bubble: "BASED" </Text>
+                                  </View>
+                                </View>
+                              </BlurView>
+                            </View>
+                          </View>
+                
+                          {/* MARGARET MEAD QUOTE */}
+                          <View style={styles.quoteSection}>
+                            <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
+                              <Text style={styles.quoteText}>
+                               "The revolution will not be televised"
+                              </Text>
+                              <Text style={styles.quoteAuthor}>— Gil Scott-Heron</Text>
+                            </BlurView>
+                          </View>
+                
+                          {/* FOOTER */}
+                          <View style={styles.footerContainer}>
+                            <Text style={styles.footerText}>
+                              © {new Date().getFullYear()} bubbleBASED.  Click tabs for more info.
+                            </Text>
+                          </View>
         </ScrollView>
       </View>
     );
@@ -566,4 +612,75 @@ const styles = StyleSheet.create({
   },
   heroVisualDesktop: { flex: 1, maxWidth: 480 },
   mediaFrame: { borderRadius: 12, overflow: "hidden" },
+     visualCardInner: {
+      flex: 1,
+      backgroundColor: "#0D1017",
+      borderRadius: 10,
+      padding: 16,
+    },
+    visualCardHeader: {
+      flexDirection: "row",
+      gap: 8,
+      marginBottom: 20,
+    },
+    dot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+    mockContentBox: {
+      gap: 12,
+    },
+    mockCodeText: {
+      fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+      color: "#6B7280",
+      fontSize: 14,
+    },
+    mockCodeTextAccent: {
+      fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+      color: "#10B981",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+  
+    // Quote Section
+    quoteSection: {
+      paddingHorizontal: 24,
+      paddingVertical: 40,
+      alignItems: "center",
+    },
+    quoteGlassCard: {
+      maxWidth: 700,
+      width: "100%",
+      padding: 32,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: "rgba(255, 255, 255, 0.15)",
+      backgroundColor: "rgba(255, 0, 129, 0.1)",
+    },
+    quoteText: {
+      color: "#F5F2FA",
+      fontSize: 20,
+      lineHeight: 30,
+      textAlign: "center",
+      fontStyle: "italic",
+      marginBottom: 16,
+    },
+    quoteAuthor: {
+      color: "#FF5CB0",
+      fontSize: 16,
+      fontWeight: "700",
+      textAlign: "right",
+    },
+  
+    // Footer
+    footerContainer: {
+      paddingTop: 20,
+      paddingBottom: 20,
+      alignItems: "center",
+    },
+    footerText: {
+      color: "#6B7280",
+      fontSize: 14,
+    },
 });

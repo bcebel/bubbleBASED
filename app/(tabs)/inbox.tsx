@@ -14,7 +14,7 @@ import {
   ScrollView,
 } from "react-native";
 import { BlurView } from "expo-blur";
-import WebTorrentMedia from "@/components/TorrentOnlyMedia";
+import WebTorrentMedia from "@/components/WebTorrentMedia";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Head from "expo-router/head";

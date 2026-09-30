@@ -17,7 +17,7 @@ import { BlurView } from "expo-blur";
 import { gql, useQuery, useSubscription } from "@apollo/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Head from "expo-router/head";
-import WebTorrentMedia from "@/components/TorrentOnlyMedia";
+import WebTorrentMedia from "@/components/WebTorrentMedia";
 
 import NeighborhoodLiveStreamPlayer from "../../../components/NeighborhoodLiveStreamPlayer";
 import { warehouse } from "../../../components/StreamWearhouse.js";
