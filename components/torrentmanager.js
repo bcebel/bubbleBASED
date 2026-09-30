@@ -40,7 +40,6 @@ export function enqueueDownload(cid, media, priority = 10) {
   queue.push({ cid, media, priority, resolve, reject, promise });
   sortQueue();
   drain();
-  console.log("[queue] enqueue", cid?.slice(0, 12), "prio", priority);
   return promise;
 }
 
@@ -64,14 +63,7 @@ async function drain() {
   processing = true;
   sortQueue();
   active = queue.shift();
-  console.log(
-    "[queue] START",
-    active.cid.slice(0, 12),
-    "prio",
-    active.priority,
-    "queue left:",
-    queue.length,
-  );
+
 
   try {
     await runJob(active);
@@ -90,10 +82,8 @@ async function runJob(job) {
   const { cid, media } = job;
   const cached = await getMedia(cid);
   if (cached?.blob) {
-    console.log("[queue] cache hit", cid.slice(0, 12));
     return;
   }
-  console.log("[queue] MISS", cid.slice(0, 12));
 
   const magnetLink = media.magnetLink || (await getMagnetForCid(cid));
 
@@ -107,7 +97,6 @@ async function runJob(job) {
     media.mimeType || "application/octet-stream",
     media.fileName || `media-${cid}`,
   );
-  console.log("[queue] cached", cid, "via", winner.source);
 }
 
 // ─── the race ─────────────────────────────────────────────
@@ -118,13 +107,7 @@ function raceSources(cid, magnetLink, media) {
     const finish = (result) => {
       if (settled) return;
       settled = true;
-      console.log(
-        "[queue] WINNER",
-        cid.slice(0, 12),
-        result?.source,
-        "size:",
-        result?.blob?.size,
-      );
+
       cleanup();
       resolve(result);
     };
@@ -155,11 +138,7 @@ function raceSources(cid, magnetLink, media) {
         finish({ blob, source: "http" });
       } catch (err) {
         if (!settled && err.name !== "AbortError") {
-          console.log(
-            "[queue] http side failed",
-            cid.slice(0, 12),
-            err.message,
-          );
+       
         }
       }
     })();
@@ -196,31 +175,15 @@ function raceSources(cid, magnetLink, media) {
 
         // ─── DIAGNOSTIC LISTENERS ─────────────────────────
         const onWire = (wire) => {
-          console.log(
-            "[queue] WIRE CONNECTED",
-            cid.slice(0, 12),
-            "peer:",
-            wire.peerId?.slice(0, 8),
-            "type:",
-            wire.type,
-          );
+        
         };
         const onNoPeers = (announceType) => {
-          console.log("[queue] noPeers", cid.slice(0, 12), announceType);
         };
         const onWarning = (err) => {
-          console.log(
-            "[queue] torrent warning",
-            cid.slice(0, 12),
-            err?.message || err,
-          );
+      
         };
         const onError = (err) => {
-          console.log(
-            "[queue] torrent error",
-            cid.slice(0, 12),
-            err?.message || err,
-          );
+     
         };
 
         torrent.on("wire", onWire);
@@ -249,16 +212,7 @@ function raceSources(cid, magnetLink, media) {
             clearInterval(statsInterval);
             return;
           }
-          console.log(
-            "[queue] p2p stats",
-            cid.slice(0, 12),
-            "peers:",
-            torrent.numPeers,
-            "progress:",
-            (torrent.progress * 100).toFixed(1) + "%",
-            "speed:",
-            torrent.downloadSpeed,
-          );
+       
         }, 2000);
         cleanups.push(() => clearInterval(statsInterval));
 
@@ -273,14 +227,7 @@ function raceSources(cid, magnetLink, media) {
         }
 
         torrent.once("done", async () => {
-          console.log(
-            "[queue] p2p DONE",
-            cid.slice(0, 12),
-            "peers:",
-            torrent.numPeers,
-            "downloaded:",
-            torrent.downloaded,
-          );
+        
           try {
             const file = torrent.files[0];
             if (!file) return;
@@ -293,10 +240,7 @@ function raceSources(cid, magnetLink, media) {
 
         const stallTimeout = setTimeout(() => {
           if (!settled) {
-            console.log(
-              "[queue] p2p stalled, letting http win",
-              cid.slice(0, 12),
-            );
+          
             try {
               torrent.destroy({ destroyStore: false });
             } catch (_) {}
@@ -305,7 +249,6 @@ function raceSources(cid, magnetLink, media) {
         cleanups.push(() => clearTimeout(stallTimeout));
       } catch (err) {
         if (!settled) {
-          console.log("[queue] p2p side failed", cid.slice(0, 12), err.message);
         }
       }
     })();

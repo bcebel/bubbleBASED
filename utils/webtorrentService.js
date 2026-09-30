@@ -38,7 +38,6 @@ class WebTorrentService {
     const torrent = client.get(magnetLink);
     if (torrent) {
       torrent.destroy();
-      console.log("🧹 Cleaned up torrent:", torrent.infoHash);
     }
   }
 
@@ -59,7 +58,6 @@ class WebTorrentService {
       !window.globalWebTorrentClient &&
       attempts < 20
     ) {
-      console.log(`Waiting for Champ (Attempt ${attempts + 1})...`);
       await new Promise((r) => setTimeout(r, 500));
       attempts++;
     }
@@ -202,9 +200,7 @@ class WebTorrentService {
               timestamp: Date.now(),
             });
             if (dataSize > this.MAX_SEED_DATA_BYTES) {
-              console.log(
-                `⚠️ Not retaining seed data (${dataSize} bytes > ${this.MAX_SEED_DATA_BYTES})`,
-              );
+  
             }
           }
 
@@ -214,7 +210,7 @@ class WebTorrentService {
             infoHash: torrent.infoHash,
             name: torrent.name,
             size: torrent.length,
-          };
+          };w
 
           this.cacheMagnetResult(torrent.magnetURI, result);
           resolve(result);
@@ -235,11 +231,9 @@ class WebTorrentService {
     const cached = this.downloadCache.get(cacheKey);
 
     if (cached && cached.data) {
-      console.log("🔄 Re-seeding from cached data...");
       return this.seed(cached.data, { name: cached.name || "re-seeded" });
     }
 
-    console.log("❌ No cached data available for re-seeding");
     return null;
   }
 
@@ -337,10 +331,7 @@ class WebTorrentService {
 
       try {
         client.add(magnetLink, torrentOptions, (torrent) => {
-          console.log(
-            "🧲 Torrent added to swarm:",
-            torrent.name || torrent.infoHash,
-          );
+ 
 
           // Reset stall timer on any progress
           torrent.on("download", armProgressTimeout);
@@ -384,7 +375,6 @@ class WebTorrentService {
           }
 
           torrent.on("done", () => {
-            console.log("✅ Torrent complete - now seeding:", torrent.name);
             this.seedingCache.set(torrent.infoHash, { torrent });
           });
 
@@ -416,9 +406,7 @@ class WebTorrentService {
           : 0;
 
     if (dataSize > this.MAX_SEED_DATA_BYTES) {
-      console.log(
-        `⚠️ Skipping storeSeedData (${dataSize} bytes > ${this.MAX_SEED_DATA_BYTES})`,
-      );
+
       return;
     }
 
@@ -429,7 +417,6 @@ class WebTorrentService {
       cachedAt: Date.now(),
       magnetLink,
     });
-    console.log("💾 Seed data stored for re-seeding");
   }
 
   async cacheMagnetLink(magnetLink, metadata = {}) {
@@ -461,10 +448,8 @@ class WebTorrentService {
   async prewarmMagnet(magnetLink) {
     try {
       const result = await this.add(magnetLink);
-      console.log("🔥 Pre-warmed magnet link:", result.name);
       return result;
     } catch (error) {
-      console.warn("Could not pre-warm magnet:", error.message);
       return null;
     }
   }
@@ -508,7 +493,6 @@ class WebTorrentService {
         const cached = this.downloadCache.get(cacheKey);
 
         if (cached && cached.data) {
-          console.log("💾 Keeping cached data for:", t.name);
         } else {
           this.downloadCache.delete(cacheKey);
         }

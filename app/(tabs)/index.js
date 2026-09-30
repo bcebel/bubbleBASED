@@ -29,29 +29,26 @@ export default function HomeScreen() {
 
   const theme = themes.bubblefusion.dark;
 
-  const handleLogout = async () => {
-    try {
-      // 1. Purge Apollo client memory cache
-      await clearApolloStore();
+ const handleLogout = async () => {
+  try {
+    // fire and forget — don't await
+    clearApolloStore().catch(() => {});
 
-      // 2. Wipe ALL auth keys & persisted disk cache
-      await AsyncStorage.multiRemove([
-        "token",
-        "username",
-        "userId",
-        "apollo-cache-persist",
-      ]);
+    // clear all auth AND persist keys
+    await AsyncStorage.multiRemove([
+      "token",
+      "username",
+      "userId",
+      "apollo-cache-persist",
+    ]);
 
-      // 3. Wipe custom caches
-      await warehouse.clearAllExcept("");
-      await mediaCache.clearCache();
+    await warehouse.clearAllExcept("");
 
-      // 4. Redirect to login
-      router.replace("/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
+    router.replace("/login");
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+};
 
   return (
     <>

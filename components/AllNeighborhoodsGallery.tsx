@@ -322,7 +322,7 @@ export default function AllNeighborhoodsGallery({
   const { data, loading, error, refetch } = useQuery(
     GET_MY_NEIGHBORHOODS_POSTS,
     {
-      fetchPolicy: "cache-and-network",
+      fetchPolicy: "cache-first",
     },
   );
 

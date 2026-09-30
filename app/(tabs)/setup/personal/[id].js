@@ -47,7 +47,7 @@ export default function NeighborhoodDetailScreen() {
   // ✅ ALL HOOKS AT THE TOP
   const { loading, error, data, refetch } = useQuery(GET_NEIGHBORHOOD, {
     variables: { id },
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
   });
   const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
   const { data: userData } = useQuery(GET_CURRENT_USER);

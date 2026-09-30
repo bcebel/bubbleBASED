@@ -222,7 +222,7 @@ export default function AllNeighborhoodsGallery({
   neighborhoodId?: string;
 }) {
   const { data, loading, error, refetch } = useQuery(GET_MY_POSTS, {
-    fetchPolicy: "cache-and-network",
+    fetchPolicy: "cache-first",
   });
 
   const [refreshing, setRefreshing] = useState(false);

@@ -96,7 +96,7 @@ export default function NeighborhoodDetailScreen() {
   // ✅ ALL HOOKS AT THE TOP
   const { loading, error, data, refetch } = useQuery(GET_NEIGHBORHOOD, {
     variables: { id },
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
   });
   const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
   const [updateBubblePhoto] = useMutation(UPDATE_BUBBLE_PHOTO);

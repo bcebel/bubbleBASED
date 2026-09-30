@@ -234,7 +234,7 @@ export default function AllNeighborhoodsGallery({
   const { data, loading, error, refetch } = useQuery(GET_NEIGHBORHOOD_POSTS, {
     variables: { neighborhoodId },
     skip: !neighborhoodId,
-    fetchPolicy: "cache-and-network",
+    fetchPolicy: "cache-first",
   });
   const [refreshing, setRefreshing] = useState(false);
   const { data: adData } = useQuery(GET_RANDOM_AFFILIATE_LINK);

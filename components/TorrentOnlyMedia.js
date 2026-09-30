@@ -22,7 +22,6 @@ if (typeof window !== "undefined") {
 
 const getCachedPinataUrl = (cid, fallbackUrl) => {
   if (pinataCache.has(cid)) {
-    console.log(`💾 Pinata cache hit: ${cid}`);
     return pinataCache.get(cid);
   }
   const url = fallbackUrl || `https://${PINATA_GATEWAY}/ipfs/${cid}`;
@@ -256,7 +255,7 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
           return;
         }
       } catch (err) {
-        console.log("Cache miss:", err.message);
+  
       }
 
       // 2. Start background cache immediately (so even if you scroll away, it'll be saved)
@@ -284,7 +283,6 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
           saveCachedMedia(combined, media.fileName);
           return;
         } catch (err) {
-          console.log("Slice assembly failed:", err.message);
         }
       }
 

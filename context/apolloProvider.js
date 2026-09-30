@@ -59,7 +59,7 @@ export function useApolloClient() {
             Video: { keyFields: ["cid"] },
             Image: { keyFields: ["cid"] },
             Post: { keyFields: ["id"] },
-            PostMedia: { keyFields: ["cid"] }, // ✅ Add this!
+            PostMedia: { keyFields: false }, // ✅ Add this!
             Query: {
               fields: {
                 posts: {
