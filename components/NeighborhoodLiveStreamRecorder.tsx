@@ -92,14 +92,29 @@ export default function NeighborhoodLiveStreamRecorder({
     }
   };
 
-  const isSafari =
-    typeof navigator !== "undefined" &&
-    /Safari/.test(navigator.userAgent) &&
-    !/Chrome/.test(navigator.userAgent);
+const checkRecorderSupport = () => {
+  if (typeof MediaRecorder === "undefined") return null;
 
-  if (isSafari) {
-    supportedTypeRef.current = 'video/mp4;codecs="mp4a.40.2, avc1.42E01E"';
+  // Chrome prefers webm; Safari prefers mp4
+  const candidates = [
+    'video/mp4;codecs="mp4a.40.2, avc1.42E01E"', // Safari
+    "video/mp4", // Safari fallback
+    "video/webm;codecs=vp8,opus", // Chrome
+    "video/webm;codecs=vp9,opus", // Chrome
+    "video/webm", // Chrome fallback
+  ];
+
+  for (const type of candidates) {
+    if (MediaRecorder.isTypeSupported(type)) return type;
   }
+  return null;
+};
+
+  supportedTypeRef.current = checkRecorderSupport();
+  
+if (!supportedTypeRef.current) {
+  alert("This browser doesn't support video recording.");
+}
 
   const currentThumbnailRef = useRef(null);
   const [sendMessage] = useMutation(SEND_MESSAGE);
