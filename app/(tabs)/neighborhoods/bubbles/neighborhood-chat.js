@@ -197,6 +197,7 @@ const SEND_NEIGHBORHOOD_MESSAGE = gql`
     $sessionId: String
     $chunkIndex: Int
     $totalChunks: Int
+    $cid: String
   ) {
     sendMessage(
       content: $content
@@ -213,6 +214,7 @@ const SEND_NEIGHBORHOOD_MESSAGE = gql`
       chunkIndex: $chunkIndex
       totalChunks: $totalChunks
       thumbnailUrl: $thumbnailUrl
+      cid: $cid
     ) {
       id
       content
@@ -221,6 +223,7 @@ const SEND_NEIGHBORHOOD_MESSAGE = gql`
       fileUrl
       fileName
       sessionId
+      cid
       chunkIndex
       totalChunks
       fileType
@@ -1381,12 +1384,21 @@ export default function NeighborhoodChatScreen() {
     setNewMessage("");
 
     try {
-      await sendMessageMutation({
-        variables: {
-          content: messageContent,
-          neighborhoodId: neighborhoodId,
-        },
-      });
+await sendMessageMutation({
+  variables: {
+    content: `Shared: ${safeName}`,
+    neighborhoodId: neighborhoodId,
+    fileName: safeName,
+    fileType: type,
+    mimeType: type === "image" ? "image/jpeg" : mimeType,
+    imageUrl: type === "image" ? uploadResult.ipfsUrl : null,
+    videoUrl: type === "video" ? uploadResult.ipfsUrl : null,
+    fileUrl: type !== "image" && type !== "video" ? uploadResult.ipfsUrl : null,
+    magnetLink: uploadResult.magnetLink || "",
+    thumbnailUrl: uploadResult.thumbnailUrl || null,
+    cid: uploadResult.cid || null, // ← add
+  },
+});
       console.log("✅ Neighborhood message sent");
     } catch (err) {
       console.error("❌ Send message error:", err);
@@ -1901,7 +1913,12 @@ export default function NeighborhoodChatScreen() {
       }
 
       const { ipfsUrl, magnetLink } = result;
-      console.log("✅ IPFS Result:", { ipfsUrl, magnetLink });
+
+ const extractedCid =
+   cid || (ipfsUrl ? ipfsUrl.match(/\/ipfs\/([^?]+)/)?.[1] : null);
+
+      console.log("✅ IPFS Result:", { ipfsUrl, magnetLink, cid: extractedCid });
+      
 
       let thumbnailUrl = null;
 
@@ -1938,6 +1955,7 @@ export default function NeighborhoodChatScreen() {
       return {
         ipfsUrl,
         magnetLink,
+        cid: extractedCid,
         thumbnailUrl,
       };
     } catch (error) {
