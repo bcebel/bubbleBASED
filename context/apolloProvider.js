@@ -27,8 +27,8 @@ const styles = StyleSheet.create({
 });
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-// Remove "http://" or "https://" from the URL for the WebSocket link
-const WS_URL = BACKEND_URL.replace(/^https?:\/\//, "");
+const WS_URL =
+  process.env.EXPO_PUBLIC_WS_URL || BACKEND_URL.replace(/^https?:\/\//, "");
 
 export async function clearApolloStore() {
   if (globalApolloClient) {
