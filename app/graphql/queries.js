@@ -17,6 +17,7 @@ export const GET_MY_NEIGHBORHOODS_POSTS = gql`
         magnetURI
         mediaType
         fileName
+        mimeType
       }
     }
   }
@@ -39,6 +40,7 @@ export const GET_NEIGHBORHOOD_POSTS = gql`
         magnetURI
         mediaType
         fileName
+        mimeType
       }
     }
   }
@@ -60,6 +62,7 @@ export const GET_MY_POSTS = gql`
         magnetURI
         mediaType
         fileName
+        mimeType
       }
     }
   }

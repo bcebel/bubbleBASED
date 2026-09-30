@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ScrollView,
+  FlatList,
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
@@ -278,7 +279,27 @@ export default function AllNeighborhoodsGallery({
       updatePriorityWindow(mediaItems, activeIndex);
     }
   }, [activeIndex, mediaItems]);
+
+  
   */
+  
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    if (viewableItems.length === 0) return;
+
+    // take the first viewable item's index as the active one
+    // (if multiple are visible due to buffer, the first is the leading edge)
+    const index = viewableItems[0].index;
+
+    if (index !== null && index !== undefined) {
+      setActiveIndex(index);
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+    minimumViewTime: 100,
+  }).current;
+
 
 useEffect(() => {
   if (!mediaItems.length) return;
@@ -375,27 +396,34 @@ useEffect(() => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={scrollRef}
+      <FlatList
+        data={mediaItems}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
         snapToInterval={CARD_WIDTH}
         decelerationRate="fast"
-      >
-        {mediaItems.map((item, index) => {
-          const isInWindow = index >= startIndex && index <= endIndex;
+        keyExtractor={(item, index) => `${item.id}-${index}`}
+        getItemLayout={(_, index) => ({
+          length: CARD_WIDTH,
+          offset: CARD_WIDTH * index,
+          index,
+        })}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={5}
+        removeClippedSubviews={true}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        renderItem={({ item, index }) => {
           const neighborhoodName =
             item.neighborhood?.name || "Unknown Neighborhood";
-          const isFocused = Math.abs(index - activeIndex) <= 1;
-          const isAlmostFocused = Math.abs(index - activeIndex) <= 5;
-          const uniqueKey = `${item.id}-${index}`;
+          const isFocused = index === activeIndex;
+          const isAlmostFocused = Math.abs(index - activeIndex) <= 4;
 
           if (item.isAd) {
             return (
-              <View key={uniqueKey} style={[styles.card, styles.adCardCenter]}>
+              <View style={[styles.card, styles.adCardCenter]}>
                 <View style={styles.adBadgeOverlay}>
                   <Text style={styles.badgeText}>SPONSORED</Text>
                 </View>
@@ -409,21 +437,8 @@ useEffect(() => {
             );
           }
 
-          if (!isInWindow) {
-            return (
-              <View key={uniqueKey} style={styles.card}>
-                <View style={styles.mediaContainer} />
-                <View style={styles.metadata}>
-                  <Text style={styles.metadataValue}>
-                    Loading {index + 1}...
-                  </Text>
-                </View>
-              </View>
-            );
-          }
-
           return (
-            <View key={uniqueKey} style={styles.card}>
+            <View style={styles.card}>
               <View style={styles.metadata}>
                 <View style={styles.metadataRow}>
                   <Text style={styles.metadataLabel}>By:</Text>
@@ -439,17 +454,37 @@ useEffect(() => {
               <View
                 style={[styles.mediaContainer, { aspectRatio: mediaAspect }]}
               >
-                <MediaDisplay
-                  item={item}
-                  isFocused={isFocused}
-                  isAlmostFocused={isAlmostFocused}
-                  onMediaAspectChange={setMediaAspect}
-                />
+                {!item.cid ? (
+                  <View style={styles.textPostContainer}>
+                    <ScrollView
+                      contentContainerStyle={styles.textScrollContent}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      <Text style={styles.textPostContent}>{item.content}</Text>
+                    </ScrollView>
+
+                    <View style={styles.textPostFooter}>
+                      <Text style={styles.textPostMeta}>
+                        @{item.author?.username || "unknown"}
+                      </Text>
+                      <Text style={styles.textPostNeighborhood}>
+                        {item.neighborhood?.name || ""}
+                      </Text>
+                    </View>
+                  </View>
+                ) : (
+                  <MediaDisplay
+                    item={item}
+                    isFocused={isFocused}
+                    isAlmostFocused={isAlmostFocused}
+                    onMediaAspectChange={setMediaAspect}
+                  />
+                )}
               </View>
             </View>
           );
-        })}
-      </ScrollView>
+        }}
+      />
     </View>
   );
 }
