@@ -45,7 +45,6 @@ export function enqueueDownload(cid, media, priority = 10) {
   queue.push({ cid, media, priority, resolve, reject, promise });
   sortQueue();
     drain();
-     console.log("[queue] enqueue", cid?.slice(0, 12), "prio", priority);
   return promise;
 }
 
@@ -81,20 +80,12 @@ async function drain() {
   processing = true;
   sortQueue();
   active = queue.shift();
-  console.log(
-    "[queue] START",
-    active.cid.slice(0, 12),
-    "prio",
-    active.priority,
-    "queue left:",
-    queue.length,
-  );
+ 
 
   try {
     await runJob(active);
     active.resolve();
   } catch (err) {
-    console.warn("[queue] job failed", active.cid, err);
     active.reject(err);
   } finally {
     processing = false;
@@ -107,10 +98,8 @@ async function runJob(job) {
   const { cid, media } = job;
   const cached = await getMedia(cid);
   if (cached?.blob) {
-    console.log("[queue] cache hit", cid.slice(0, 12));
     return;
   }
-  console.log("[queue] MISS", cid.slice(0, 12));
 
   const magnetLink = media.magnetLink || (await getMagnetForCid(cid));
 
@@ -125,7 +114,6 @@ async function runJob(job) {
     media.mimeType || "application/octet-stream",
     media.fileName || `media-${cid}`,
   );
-  console.log("[queue] cached", cid, "via", winner.source);
 }
 
 // ─── the race ─────────────────────────────────────────────
@@ -135,13 +123,7 @@ function raceSources(cid, magnetLink, media) {
     const finish = (result) => {
       if (settled) return;
       settled = true;
-      console.log(
-        "[queue] WINNER",
-        cid.slice(0, 12),
-        result?.source,
-        "size:",
-        result?.blob?.size,
-      );
+  
       cleanup();
       resolve(result);
     };
@@ -224,18 +206,7 @@ function raceSources(cid, magnetLink, media) {
               clearInterval(statsInterval);
               return;
             }
-            console.log(
-              "[queue] p2p stats",
-              cid.slice(0, 12),
-              "peers:",
-              torrent.numPeers,
-              "progress:",
-              (torrent.progress * 100).toFixed(1) + "%",
-              "speed:",
-              torrent.downloadSpeed,
-              "downloaded:",
-              torrent.downloaded,
-            );
+         
           }, 2000);
           cleanups.push(() => clearInterval(statsInterval));
 
@@ -249,21 +220,13 @@ function raceSources(cid, magnetLink, media) {
         }
 
 torrent.once("done", async () => {
-  console.log(
-    "[queue] p2p DONE",
-    cid.slice(0, 12),
-    "peers:",
-    torrent.numPeers,
-    "downloaded:",
-    torrent.downloaded,
-  );
+ 
   try {
     const file = torrent.files[0];
     if (!file) return;
     const blob = await file.blob();
     if (blob.size > 0) finish({ blob, source: "p2p" });
   } catch (err) {
-    console.warn("[queue] p2p blob failed", err);
   }
 });
 
@@ -278,14 +241,7 @@ torrent.once("done", async () => {
           if (settled) return;
           if (torrent.numPeers > 0 && torrent.downloadSpeed > 0) {
             peersSeen = true;
-            console.log(
-              "[queue] p2p has peers",
-              cid.slice(0, 12),
-              "peers:",
-              torrent.numPeers,
-              "speed:",
-              torrent.downloadSpeed,
-            );
+      
             clearInterval(peerCheck);
             // P2P is alive — give it a bit more time before starting HTTP
             // OR start HTTP now and let them race
@@ -298,10 +254,7 @@ torrent.once("done", async () => {
           if (settled) return;
           clearInterval(peerCheck);
           if (!peersSeen) {
-            console.log(
-              "[queue] no peers after head start, HTTP wins by default",
-              cid.slice(0, 12),
-            );
+     
           }
           startHTTP();
         }, HEAD_START_MS);
@@ -310,7 +263,6 @@ torrent.once("done", async () => {
         // 60s total budget for P2P
         const stallTimeout = setTimeout(() => {
           if (!settled) {
-            console.log("[queue] p2p stalled, destroying", cid.slice(0, 12));
             try {
               torrent.destroy({ destroyStore: false });
             } catch (_) {}
@@ -319,7 +271,6 @@ torrent.once("done", async () => {
         cleanups.push(() => clearTimeout(stallTimeout));
       } catch (err) {
         if (!settled) {
-          console.log("[queue] p2p side failed", cid.slice(0, 12), err.message);
           // P2P couldn't even start — HTTP immediately
           startHTTP();
         }

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
 import NeighborhoodLiveStreamRecorder from "../../../components/NeighborhoodLiveStreamRecorder";
@@ -57,38 +58,43 @@ export default function SelectorScreen() {
 
   return (
     <View style={styles.container}>
-   <Link href={`livestream`} replace asChild>
+      <Link href={`livestream`} replace asChild>
         <TouchableOpacity style={styles.backButton}>
           <Text style={styles.backButtonText}>← Back to Bubble</Text>
         </TouchableOpacity>
       </Link>
       <Text style={styles.title}>Pick a Bubble to Stream To</Text>
       <Text style={styles.title2}>
-        Works best on Regular Safari tab. Not Private/Incognito
+        Works best on regular tab. Not Private/Incognito
       </Text>
+      <ScrollView style={styles.scrolly}>
+        <View style={styles.picker}>
+          {hoodsData?.myNeighborhoods?.map(
+            (h: { id: string; name: string }) => (
+              <TouchableOpacity
+                key={h.id}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={[styles.item, selectedHood === h.id && styles.selected]}
+                onPress={() => setSelectedHood(h.id)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "white", fontWeight: "600" }}>
+                  {h.name}
+                </Text>
+              </TouchableOpacity>
+            ),
+          )}
+        </View>
 
-      <View style={styles.picker}>
-        {hoodsData?.myNeighborhoods?.map((h: { id: string; name: string }) => (
-          <TouchableOpacity
-            key={h.id}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            style={[styles.item, selectedHood === h.id && styles.selected]}
-            onPress={() => setSelectedHood(h.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={{ color: "white", fontWeight: "600" }}>{h.name}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <TouchableOpacity
-        style={styles.goLive}
-        onPress={() =>
-          selectedHood ? setIsRecording(true) : alert("Pick a bubble")
-        }
-      >
-        <Text style={styles.btnText}>GO LIVE</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.goLive}
+          onPress={() =>
+            selectedHood ? setIsRecording(true) : alert("Pick a bubble")
+          }
+        >
+          <Text style={styles.btnText}>GO LIVE</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
@@ -172,4 +178,5 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   btnText: { color: "white", fontWeight: "bold", fontSize: 18 },
+  scrolly: {paddingBottom: 50},
 });
