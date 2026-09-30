@@ -6,10 +6,12 @@ import {
   TextInput as RNTextInput,
   Alert,
   ImageBackground,
+  ActivityIndicator,
 } from "react-native";
 import { Text } from "react-native";
 import Head from "expo-router/head";
-import { useRouter, Link } from "expo-router";
+import { useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { clearApolloStore } from "@/context/apolloProvider"; // Adjust path if needed
 
@@ -20,13 +22,20 @@ export default function LoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleLogin = async () => {
+    // Clear previous error on new attempt
+    setErrorMessage(null);
+
     if (!username.trim() || !password.trim()) {
-      Alert.alert("Error", "Please fill in all fields");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      setErrorMessage("Please fill in all fields");
       return;
     }
 
+    // Light tap when initiating action
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsLoading(true);
 
     try {
@@ -52,10 +61,13 @@ export default function LoginScreen() {
       });
 
       const data = await response.json();
-      console.log("✅ Login response:", data);
 
       if (data.data?.loginUser?.token) {
         const { token, user } = data.data.loginUser;
+
+        // Trigger heavy success feedback before state updates
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
         await clearApolloStore();
         await AsyncStorage.multiRemove([
           "token",
@@ -63,33 +75,23 @@ export default function LoginScreen() {
           "userId",
           "apollo-cache-persist",
         ]);
-        await AsyncStorage.setItem("token", token);
-        await AsyncStorage.setItem("username", user.username);
-        await AsyncStorage.setItem("userId", user.id);
 
-        Alert.alert("Success", `Welcome back, ${user.username}!`);
+        await AsyncStorage.multiSet([
+          ["token", token],
+          ["username", user.username],
+          ["userId", user.id],
+        ]);
+
         router.replace("/gallery");
-
-        // ✅ CRITICAL: Save token and username to AsyncStorage
-        await AsyncStorage.setItem("token", token);
-        await AsyncStorage.setItem("username", user.username);
-        await AsyncStorage.setItem("userId", user.id);
-
-        console.log(
-          "✅ Token saved to AsyncStorage:",
-          token.substring(0, 20) + "...",
-        );
-        console.log("✅ Username saved:", user.username);
-
-        Alert.alert("Success", `Welcome back, ${user.username}!`);
-        router.replace("/gallery"); // Use replace so they can't go back to login
       } else {
-        const errorMessage = data.errors?.[0]?.message || "Login failed";
-        Alert.alert("Error", errorMessage);
+        const err = data.errors?.[0]?.message || "Invalid username or password";
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setErrorMessage(err);
       }
     } catch (error) {
       console.error("Login error:", error);
-      Alert.alert("Error", "Network error. Please try again.");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setErrorMessage("Network error. Please check your connection.");
     } finally {
       setIsLoading(false);
     }
@@ -114,14 +116,23 @@ export default function LoginScreen() {
         <Text style={styles.subtitle}>Enter bubbleBASED</Text>
 
         <View style={styles.form}>
+          {errorMessage && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
+
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Username</Text>
             <RNTextInput
-              style={styles.input}
+              style={[styles.input, errorMessage && styles.inputError]}
               placeholder="Enter your username"
               placeholderTextColor="#888"
               value={username}
-              onChangeText={setUsername}
+              onChangeText={(text) => {
+                setUsername(text);
+                if (errorMessage) setErrorMessage(null);
+              }}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -130,11 +141,14 @@ export default function LoginScreen() {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password</Text>
             <RNTextInput
-              style={styles.input}
+              style={[styles.input, errorMessage && styles.inputError]}
               placeholder="Enter your password"
               placeholderTextColor="#888"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errorMessage) setErrorMessage(null);
+              }}
               secureTextEntry
               onSubmitEditing={handleLogin}
             />
@@ -144,21 +158,31 @@ export default function LoginScreen() {
             style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
+            activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>
-              {isLoading ? "Signing In..." : "Sign In"}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color="#130720" size="small" />
+            ) : (
+              <Text style={styles.buttonText}>Sign In</Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.linkButton}
-            onPress={() => router.replace("/register")}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.replace("/register");
+            }}
           >
             <Text style={styles.linkText}>New here? Create an account</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.linkButton}
-            onPress={() => router.replace("/")}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.replace("/");
+            }}
           >
             <Text style={styles.linkText}>Return to Homepage</Text>
           </TouchableOpacity>
@@ -176,7 +200,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   heroBubble: { width: "100%", height: "100%", position: "absolute" },
-
   title: {
     fontSize: 32,
     fontWeight: "bold",
@@ -188,11 +211,25 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: "#ff0081",
     textAlign: "center",
-    marginBottom: 40,
+    marginBottom: 30,
     opacity: 0.8,
   },
   form: {
     marginHorizontal: 10,
+  },
+  errorContainer: {
+    backgroundColor: "rgba(255, 0, 129, 0.15)",
+    borderWidth: 1,
+    borderColor: "#ff0081",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: "#ff0081",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
   },
   inputContainer: {
     marginBottom: 20,
@@ -212,12 +249,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#00ffff",
   },
+  inputError: {
+    borderColor: "#ff0081",
+  },
   button: {
     backgroundColor: "#00ffff",
     padding: 18,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 10,
+    height: 58,
+    justifyContent: "center",
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -230,7 +272,7 @@ const styles = StyleSheet.create({
   linkButton: {
     padding: 15,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 10,
   },
   linkText: {
     color: "#00ffff",
