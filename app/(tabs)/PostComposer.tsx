@@ -161,113 +161,77 @@ export default function PostComposer({
       if (selectedMedia?.uri) {
         const uri = selectedMedia.uri;
 
-        if (uri.startsWith("blob:") || uri.startsWith("file:")) {
-  
-          const isLargeVideo =
-            currentMediaType === "video" &&
-            (selectedMedia?.fileSize ?? 0) > 10 * 1024 * 1024;
+ if (uri.startsWith("blob:") || uri.startsWith("file:")) {
+   // 1. Upload to Pinata
+   console.log(`📤 Uploading to Pinata: ${fileName}`);
+   const pinataResult = await uploadToIPFS(
+     uri,
+     fileName ||
+       `post_${Date.now()}.${currentMediaType === "video" ? "mp4" : "jpg"}`,
+     currentMediaType,
+     neighborhoodId,
+     selectedMedia?.file,
+   );
 
-          // Upload to Pinata
-          console.log(`📤 Uploading to Pinata: ${fileName}`);
-          const pinataResult = await uploadToIPFS(
-            uri,
-            fileName ||
-              `post_${Date.now()}.${currentMediaType === "video" ? "mp4" : "jpg"}`,
-            currentMediaType,
-            neighborhoodId,
-            selectedMedia?.file,
-          );
+   const slice = pinataResult?.slices?.[0];
+   const extractedCid = slice?.cid || pinataResult?.cid || null;
+   if (!extractedCid) throw new Error("Upload returned no CID");
 
-          const slice = pinataResult?.slices?.[0];
-          extractedCid = slice?.cid || pinataResult?.cid || null;
-          magnetLink = slice?.magnetLink || pinataResult?.magnetLink || null;
-          if (extractedCid) {
-            finalMediaUrl = `https://${PINATA_GATEWAY}/ipfs/${extractedCid}`;
-          }
+   const finalMediaUrl = `https://${PINATA_GATEWAY}/ipfs/${extractedCid}`;
+   console.log(`✅ Pinata upload complete: ${extractedCid}`);
 
-          console.log(`✅ Pinata upload complete: ${extractedCid}`);
+   // 2. Tell the backend to seed it. Fire-and-forget — don't block the post.
+   //    The backend fetches from IPFS, hands to ReactiveSeedBooster, and
+   //    writes the resulting magnet to the Post's media record.
+   // after Pinata upload completes
+   await fetch(`${BACKEND_URL}/api/seed-register`, {
+     method: "POST",
+     headers: {
+       "Content-Type": "application/json",
+       Authorization: `Bearer ${token}`,
+     },
+     body: JSON.stringify({
+       cid: extractedCid,
+       fileName,
+       fileSize: selectedMedia.fileSize,
+       mediaType: currentMediaType,
+     }),
+   }).catch((err) => console.log("seed-register failed:", err));
 
-          // If large video, also seed via WebTorrent
-          if (isLargeVideo) {
-            try {
-              console.log(`🎬 Also seeding via P2P for large video...`);
-         const seedResult = await webtorrentService.seed(selectedMedia.file, {
-           name: fileName,
-         });
-              const p2pMagnet = seedResult.magnetUri;
-              magnetLink = p2pMagnet;
+   // 3. Create the post with the CID. The magnet will be filled in by
+   //    the backend's seed-register response, but the gallery will still
+   //    work without it (HTTP fallback via webseed).
+   const mediaObject = {
+     url: finalMediaUrl,
+     cid: extractedCid,
+     mediaType: currentMediaType,
+     fileName: selectedMedia.fileName,
+     fileSize: selectedMedia.fileSize,
+     mimeType: selectedMedia.mimeType,
+     // No magnetURI here — backend will set it via seed-register
+   };
 
-              console.log(
-                `✅ P2P seed active: ${p2pMagnet.substring(0, 50)}...`,
-              );
+   await createPostMutation({
+     variables: {
+       input: {
+         content,
+         feedType: "neighborhood",
+         neighborhoodId: currentNeighborhoodId,
+         groupId: currentGroupId || null,
+         media: [mediaObject],
+       },
+     },
+     context: {
+       headers: {
+         Authorization: `Bearer ${token}`,
+       },
+     },
+   });
 
-       await webtorrentService.storeSeedData(p2pMagnet, selectedMedia.file, {
-         fileName: fileName,
-         fileType: "video",
-         size: selectedMedia.fileSize,
-       });
-
-              await fetch(`${BACKEND_URL}/api/seed-register`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  magnetLink: p2pMagnet,
-                  neighborhoodId: currentNeighborhoodId,
-                  content: content,
-                  fileName: fileName,
-                  fileSize: selectedMedia.fileSize,
-                  mediaType: "video",
-                }),
-              }).catch(() => {
-                console.log(
-                  "⚠️ Backend registration failed, but seeds are active",
-                );
-              });
-            } catch (p2pError) {
-              console.log(
-                "⚠️ P2P seeding failed, using Pinata only:",
-                p2pError,
-              );
-            }
-          }
-
-          const mediaObject: any = {
-            url: finalMediaUrl,
-            cid: extractedCid,
-            mediaType: currentMediaType,
-            fileName: selectedMedia.fileName,
-            fileSize: selectedMedia.fileSize,
-            mimeType: selectedMedia.mimeType,
-          };
-
-          if (magnetLink) {
-            mediaObject.magnetURI = magnetLink;
-          }
-
-          await createPostMutation({
-            variables: {
-              input: {
-                content,
-                feedType: "neighborhood",
-                neighborhoodId: currentNeighborhoodId,
-                groupId: currentGroupId || null,
-                media: [mediaObject],
-              },
-            },
-            context: {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          });
-
-          console.log("✅ Post created with Pinata + P2P");
-        } else {
-          finalMediaUrl = uri;
-        }
+   console.log("✅ Post created, seeding requested");
+ } else {
+   finalMediaUrl = uri;
+ }
       }
 
       if (!selectedMedia) {
