@@ -157,7 +157,7 @@ export default function ProfileSetupScreen() {
       formData.append("title", "Profile Photo");
       formData.append("description", "User profile photo");
 
-      const res = await fetch(`${BACKEND_URL}/upload`, {
+      const res = await fetch(`${BACKEND_URL}/api/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

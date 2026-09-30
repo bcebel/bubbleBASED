@@ -1855,7 +1855,7 @@ export default function NeighborhoodChatScreen() {
           neighborhoodId,
         });
 
-        const res = await fetch(`${BACKEND_URL}/upload`, {
+        const res = await fetch(`${BACKEND_URL}/api/upload`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
@@ -1874,7 +1874,7 @@ export default function NeighborhoodChatScreen() {
         });
 
         const uploadResponse = await FileSystem.uploadAsync(
-          `${BACKEND_URL}/upload`,
+          `${BACKEND_URL}/api/upload`,
           fileUri,
           {
             httpMethod: "POST",

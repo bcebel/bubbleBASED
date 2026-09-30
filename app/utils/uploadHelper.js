@@ -33,7 +33,7 @@ export const uploadToIPFS = async (
       formData.append("neighborhoodId", neighborhoodId);
     }
 
-    const res = await fetch(`${BACKEND_URL}/upload`, {
+    const res = await fetch(`${BACKEND_URL}/api/upload`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -49,7 +49,7 @@ export const uploadToIPFS = async (
   } else {
     // Native React Native fallback
     const uploadResponse = await FileSystem.uploadAsync(
-      `${BACKEND_URL}/upload`,
+      `${BACKEND_URL}/api/upload`,
       fileUri,
       {
         httpMethod: "POST",
