@@ -138,131 +138,96 @@ export default function PostComposer({
     }
   };
 
-  const handleSubmit = async () => {
-    const hasContent = content.trim().length > 0;
-    const hasMedia = !!selectedMedia?.uri;
+const handleSubmit = async () => {
+  const hasContent = content.trim().length > 0;
+  const hasMedia = !!selectedMedia?.uri;
 
-    if (!hasContent && !hasMedia) return;
-    setLoading(true);
-    try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found");
+  if (!hasContent && !hasMedia) return;
+  setLoading(true);
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) throw new Error("No authentication token found");
+
+    const currentMediaType = selectedMedia?.mediaType || "image";
+    const fileName = selectedMedia?.uri
+      ? `post_${Date.now()}.${currentMediaType === "video" ? "mp4" : "jpg"}`
+      : null;
+
+    let mediaObject = null;
+
+    if (selectedMedia?.uri) {
+      const uri = selectedMedia.uri;
+
+      if (uri.startsWith("blob:") || uri.startsWith("file:")) {
+        console.log(`📤 Uploading to Pinata: ${fileName}`);
+        const pinataResult = await uploadToIPFS(
+          uri,
+          fileName,
+          currentMediaType,
+          neighborhoodId,
+          selectedMedia?.file,
+        );
+
+        const slice = pinataResult?.slices?.[0];
+        const cid = slice?.cid || pinataResult?.cid || null;
+        if (!cid) throw new Error("Upload returned no CID");
+
+        const magnetLink =
+          slice?.magnetLink || pinataResult?.magnetLink || null;
+
+        const finalMediaUrl = `https://${PINATA_GATEWAY}/ipfs/${cid}`;
+        console.log(
+          `✅ Upload complete: ${cid}, magnet: ${magnetLink ? "yes" : "no"}`,
+        );
+
+        mediaObject = {
+          url: finalMediaUrl,
+          cid,
+          mediaType: currentMediaType,
+          fileName: selectedMedia.fileName,
+          fileSize: selectedMedia.fileSize,
+          mimeType: selectedMedia.mimeType,
+          magnetURI: magnetLink,
+        };
+      } else {
+        mediaObject = {
+          url: uri,
+          cid: null,
+          mediaType: currentMediaType,
+          fileName: selectedMedia.fileName,
+          fileSize: selectedMedia.fileSize,
+          mimeType: selectedMedia.mimeType,
+          magnetURI: null,
+        };
       }
-
-      let extractedCid = null;
-      let magnetLink = null;
-      let finalMediaUrl = null;
-      const currentMediaType = selectedMedia?.mediaType || "image";
-      const fileName = selectedMedia?.uri
-        ? `post_${Date.now()}.${currentMediaType === "video" ? "mp4" : "jpg"}`
-        : null;
-
-      if (selectedMedia?.uri) {
-        const uri = selectedMedia.uri;
-
- if (uri.startsWith("blob:") || uri.startsWith("file:")) {
-   // 1. Upload to Pinata
-   console.log(`📤 Uploading to Pinata: ${fileName}`);
-   const pinataResult = await uploadToIPFS(
-     uri,
-     fileName ||
-       `post_${Date.now()}.${currentMediaType === "video" ? "mp4" : "jpg"}`,
-     currentMediaType,
-     neighborhoodId,
-     selectedMedia?.file,
-   );
-
-   const slice = pinataResult?.slices?.[0];
-   const extractedCid = slice?.cid || pinataResult?.cid || null;
-   if (!extractedCid) throw new Error("Upload returned no CID");
-
-   const finalMediaUrl = `https://${PINATA_GATEWAY}/ipfs/${extractedCid}`;
-   console.log(`✅ Pinata upload complete: ${extractedCid}`);
-
-   // 2. Tell the backend to seed it. Fire-and-forget — don't block the post.
-   //    The backend fetches from IPFS, hands to ReactiveSeedBooster, and
-   //    writes the resulting magnet to the Post's media record.
-   // after Pinata upload completes
-   await fetch(`${BACKEND_URL}/api/seed-register`, {
-     method: "POST",
-     headers: {
-       "Content-Type": "application/json",
-       Authorization: `Bearer ${token}`,
-     },
-     body: JSON.stringify({
-       cid: extractedCid,
-       fileName,
-       fileSize: selectedMedia.fileSize,
-       mediaType: currentMediaType,
-     }),
-   }).catch((err) => console.log("seed-register failed:", err));
-
-   // 3. Create the post with the CID. The magnet will be filled in by
-   //    the backend's seed-register response, but the gallery will still
-   //    work without it (HTTP fallback via webseed).
-   const mediaObject = {
-     url: finalMediaUrl,
-     cid: extractedCid,
-     mediaType: currentMediaType,
-     fileName: selectedMedia.fileName,
-     fileSize: selectedMedia.fileSize,
-     mimeType: selectedMedia.mimeType,
-     // No magnetURI here — backend will set it via seed-register
-   };
-
-   await createPostMutation({
-     variables: {
-       input: {
-         content,
-         feedType: "neighborhood",
-         neighborhoodId: currentNeighborhoodId,
-         groupId: currentGroupId || null,
-         media: [mediaObject],
-       },
-     },
-     context: {
-       headers: {
-         Authorization: `Bearer ${token}`,
-       },
-     },
-   });
-
-   console.log("✅ Post created, seeding requested");
- } else {
-   finalMediaUrl = uri;
- }
-      }
-
-      if (!selectedMedia) {
-        await createPostMutation({
-          variables: {
-            input: {
-              content,
-              feedType: "neighborhood",
-              neighborhoodId: currentNeighborhoodId,
-              groupId: currentGroupId || null,
-              media: [],
-            },
-          },
-          context: {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        });
-      }
-
-      setContent("");
-      setSelectedMedia(null);
-      refetchPosts();
-      onPostCreated?.();
-    } catch (error) {
-      console.error("❌ Failed to create post:", error);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    await createPostMutation({
+      variables: {
+        input: {
+          content,
+          feedType: "neighborhood",
+          neighborhoodId: currentNeighborhoodId,
+          groupId: currentGroupId || null,
+          media: mediaObject ? [mediaObject] : [],
+        },
+      },
+      context: {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    });
+
+    console.log("✅ Post created");
+    setContent("");
+    setSelectedMedia(null);
+    refetchPosts();
+    onPostCreated?.();
+  } catch (error) {
+    console.error("❌ Failed to create post:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <View style={styles.container}>
