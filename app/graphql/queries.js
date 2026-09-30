@@ -6,26 +6,17 @@ export const GET_MY_NEIGHBORHOODS_POSTS = gql`
     myNeighborhoodsPosts {
       id
       content
-      createdAt
       author {
-        id
         username
-        profilePhoto
       }
       neighborhood {
-        id
         name
       }
       media {
-        _id
         cid
-        url
         magnetURI
         mediaType
         fileName
-        fileSize
-        mimeType
-        thumbnailUrl
       }
     }
   }
@@ -37,10 +28,18 @@ export const GET_NEIGHBORHOOD_POSTS = gql`
     posts(neighborhoodId: $neighborhoodId) {
       id
       content
-      createdAt
-      author { id username profilePhoto }
-      neighborhood { id name }
-      media { _id cid url magnetURI mediaType fileName fileSize mimeType thumbnailUrl }
+      author {
+        username
+      }
+      neighborhood {
+        name
+      }
+      media {
+        cid
+        magnetURI
+        mediaType
+        fileName
+      }
     }
   }
 `;
@@ -50,26 +49,17 @@ export const GET_MY_POSTS = gql`
     myPosts {
       id
       content
-      createdAt
       author {
-        id
         username
-        profilePhoto
       }
       neighborhood {
-        id
         name
       }
       media {
-        _id
         cid
-        url
         magnetURI
         mediaType
         fileName
-        fileSize
-        mimeType
-        thumbnailUrl
       }
     }
   }
