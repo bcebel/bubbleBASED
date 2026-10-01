@@ -77,6 +77,7 @@ export default function TabLayout() {
               <Text style={styles.iconText}>🖼️</Text>
             </View>
           ),
+          
         }}
       />
       <Tabs.Screen
@@ -126,6 +127,10 @@ export default function TabLayout() {
         options={{ href: null }}
       />
       <Tabs.Screen
+        name="gallery2"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
         name="neighborhoods/bubbles/bublic"
         options={{ href: null }}
       />
@@ -141,11 +146,8 @@ export default function TabLayout() {
         options={{ href: null }}
       />
       <Tabs.Screen name="neighborhoods/bubbles/[id]" options={{ href: null }} />
+      <Tabs.Screen name="bubbles" options={{ href: null }} />
       <Tabs.Screen
-        name="bubbles"
-        options={{ href: null }}
-      />
-       <Tabs.Screen
         name="neighborhoods/bubbles/global"
         options={{ href: null }}
       />

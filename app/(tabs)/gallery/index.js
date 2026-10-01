@@ -153,29 +153,46 @@ function BubbleCarousel({ posts }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef(null);
 
-  const mediaItems = useMemo(() => {
-    const items = [];
-    for (const post of posts) {
-      for (const m of post.media || []) {
-        if (!m.cid) continue;
-        items.push({
-          id: m._id || m.cid,
-          cid: m.cid,
-          url: m.url,
-          magnetLink: m.magnetURI,
-          fileType: m.mediaType,
-          fileName: m.fileName,
-          mimeType: m.mimeType,
-          postId: post.id,
-          content: post.content,
-          createdAt: post.createdAt,
-          author: post.author,
-          neighborhood: post.neighborhood,
-        });
-      }
+const mediaItems = useMemo(() => {
+  const items = [];
+  for (const post of posts) {
+    const hasMedia = post.media?.some((m) => m.cid);
+
+    if (!hasMedia && post.content?.trim()) {
+      // text-only post
+      items.push({
+        id: `text-${post.id}`,
+        isTextOnly: true,
+        content: post.content,
+        postId: post.id,
+        createdAt: post.createdAt,
+        author: post.author,
+        neighborhood: post.neighborhood,
+        cid: null,
+      });
+      continue;
     }
-    return items;
-  }, [posts]);
+
+    for (const m of post.media || []) {
+      if (!m.cid) continue;
+      items.push({
+        id: m._id || m.cid,
+        cid: m.cid,
+        url: m.url,
+        magnetLink: m.magnetURI,
+        fileType: m.mediaType,
+        fileName: m.fileName,
+        mimeType: m.mimeType,
+        postId: post.id,
+        content: post.content,
+        createdAt: post.createdAt,
+        author: post.author,
+        neighborhood: post.neighborhood,
+      });
+    }
+  }
+  return items;
+}, [posts]);
 
   const handleScroll = (e) => {
     const newIndex = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);
@@ -211,11 +228,39 @@ function BubbleCarousel({ posts }) {
               key={`${item.id}-${index}`}
               style={{ width: CARD_WIDTH, height: CAROUSEL_HEIGHT }}
             >
-              <MediaDisplay
-                item={item}
-                isFocused={isFocused}
-                isAlmostFocused={isAlmostFocused}
-              />
+              {item.isTextOnly ? (
+                <View style={styles.textPostContainer}>
+                  <ScrollView
+                    contentContainerStyle={styles.textScrollContent}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    <Text style={styles.textPostContent}>{item.content}</Text>
+                  </ScrollView>
+                  <View style={styles.textPostFooter}>
+                    <Text style={styles.textPostMeta}>
+                      🫧 {item.author?.username || "unknown"}
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={{ flex: 1, width: "100%", height: "100%" }}>
+                  <MediaDisplay
+                    item={item}
+                    isFocused={isFocused}
+                    isAlmostFocused={isAlmostFocused}
+                  />
+                  <View style={styles.mediaFooter}>
+                    <Text style={styles.mediaFooterText}>
+                      🫧{item.author?.username || "unknown"}
+                    </Text>
+                    {item.neighborhood?.name && (
+                      <Text style={styles.mediaFooterBubble}>
+                        🫧 {item.neighborhood.name}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              )}
             </View>
           );
         })}
@@ -413,4 +458,59 @@ const styles = StyleSheet.create({
   heroTitle: { color: "#fff", fontSize: 24, marginBottom: 20 },
   loginButton: { backgroundColor: "#00ffff", padding: 12, borderRadius: 20 },
   loginButtonText: { color: "#000", fontWeight: "bold" },
+  textPostContainer: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#130720",
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    justifyContent: "space-between",
+  },
+  textScrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  textPostContent: {
+    color: "#F5F2FA",
+    fontSize: 19,
+    lineHeight: 28,
+    textAlign: "center",
+    maxWidth: 500,
+  },
+  textPostFooter: {
+    alignItems: "center",
+    paddingTop: 10,
+  },
+  textPostMeta: {
+    color: "#ff00ff",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  mediaFooter: {
+    position: "absolute",
+    bottom: 12,
+    left: 16,
+    right: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  mediaFooterText: {
+    color: "#F5F2FA",
+    fontSize: 23,
+    fontWeight: "600",
+    textShadowColor: "rgba(0,0,0,0.9)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
+  },
+  mediaFooterBubble: {
+    color: "#00ffff",
+    fontSize: 11,
+    fontWeight: "700",
+    textShadowColor: "rgba(0,0,0,0.9)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
+  },
 });
