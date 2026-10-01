@@ -849,7 +849,7 @@ export default function NeighborhoodChatScreen() {
 
   const initializeSocket = (token) => {
     console.log("🔌 Initializing neighborhood socket...");
-    const WS_URL = BACKEND_URL.replace(/^https?:\/\//, "wss://");
+const WS_URL = process.env.EXPO_PUBLIC_WS_URL;
 
     const newSocket = io(WS_URL, {
       auth: { token },

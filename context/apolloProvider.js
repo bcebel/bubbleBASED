@@ -27,9 +27,7 @@ const styles = StyleSheet.create({
 });
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-const WS_URL =
-  process.env.EXPO_PUBLIC_WS_URL || BACKEND_URL.replace(/^https?:\/\//, "");
-
+const WS_URL = process.env.EXPO_PUBLIC_WS_URL
 export async function clearApolloStore() {
   if (globalApolloClient) {
     // 1. Clear in-memory Apollo cache
@@ -44,7 +42,7 @@ export function useApolloClient() {
   const [cacheReady, setCacheReady] = useState(false);
  
   useEffect(() => {
-     console.log("🔌 [WS] Connecting to:", `wss://${WS_URL}/graphql`);
+     console.log("🔌 [WS] Connecting to:", `${WS_URL}/graphql`);
     const initializeClient = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
@@ -91,7 +89,7 @@ export function useApolloClient() {
         // In apolloProvider.js, update the wsLink
         const wsLink = new GraphQLWsLink(
           createClient({
-            url: `wss://${WS_URL}/graphql`,
+            url: `${WS_URL}/graphql`,
             connectionParams: async () => {
               const token = await AsyncStorage.getItem("token");
               console.log(
