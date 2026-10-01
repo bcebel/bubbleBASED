@@ -17,9 +17,16 @@ import WebTorrentMedia from "../../../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "../../../components/AdMessage";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-const CARD_WIDTH = SCREEN_WIDTH - 32;
-const CAROUSEL_HEIGHT = SCREEN_WIDTH * 0.75;
+let { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+let CARD_WIDTH = SCREEN_WIDTH - 32;
+let CAROUSEL_HEIGHT = SCREEN_WIDTH * 0.75;
+let AUTHOR = 0;
+
+if (SCREEN_WIDTH > SCREEN_HEIGHT) {
+  CAROUSEL_HEIGHT = SCREEN_HEIGHT * 0.8;
+  AUTHOR = 100;
+}
+
 
 // ─── QUERIES ─────────────────────────────────────────────
 const MY_NEIGHBORHOODS = gql`
@@ -251,13 +258,9 @@ const mediaItems = useMemo(() => {
                   />
                   <View style={styles.mediaFooter}>
                     <Text style={styles.mediaFooterText}>
-                      🫧{item.author?.username || "unknown"}
+                      🫧 {item.author?.username || "unknown"}
                     </Text>
-                    {item.neighborhood?.name && (
-                      <Text style={styles.mediaFooterBubble}>
-                        🫧 {item.neighborhood.name}
-                      </Text>
-                    )}
+                 
                   </View>
                 </View>
               )}
@@ -389,12 +392,12 @@ export default function GalleryScreen() {
 
 // ─── STYLES ──────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#130720" },
+  container: { flex: 1, backgroundColor: "rgba(89, 17, 85, 0.1)" },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#130720",
+    backgroundColor: "rgba(89, 17, 85, 0.1)",
   },
   scrollContent: { padding: 16, paddingBottom: 120 },
   mainGroupTitle: {
@@ -405,12 +408,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   neighborhoodCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.03)",
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "rgba(255, 0, 129, 0.2)",
-    padding: 12,
-    marginBottom: 20,
+    backgroundColor: "rgba(89, 17, 85, 0.1)",
+    borderRadius: 10,
+    borderWidth: 2,
+    padding: 5,
+    marginBottom: 5,
+    borderColor: "rgba(0,255,255, .25)",
   },
   rowHeaderRow: {
     flexDirection: "row",
@@ -424,7 +427,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#ff0081",
     fontWeight: "bold",
-    backgroundColor: "rgba(255, 0, 129, 0.15)",
+    backgroundColor: "rgba(89, 17, 85, 0.1)",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
@@ -439,7 +442,7 @@ const styles = StyleSheet.create({
   emptyStateCard: {
     padding: 30,
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.02)",
+    backgroundColor: "rgba(89, 17, 85, 0.6)",
     borderRadius: 16,
   },
   emptyStateText: { color: "#ccc", fontSize: 16 },
@@ -462,7 +465,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     height: "100%",
-    backgroundColor: "#130720",
+    backgroundColor: "rgba(89, 17, 85, 0.1)",
     paddingHorizontal: 24,
     paddingVertical: 20,
     justifyContent: "space-between",
@@ -480,17 +483,25 @@ const styles = StyleSheet.create({
     maxWidth: 500,
   },
   textPostFooter: {
+    position: "absolute",
+    bottom: AUTHOR,
+    left: 16,
+    right: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 10,
   },
   textPostMeta: {
-    color: "#ff00ff",
-    fontSize: 18,
+    color: "#F5F2FA",
+    fontSize: 20,
     fontWeight: "600",
+    textShadowColor: "rgba(0,0,0,0.9)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
   },
   mediaFooter: {
     position: "absolute",
-    bottom: 12,
+    bottom: AUTHOR,
     left: 16,
     right: 16,
     flexDirection: "row",
@@ -499,7 +510,7 @@ const styles = StyleSheet.create({
   },
   mediaFooterText: {
     color: "#F5F2FA",
-    fontSize: 23,
+    fontSize: 20,
     fontWeight: "600",
     textShadowColor: "rgba(0,0,0,0.9)",
     textShadowOffset: { width: 1, height: 1 },
