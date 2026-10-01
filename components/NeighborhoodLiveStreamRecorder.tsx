@@ -56,7 +56,7 @@ const CREATE_STREAM = gql`
   }
 `;
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
 export default function NeighborhoodLiveStreamRecorder({
   neighborhoodId,

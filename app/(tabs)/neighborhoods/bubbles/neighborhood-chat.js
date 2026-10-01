@@ -1361,52 +1361,43 @@ const WS_URL = process.env.EXPO_PUBLIC_WS_URL;
     }
   };
 
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !socket) return;
+const sendMessage = async () => {
+  if (!newMessage.trim() || !socket) return;
 
-    const messageContent = newMessage.trim();
+  const messageContent = newMessage.trim();
 
-    const tempId = `temp-${Date.now()}`;
-    const optimisticMessage = {
-      id: tempId,
-      content: messageContent,
-      createdAt: Date.now().toString(),
-      sender: {
-        username: username,
-        profilePhoto: await AsyncStorage.getItem("profilePhoto"),
-      },
-    };
-
-    setMessages((prev) => [...prev, optimisticMessage]);
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-    setNewMessage("");
-
-    try {
-await sendMessageMutation({
-  variables: {
-    content: `Shared: ${safeName}`,
-    neighborhoodId: neighborhoodId,
-    fileName: safeName,
-    fileType: type,
-    mimeType: type === "image" ? "image/jpeg" : mimeType,
-    imageUrl: type === "image" ? uploadResult.ipfsUrl : null,
-    videoUrl: type === "video" ? uploadResult.ipfsUrl : null,
-    fileUrl: type !== "image" && type !== "video" ? uploadResult.ipfsUrl : null,
-    magnetLink: uploadResult.magnetLink || "",
-    thumbnailUrl: uploadResult.thumbnailUrl || null,
-    cid: uploadResult.cid || null, // ← add
-  },
-});
-      console.log("✅ Neighborhood message sent");
-    } catch (err) {
-      console.error("❌ Send message error:", err);
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      Alert.alert("Error", "Failed to send message");
-      setNewMessage(messageContent);
-    }
+  const tempId = `temp-${Date.now()}`;
+  const optimisticMessage = {
+    id: tempId,
+    content: messageContent,
+    createdAt: Date.now().toString(),
+    sender: {
+      username: username,
+      profilePhoto: await AsyncStorage.getItem("profilePhoto"),
+    },
   };
+
+  setMessages((prev) => [...prev, optimisticMessage]);
+  setTimeout(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, 100);
+  setNewMessage("");
+
+  try {
+    await sendMessageMutation({
+      variables: {
+        content: messageContent,
+        neighborhoodId: neighborhoodId,
+      },
+    });
+    console.log("✅ Neighborhood message sent");
+  } catch (err) {
+    console.error("❌ Send message error:", err);
+    setMessages((prev) => prev.filter((m) => m.id !== tempId));
+    Alert.alert("Error", "Failed to send message");
+    setNewMessage(messageContent);
+  }
+};
 
   // In your neighborhood-chat.js, update the unifiedUpload function:
 
@@ -1912,7 +1903,7 @@ await sendMessageMutation({
         result = JSON.parse(uploadResponse.body);
       }
 
-      const { ipfsUrl, magnetLink } = result;
+      const { ipfsUrl, magnetLink, cid } = result;
 
  const extractedCid =
    cid || (ipfsUrl ? ipfsUrl.match(/\/ipfs\/([^?]+)/)?.[1] : null);
