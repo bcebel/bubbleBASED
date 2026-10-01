@@ -16,6 +16,22 @@
   "source": "/graphql",
   "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/graphql"
 },
+{
+  "source": "/api/live-chunk/:path*",
+  "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/live-chunk/:path*"
+},
+{
+  "source": "/api/stream/:path*",
+  "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/stream/:path*"
+},
+{
+  "source": "/api/stream-end",
+  "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/stream-end"
+},
+{
+  "source": "/api/stream-rotation/:path*",
+  "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/stream-rotation/:path*"
+},
     {
       "source": "/api/upload",
       "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/upload"

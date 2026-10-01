@@ -23,7 +23,7 @@ import NeighborhoodLiveStreamPlayer from "../../../components/NeighborhoodLiveSt
 import { warehouse } from "../../../components/StreamWearhouse.js";
 import { useRouter } from "expo-router";
 
-const API_BASE = "https://minnowspacebackend-e6635e46c3d0.herokuapp.com";
+const API_BASE = "https://bubblebased.com";
 
 const GET_ACTIVE_LIVESTREAMS = gql`
   query GetActiveLivestreams {
