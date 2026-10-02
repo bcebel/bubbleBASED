@@ -2,29 +2,6 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/join/:code",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": ".*(Twitterbot|facebookexternalhit|Discordbot|Slackbot|TelegramBot|WhatsApp|LinkedInBot|Pinterestbot|Embedly|VKShare|Tumblr|Googlebot|bingbot|Applebot).*"
-        }
-      ],
-      "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/og/join/:code"
-    },
-    {
-      "source": "/upload",
-      "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/upload"
-    },
-    {
-      "source": "/graphql",
-      "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/graphql"
-    },
-    {
-      "source": "/api/:path*",
-      "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/:path*"
-    },
-    {
       "source": "/(.*)",
       "destination": "/"
     }
@@ -41,27 +18,19 @@
     },
     {
       "source": "/webtorrent.min.js",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
-    },
-    {
-      "source": "/:path*.(png|jpg|jpeg|gif|webp|avif|ico)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
-    },
-    {
-      "source": "/api/media/:path*",
       "headers": [
         {
-          "key": "x-vercel-enable-rewrite-caching",
-          "value": "1"
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
         }
       ]
     },
     {
-      "source": "/api/webseed/:path*",
+      "source": "/:path*.(png|jpg|jpeg|gif|webp|avif|ico)",
       "headers": [
         {
-          "key": "x-vercel-enable-rewrite-caching",
-          "value": "1"
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
         }
       ]
     }
