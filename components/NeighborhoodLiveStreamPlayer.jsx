@@ -33,15 +33,16 @@ class StreamController {
     this.MS = window.ManagedMediaSource || window.MediaSource;
     this.ms = new this.MS();
 
-    this.sb = null;
+  this.sb = null;
 
-    this.canAppend = false;
+  this.isManaged = !!window.ManagedMediaSource;
+  this.canAppend = !this.isManaged;
 
-    this.ms.addEventListener("startstreaming", () => {
-      this.canAppend = true;
-      this.addLog("✅ ManagedMediaSource started streaming");
-      this.tick();
-    });
+  this.ms.addEventListener("startstreaming", () => {
+    this.canAppend = true;
+    this.addLog("✅ ManagedMediaSource started streaming");
+    this.tick();
+  });
 
     this.ms.addEventListener("endstreaming", () => {
       this.canAppend = false;
