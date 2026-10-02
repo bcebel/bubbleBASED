@@ -5,21 +5,28 @@ export default function AboutScreen() {
   return (
     <>
       <Head>
-        <title>About bubbleBASED 🫧</title>
-        <meta name="description" content="🫧 About bubbleBASED" />
+        <title>About ebubbl 🫧</title>
+        <meta name="description" content="🫧 About ebubbl" />
       </Head>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-        <Text style={styles.title}>🫧 About bubbleBASED</Text>
-        <Text style={styles.meta}>Version 1 · September 2026</Text>
+        <Text style={styles.title}>🫧 About ebubbl</Text>
+        <Text style={styles.meta}>Version 2 · October 2026</Text>
         <Text style={styles.heading}>The People in Your Bubble.</Text>
         <Text style={styles.paragraph}>
-          bubbleBASED is a set of bubbles — small, contextual spaces where you
-          choose who's in them and what you share. Some are for people you
-          already know. Some are for people you'd like to meet. All of them are
-          yours to shape
+       
+          What if Facebook, Instagram, and Twitter were just a few bubbles in a
+          larger network of bubbles? What if you could create your own bubble
+          and invite only the people you want to see your content? What if you
+          could join other people's bubbles and see their content without being
+          tracked or having your data sold?
+        </Text>
+        <Text style={styles.paragraph}>
+          ebubbl is a set of bubbles — contextual spaces where you choose who's
+          in them and what you share. Some are for people you already know. Some
+          are for people you'd like to meet.
         </Text>
         <Text style={styles.paragraph}>
           You decide who's in the room, and how public the room is. Bubbles can
@@ -27,25 +34,47 @@ export default function AboutScreen() {
         </Text>
         <Text style={styles.heading}>Digital Bubbles Over Feeds</Text>
         <Text style={styles.paragraph}>
-          That memory of home, that vacation. They are worth enjoying and
-          sharing. Even if you just connect with a few of your besties for a few
-          smiles it's worth it.
+          What if we actually truly shared content with eachother instead of
+          just broadcasting it to the world? When I say share I mean share the
+          file through webtorrent? Like Napster and Limewire did, but for social
+          media. Who do you trust with your content with more than your friends?
+          Shouldn't they be the ones who see it instead of a data center that
+          you don't know and can't trust. What if it was centralized with you at
+          the center rippling out to your friends and their friends and so on.
+          If everyone is the center it actually becomes a decentralized network
+          of people sharing content with eachother instead of a centralized
+          network of people broadcasting content to eachother.
         </Text>
 
         <Text style={styles.bullet}>
-          Context Matters. Your boss shouldn't see your vacation photos unless
-          you want to specifically share them.
+          Freedom of speech, sure. Platforms will give you 280 characters to say
+          what you want but then shadowban it. Not here, you join bubbles you
+          want to be in and you can say what you want. If you don't like what
+          someone is saying, leave the bubble. If you don't like the bubble,
+          leave the bubble. I don't even know the character limit for a post so
+          write as much as you want.
         </Text>
         <Text style={styles.heading}>We Are The Platform.</Text>
         <Text style={styles.paragraph}>
-          When you post something, your device helps share it with the people
-          who want to see it. Not a data center we pay for, not a company that
-          gets to decide what stays online. The network is made of the people
-          using it.
+          Everyone is looking for an alternative to the big social media
+          platforms. You want Substack, write away and publish it to the
+          internet. You want Instagram? We have the galleries. You want X posts,
+          we have the platform. You want meetup? Meet your friends here.
+          Bluesky, Mastodon, and other federated platforms are great but they
+          are still centralized and besides didn't Elon Musk just buy twitter /
+          X from the Bluesky guy? They have enough money. And TikTok is a great
+          platform but they are still centralized and they are still tracking
+          you. You want OnlyFans? Make a private bubble. You want Discord and
+          Slack? Make a work bubble and invite your team. You want a private
+          bubble for your friends? Make a private bubble and invite your
+          friends. You want a bubble for your community, school, family, church, club, team, organization, business, project or event? Put a bubble on it.  
         </Text>
         <Text style={styles.paragraph}>
           Literally share your content. Simply put, we won't scan your face —
-          and neither would your friends.
+          and neither would your friends. Torrenting is public in the sense that
+          your ip address is visible, but how many Flock cameras did you drive
+          by today? Also having your ip address visible makes the platform safer
+          for everyone. 
         </Text>
         <Text style={styles.paragraph}>
           Community ads — users bring their own affiliate links in addition to
@@ -55,7 +84,8 @@ export default function AboutScreen() {
         <Text style={styles.paragraph}>
           Livestream is set up using WebTorrent to broadcast to your bubbles.
           The more viewers there are the faster the connection. Great for real
-          time events.
+          time events. Torrenting a stream makes it powerful for global
+          communication.
         </Text>
         <Text style={styles.heading}>1. User Privacy Levels.</Text>
         <Text style={styles.paragraph}>
@@ -63,25 +93,25 @@ export default function AboutScreen() {
           travel. When they disagree, the more private one wins. There are
           bubble privacy options and user privacy options. User levels take
           priority over bubble levels unless bubble levels are more restrictive.
-          There are 4 User privacy levels in bubbleBASED.
+          There are 4 User privacy levels in ebubbl.
         </Text>
         <Text style={styles.bullet}>
           • Private - What you share in bubble stays in that bubble.
         </Text>
         <Text style={styles.bullet}>
           • Bublic - What you share in a bubble can only be seen by other users
-          of bubbleBASED (must be logged in, can't be found by Google etc.).
-          Bublic is the middle ground — visible to the community, not to the
-          open web. It's the difference between telling a room and telling the
-          whole internet.
+          of ebubbl (must be logged in, can't be found by Google etc.). Bublic
+          is the middle ground — visible to the community, not to the open web.
+          It's the difference between telling a room and telling the whole
+          internet.
         </Text>
         <Text style={styles.bullet}>
           • Default - Setting your user profile to default your privacy levels
           will match what each bubble sets as their default.
         </Text>
         <Text style={styles.bullet}>
-          • Global - global publishes OUTSIDE of bubbleBASED and can be indexed
-          by search engines. In this case the bubble's privacy levels would take
+          • Global - global publishes OUTSIDE of ebubbl and can be indexed by
+          search engines. In this case the bubble's privacy levels would take
           precedence because a private bubble is privately scoped.
         </Text>
         <Text style={styles.heading}>2. Types of Bubbles</Text>
@@ -93,12 +123,12 @@ export default function AboutScreen() {
           bubble and the people who were invited to that bubble.
         </Text>
         <Text style={styles.bullet}>
-          • Bublic - Visible by any user of bubbleBASED. However private posts
-          will not be seen unless you are a member of that bubble.
+          • Bublic - Visible by any user of ebubbl. However private posts will
+          not be seen unless you are a member of that bubble.
         </Text>
         <Text style={styles.bullet}>
-          • Global - global bubbles are published OUTSIDE of bubbleBASED and can
-          be indexed by search engines.
+          • Global - global bubbles are published OUTSIDE of ebubbl and can be
+          indexed by search engines.
         </Text>
       </ScrollView>
     </>
