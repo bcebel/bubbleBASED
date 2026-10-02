@@ -361,6 +361,15 @@ export const GET_NEIGHBORHOOD = gql`
       type
       bubblePhotoCid
       rules
+      joinRequests {
+        user {
+          id
+          username
+          profilePhoto
+        }
+        status
+        requestedAt
+      }
       owner {
         username
         profilePhoto
