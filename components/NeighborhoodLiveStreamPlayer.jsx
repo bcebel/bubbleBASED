@@ -34,9 +34,18 @@ class StreamController {
     this.ms = new this.MS();
 
     this.sb = null;
+
+    this.canAppend = false;
+
     this.ms.addEventListener("startstreaming", () => {
+      this.canAppend = true;
       this.addLog("✅ ManagedMediaSource started streaming");
-      this.sweepWarehouse();
+      this.tick();
+    });
+
+    this.ms.addEventListener("endstreaming", () => {
+      this.canAppend = false;
+      this.addLog("⏸️ ManagedMediaSource paused streaming");
     });
 
     const wrapper = document.createElement("div");
@@ -115,6 +124,11 @@ class StreamController {
 
   processBufferQueue() {
     if (this.bufferQueue.length === 0 || !this.sb || this.sb.updating) return;
+    if (this.isManaged && !this.canAppend) {
+      // Wait for the browser to tell us it wants more data
+      return;
+    }
+
     const nextBuffer = this.bufferQueue.shift();
     try {
       this.sb.appendBuffer(nextBuffer);
@@ -255,6 +269,8 @@ class StreamController {
     if (this.ms.readyState !== "open") await this.once(this.ms, "sourceopen");
     if (this.sb?.updating) return;
 
+    if (this.isManaged && !this.canAppend) return;
+
     if (!this.sb && this.detectedMimeType) {
       try {
         if (!this.MS.isTypeSupported(this.detectedMimeType)) {
@@ -330,46 +346,75 @@ class StreamController {
   }
 
   async download(magnet, index) {
+    // 1. Check local cache first
     const cached = await warehouse.getChunk(this.sessionId, index);
     if (cached) return cached;
+
+    // 2. Try P2P with a timeout
+    const p2p = await Promise.race([
+      this.tryP2P(magnet, index),
+      new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
+    ]);
+    if (p2p) {
+      await warehouse.saveChunk(this.sessionId, index, p2p); // cache it
+      return p2p;
+    }
+
+    // 3. Fall back to HTTP fetch from Heroku
+    try {
+      const res = await fetch(
+        `${LIVESTREAM_URL}/api/live-chunk/${this.sessionId}/${index}`,
+        { signal: AbortSignal.timeout(8000) },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buf = new Uint8Array(await res.arrayBuffer());
+      await warehouse.saveChunk(this.sessionId, index, buf); // cache it
+      return buf;
+    } catch (err) {
+      console.warn(`[stream] chunk ${index} failed both paths`, err);
+      return null;
+    }
+  }
+
+  async tryP2P(magnet, index) {
     return new Promise(async (resolve) => {
-      let handled = false;
-      const swarmTimeout = setTimeout(() => {
-        if (!handled) {
-          handled = true;
-          resolve(null);
-        }
-      }, 5000);
-      if (!magnet || magnet === "cached") {
-        clearTimeout(swarmTimeout);
-        return resolve(null);
-      }
+      if (!magnet || magnet === "cached") return resolve(null);
       try {
         const client = await webtorrentService.ensureClient();
-   client.add(
-     magnet,
-     { announce: ["wss://tracker-0ad4cca9fd92.herokuapp.com"] },
-     (torrent) => {
-       torrent.on("done", async () => {
-         try {
-           const buffer = await torrent.files[0].arrayBuffer();
-           if (!handled) {
-             handled = true;
-             clearTimeout(swarmTimeout);
-             resolve(new Uint8Array(buffer));
-           }
-         } catch (err) {
-           if (!handled) {
-             handled = true;
-             clearTimeout(swarmTimeout);
-             resolve(null);
-           }
-         }
-         client.remove(torrent.infoHash).catch(() => {});
-       });
-     },
-   );
-      } catch (e) {
+        const torrent =
+          client.get(magnet) ||
+          (await new Promise((r) => client.add(magnet, r)));
+
+        const extractAndCleanup = async () => {
+          try {
+            const buf = await torrent.files[0].arrayBuffer();
+            // Destroy the torrent NOW — we have the bytes
+            try {
+             await client.remove(torrent.infoHash);
+            } catch (_) {}
+            resolve(new Uint8Array(buf));
+          } catch (err) {
+            try {
+              client.remove(torrent.infoHash);
+            } catch (_) {}
+            resolve(null);
+          }
+        };
+
+        if (torrent.done) {
+          return extractAndCleanup();
+        }
+
+        torrent.once("done", extractAndCleanup);
+
+        // Also cleanup if we time out
+        setTimeout(() => {
+          try {
+            client.remove(torrent.infoHash);
+          } catch (_) {}
+          resolve(null);
+        }, 10000);
+      } catch (err) {
         resolve(null);
       }
     });

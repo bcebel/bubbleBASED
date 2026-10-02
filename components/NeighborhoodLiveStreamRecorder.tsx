@@ -318,6 +318,7 @@ if (!supportedTypeRef.current) {
         mimeType: supportedTypeRef.current,
       });
       mediaRecorderRef.current = mediaRecorder;
+      console.log("[recorder] mimeType:", mediaRecorder.mimeType);
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
