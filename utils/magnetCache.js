@@ -11,7 +11,9 @@ try {
 export async function getMagnetForCid(cid) {
   if (magnetCache.has(cid)) return magnetCache.get(cid);
 
-  const res = await fetch(`https://bubblebased.com/api/media/${cid}`);
+  const res = await fetch(
+    `https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/media/${cid}`,
+  );
   if (!res.ok) return null;
 
   const meta = await res.json();
