@@ -213,7 +213,7 @@ export default function NeighborhoodDetailScreen() {
       formData.append("title", "Bubble Photo");
       formData.append("description", "Neighborhood cover photo");
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}api/upload`, {
+      const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

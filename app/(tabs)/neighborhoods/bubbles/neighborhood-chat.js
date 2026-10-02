@@ -849,7 +849,7 @@ export default function NeighborhoodChatScreen() {
 
   const initializeSocket = (token) => {
     console.log("🔌 Initializing neighborhood socket...");
-const WS_URL = process.env.EXPO_PUBLIC_WS_URL;
+    const WS_URL = process.env.EXPO_PUBLIC_WS_URL;
 
     const newSocket = io(WS_URL, {
       auth: { token },
@@ -1361,43 +1361,43 @@ const WS_URL = process.env.EXPO_PUBLIC_WS_URL;
     }
   };
 
-const sendMessage = async () => {
-  if (!newMessage.trim() || !socket) return;
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !socket) return;
 
-  const messageContent = newMessage.trim();
+    const messageContent = newMessage.trim();
 
-  const tempId = `temp-${Date.now()}`;
-  const optimisticMessage = {
-    id: tempId,
-    content: messageContent,
-    createdAt: Date.now().toString(),
-    sender: {
-      username: username,
-      profilePhoto: await AsyncStorage.getItem("profilePhoto"),
-    },
-  };
-
-  setMessages((prev) => [...prev, optimisticMessage]);
-  setTimeout(() => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, 100);
-  setNewMessage("");
-
-  try {
-    await sendMessageMutation({
-      variables: {
-        content: messageContent,
-        neighborhoodId: neighborhoodId,
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMessage = {
+      id: tempId,
+      content: messageContent,
+      createdAt: Date.now().toString(),
+      sender: {
+        username: username,
+        profilePhoto: await AsyncStorage.getItem("profilePhoto"),
       },
-    });
-    console.log("✅ Neighborhood message sent");
-  } catch (err) {
-    console.error("❌ Send message error:", err);
-    setMessages((prev) => prev.filter((m) => m.id !== tempId));
-    Alert.alert("Error", "Failed to send message");
-    setNewMessage(messageContent);
-  }
-};
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+    setNewMessage("");
+
+    try {
+      await sendMessageMutation({
+        variables: {
+          content: messageContent,
+          neighborhoodId: neighborhoodId,
+        },
+      });
+      console.log("✅ Neighborhood message sent");
+    } catch (err) {
+      console.error("❌ Send message error:", err);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      Alert.alert("Error", "Failed to send message");
+      setNewMessage(messageContent);
+    }
+  };
 
   // In your neighborhood-chat.js, update the unifiedUpload function:
 
@@ -1858,7 +1858,7 @@ const sendMessage = async () => {
           neighborhoodId,
         });
 
-        const res = await fetch(`${BACKEND_URL}/api/upload`, {
+        const res = await fetch(`${BACKEND_URL}/upload`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
@@ -1877,7 +1877,7 @@ const sendMessage = async () => {
         });
 
         const uploadResponse = await FileSystem.uploadAsync(
-          `${BACKEND_URL}/api/upload`,
+          `${BACKEND_URL}/upload`,
           fileUri,
           {
             httpMethod: "POST",
@@ -1905,11 +1905,14 @@ const sendMessage = async () => {
 
       const { ipfsUrl, magnetLink, cid } = result;
 
- const extractedCid =
-   cid || (ipfsUrl ? ipfsUrl.match(/\/ipfs\/([^?]+)/)?.[1] : null);
+      const extractedCid =
+        cid || (ipfsUrl ? ipfsUrl.match(/\/ipfs\/([^?]+)/)?.[1] : null);
 
-      console.log("✅ IPFS Result:", { ipfsUrl, magnetLink, cid: extractedCid });
-      
+      console.log("✅ IPFS Result:", {
+        ipfsUrl,
+        magnetLink,
+        cid: extractedCid,
+      });
 
       let thumbnailUrl = null;
 
@@ -1999,11 +2002,11 @@ const sendMessage = async () => {
 
   return (
     <View style={styles.container}>
-          <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
-              <TouchableOpacity style={styles.backButton}>
-                <Text style={styles.backButtonText}>← Back to Bubble</Text>
-              </TouchableOpacity>
-            </Link>
+      <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
+        <TouchableOpacity style={styles.backButton}>
+          <Text style={styles.backButtonText}>← Back to Bubble</Text>
+        </TouchableOpacity>
+      </Link>
       <View style={styles.header}>
         <Text style={styles.roomTitle}>🫧 {neighborhoodName} 🫧 </Text>
         <TouchableOpacity

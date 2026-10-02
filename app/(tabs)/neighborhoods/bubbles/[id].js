@@ -202,7 +202,7 @@ export default function NeighborhoodDetailScreen() {
       formData.append("title", "Bubble Photo");
       formData.append("description", "Neighborhood cover photo");
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/upload`, {
+      const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -243,15 +243,15 @@ export default function NeighborhoodDetailScreen() {
   })();
 
   // ✅ PREVIEW EARLY RETURN (after handlers are defined)
-if (!isMember && neighborhood.type !== "personal" && previewing) {
-  return (
-    <PreviewView
-      neighborhood={neighborhood}
-      onJoin={handleJoin}
-      onBrowse={() => setPreviewing(false)}
-    />
-  );
-}
+  if (!isMember && neighborhood.type !== "personal" && previewing) {
+    return (
+      <PreviewView
+        neighborhood={neighborhood}
+        onJoin={handleJoin}
+        onBrowse={() => setPreviewing(false)}
+      />
+    );
+  }
   // ✅ Render full view
   return (
     <View style={styles.container}>

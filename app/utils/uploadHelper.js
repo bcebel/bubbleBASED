@@ -17,14 +17,14 @@ export const uploadToIPFS = async (
   if (!token) throw new Error("No authentication token found");
 
   if (Platform.OS === "web") {
-   const formData = new FormData();
-   if (fileObject) {
-     formData.append("video", fileObject, fileName);
-   } else {
-     const response = await fetch(fileUri);
-     const blob = await response.blob();
-     formData.append("video", blob, fileName);
-   }
+    const formData = new FormData();
+    if (fileObject) {
+      formData.append("video", fileObject, fileName);
+    } else {
+      const response = await fetch(fileUri);
+      const blob = await response.blob();
+      formData.append("video", blob, fileName);
+    }
     formData.append("title", fileName);
     formData.append("description", `Uploaded ${type} - ${fileName}`);
 
@@ -33,7 +33,7 @@ export const uploadToIPFS = async (
       formData.append("neighborhoodId", neighborhoodId);
     }
 
-    const res = await fetch(`${BACKEND_URL}/api/upload`, {
+    const res = await fetch(`${BACKEND_URL}/upload`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -49,7 +49,7 @@ export const uploadToIPFS = async (
   } else {
     // Native React Native fallback
     const uploadResponse = await FileSystem.uploadAsync(
-      `${BACKEND_URL}/api/upload`,
+      `${BACKEND_URL}/upload`,
       fileUri,
       {
         httpMethod: "POST",

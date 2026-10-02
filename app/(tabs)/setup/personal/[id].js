@@ -149,7 +149,7 @@ export default function NeighborhoodDetailScreen() {
       formData.append("title", "Bubble Photo");
       formData.append("description", "Neighborhood cover photo");
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/upload`, {
+      const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -232,11 +232,7 @@ export default function NeighborhoodDetailScreen() {
 
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
           <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `setup/personal/myGallery`,
-              )
-            }
+            onPress={() => router.replace(`setup/personal/myGallery`)}
           >
             <Text style={styles.button}>🖼️ Gallery</Text>
           </TouchableOpacity>
@@ -254,7 +250,7 @@ export default function NeighborhoodDetailScreen() {
           </TouchableOpacity>
         </BlurView>
 
-        {canInvite &&  (
+        {canInvite && (
           <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
             <TouchableOpacity
               onPress={() =>

@@ -134,7 +134,7 @@ export default function ProfileSetupScreen() {
           incomingLinks.map((link) => ({
             // Use description field which contains the raw HTML
             rawHtml: link.description || link.url || "",
-          }))
+          })),
         );
       } else {
         setAffiliateLinks([{ rawHtml: "" }]);
@@ -157,7 +157,7 @@ export default function ProfileSetupScreen() {
       formData.append("title", "Profile Photo");
       formData.append("description", "User profile photo");
 
-      const res = await fetch(`${BACKEND_URL}/api/upload`, {
+      const res = await fetch(`${BACKEND_URL}/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -210,7 +210,7 @@ export default function ProfileSetupScreen() {
         } catch (error) {
           Alert.alert(
             "Upload Failed",
-            "Could not upload profile photo to IPFS."
+            "Could not upload profile photo to IPFS.",
           );
           setProfilePhotoCid(null);
         } finally {
@@ -238,57 +238,55 @@ export default function ProfileSetupScreen() {
 
   // --- SAVE LOGIC (FIXED) ---
   const handleSave = async () => {
-    
-   try {
-     setSaving(true);
+    try {
+      setSaving(true);
 
-     const validLinks = affiliateLinks
-       .filter((link) => link.rawHtml && link.rawHtml.trim())
-       .map((link) => ({
-         url: link.rawHtml,
-         title: "",
-       }));
+      const validLinks = affiliateLinks
+        .filter((link) => link.rawHtml && link.rawHtml.trim())
+        .map((link) => ({
+          url: link.rawHtml,
+          title: "",
+        }));
 
-     // 1. Update profile (bio + photo + affiliate links)
-     const { data, errors } = await updateProfile({
-       variables: {
-         bio: bio || "",
-         profilePhoto: profilePhotoCid || "",
-         affiliateLinks: validLinks,
-         isPublic,
-       },
-     });
+      // 1. Update profile (bio + photo + affiliate links)
+      const { data, errors } = await updateProfile({
+        variables: {
+          bio: bio || "",
+          profilePhoto: profilePhotoCid || "",
+          affiliateLinks: validLinks,
+          isPublic,
+        },
+      });
 
-     if (errors && errors.length > 0) {
-       throw new Error(errors[0].message);
-     }
+      if (errors && errors.length > 0) {
+        throw new Error(errors[0].message);
+      }
 
-     // 2. Update visibility (separate mutation)
-console.log("About to send isPublic:", isPublic, typeof isPublic);
+      // 2. Update visibility (separate mutation)
+      console.log("About to send isPublic:", isPublic, typeof isPublic);
 
-const { errors: visErrors, data: visData } = await updateVisibility({
-  variables: { isPublic },
-  context: {
-    headers: {
-      Authorization: `Bearer ${await AsyncStorage.getItem("token")}`,
-    },
-  },
-});
-console.log("Server returned:", visData?.updateVisibility?.isPublic);
-     
+      const { errors: visErrors, data: visData } = await updateVisibility({
+        variables: { isPublic },
+        context: {
+          headers: {
+            Authorization: `Bearer ${await AsyncStorage.getItem("token")}`,
+          },
+        },
+      });
+      console.log("Server returned:", visData?.updateVisibility?.isPublic);
 
-     if (visErrors && visErrors.length > 0) {
-       throw new Error(visErrors[0].message);
-     }
+      if (visErrors && visErrors.length > 0) {
+        throw new Error(visErrors[0].message);
+      }
 
-     Alert.alert("Success", "Profile saved successfully!");
-     refetchProfile();
-   } catch (err) {
-     Alert.alert("Error", err.message);
-   } finally {
-     setSaving(false);
-   }
- };
+      Alert.alert("Success", "Profile saved successfully!");
+      refetchProfile();
+    } catch (err) {
+      Alert.alert("Error", err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
   // --- RENDER LOGIC (Minor Fixes) ---
 
   if (loadingProfile) {
