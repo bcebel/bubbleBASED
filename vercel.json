@@ -2,11 +2,19 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/api/webseed/:path*",
+      "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/webseed/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }
   ],
   "headers": [
+    {
+  "source": "/api/webseed/:path*",
+  "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }]
+},
     {
       "source": "/assets/(.*)",
       "headers": [
