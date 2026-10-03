@@ -77,7 +77,6 @@ export default function TabLayout() {
               <Text style={styles.iconText}>🖼️</Text>
             </View>
           ),
-          
         }}
       />
       <Tabs.Screen
@@ -126,12 +125,13 @@ export default function TabLayout() {
         name="neighborhoods/bubbles/PostFeed"
         options={{ href: null }}
       />
+      <Tabs.Screen name="gallery2" options={{ href: null }} />
       <Tabs.Screen
-        name="gallery2"
+        name="neighborhoods/bubbles/bublic"
         options={{ href: null }}
       />
       <Tabs.Screen
-        name="neighborhoods/bubbles/bublic"
+        name="neighborhoods/bubbles/pending-requests"
         options={{ href: null }}
       />
       <Tabs.Screen name="setup/personal/myGallery" options={{ href: null }} />
