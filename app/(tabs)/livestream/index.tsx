@@ -11,10 +11,12 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Alert,
 } from "react-native";
+
 import { BlurView } from "expo-blur";
 
-import { gql, useQuery, useSubscription } from "@apollo/client";
+import { gql, useQuery, useSubscription, useMutation } from "@apollo/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Head from "expo-router/head";
 import WebTorrentMedia from "@/components/WebTorrentMedia";
@@ -33,9 +35,17 @@ const GET_ACTIVE_LIVESTREAMS = gql`
       sessionId
       status
       createdAt
+      viewerCanDelete
     }
   }
 `;
+
+const DELETE_STREAM = gql`
+  mutation DeleteStream($streamId: ID!) {
+    deleteStream(streamId: $streamId)
+  }
+`;
+
 
 const LIVESTREAM_CHUNK_SUBSCRIPTION = gql`
   subscription OnLivestreamChunkAdded($sessionId: String!) {
@@ -69,16 +79,56 @@ function NavButton({ title }: { title: string }) {
 }
 
 // --- INDIVIDUAL STREAM PLAYER ITEM ---
-function StreamItem({ stream }: { stream: any }) {
+function StreamItem({
+  stream,
+  onDelete,
+}: {
+  stream: any;
+  onDelete?: (id: string) => void;
+}) {
   const [availableInWarehouse, setAvailableInWarehouse] = useState<number[]>(
     [],
   );
   const sessionId = stream?.sessionId;
+  const [deleteStream] = useMutation(DELETE_STREAM);
+  const [deleting, setDeleting] = useState(false);
 
   const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
   const isiPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   const shouldRotate = isSafari || isiPhone;
   const [rotation, setRotation] = useState(0);
+
+  const handleDelete = async () => {
+    const confirmed =
+      Platform.OS === "web"
+        ? window.confirm("Delete this livestream? This cannot be undone.")
+        : await new Promise((resolve) =>
+            Alert.alert("Delete Stream", "This cannot be undone.", [
+              {
+                text: "Cancel",
+                style: "cancel",
+                onPress: () => resolve(false),
+              },
+              {
+                text: "Delete",
+                style: "destructive",
+                onPress: () => resolve(true),
+              },
+            ]),
+          );
+
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await deleteStream({ variables: { streamId: stream.id } });
+      if (onDelete) onDelete(stream.id);
+    } catch (err) {
+      alert("Delete failed: " + err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!sessionId) return;
@@ -171,6 +221,15 @@ function StreamItem({ stream }: { stream: any }) {
         <View style={styles.liveBadge}>
           <Text style={styles.liveText}>LIVE</Text>
         </View>
+        {stream.viewerCanDelete && (
+          <TouchableOpacity
+            onPress={handleDelete}
+            style={styles.deleteButton}
+            disabled={deleting}
+          >
+            <Text style={styles.deleteText}>{deleting ? "..." : "🗑️"}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <NeighborhoodLiveStreamPlayer
@@ -201,10 +260,14 @@ export default function StreamsScreen() {
     checkLogin();
   }, []);
 
-  const { data: streamsData, loading } = useQuery(GET_ACTIVE_LIVESTREAMS, {
-    pollInterval: 5000,
-    skip: !isLoggedIn,
-  });
+const {
+  data: streamsData,
+  loading,
+  refetch,
+} = useQuery(GET_ACTIVE_LIVESTREAMS, {
+  pollInterval: 5000,
+  skip: !isLoggedIn,
+});
 
   // 1. auth not resolved yet
   if (!authChecked) {
@@ -441,7 +504,7 @@ export default function StreamsScreen() {
         decelerationRate="fast"
         renderItem={({ item }) => (
           <View style={{ height: SCREEN_HEIGHT, width: "100%" }}>
-            <StreamItem stream={item} />
+            <StreamItem stream={item} onDelete={() => refetch()} />
           </View>
         )}
         ListEmptyComponent={
@@ -797,5 +860,17 @@ const styles = StyleSheet.create({
   footerText: {
     color: "#6B7280",
     fontSize: 14,
+  },
+  deleteButton: {
+    marginLeft: 12,
+    padding: 8,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  deleteText: {
+    color: "#fff",
+    fontSize: 16,
   },
 });
