@@ -157,7 +157,11 @@ export default function NeighborhoodDetailScreen() {
             >
               <Text style={styles.button}>🖼️ My Vault</Text>
             </TouchableOpacity>
-          </BlurView>
+   
+              <TouchableOpacity onPress={() => router.replace(`/setup/setup`)}>
+                <Text style={styles.button}>📝 Profile</Text>
+              </TouchableOpacity>
+            </BlurView>
         ) : (
           // Normal bubble: the full menu
           <>
