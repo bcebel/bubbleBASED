@@ -41,7 +41,7 @@ const DELETE_NEIGHBORHOOD = gql`
   }
 `;
 
-function PreviewView({ neighborhood, onJoin, onBrowse }) {
+function PreviewView({ neighborhood, onJoin, onBrowse, hasPendingRequest }) {
   const bubblePhotoSource = neighborhood.bubblePhotoCid
     ? {
         uri: `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${neighborhood.bubblePhotoCid}`,
@@ -70,7 +70,9 @@ function PreviewView({ neighborhood, onJoin, onBrowse }) {
 
       <View style={styles.previewBody}>
         <Text style={styles.previewText}>
-          Browse what's here, or join to post and chat.
+          {hasPendingRequest
+            ? "Your request to join is pending approval."
+            : "Browse what's here, or join to post and chat."}
         </Text>
 
         <View style={styles.previewButtonRow}>
@@ -78,11 +80,17 @@ function PreviewView({ neighborhood, onJoin, onBrowse }) {
             <Text style={styles.browseButtonText}>👀 Browse</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.joinButton} onPress={onJoin}>
-            <Text style={styles.joinButtonText}>
-              ✨ Join {neighborhood.name}
-            </Text>
-          </TouchableOpacity>
+          {hasPendingRequest ? (
+            <View style={styles.pendingBadge}>
+              <Text style={styles.pendingBadgeText}>⏳ Request Pending</Text>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.joinButton} onPress={onJoin}>
+              <Text style={styles.joinButtonText}>
+                ✨ Join {neighborhood.name}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </View>
@@ -136,9 +144,13 @@ export default function NeighborhoodDetailScreen() {
     );
   }
 
-  const isMember = neighborhood.members?.some(
-    (m) => m.user?.username === username,
-  );
+const isMember = neighborhood.members?.some(
+  (m) => m.user?.username === username,
+);
+
+const hasPendingRequest = neighborhood.joinRequests?.some(
+  (r) => r.user?.id === userData?.me?.id && r.status === "pending",
+);
 
   const handleJoin = async () => {
     try {
@@ -298,6 +310,7 @@ export default function NeighborhoodDetailScreen() {
         neighborhood={neighborhood}
         onJoin={handleJoin}
         onBrowse={() => setPreviewing(false)}
+        hasPendingRequest={hasPendingRequest}
       />
     );
   }
@@ -513,6 +526,20 @@ const styles = StyleSheet.create({
   },
   browseButtonText: {
     color: "#FF0081",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  pendingBadge: {
+    backgroundColor: "rgba(255, 200, 0, 0.15)",
+    borderWidth: 2,
+    borderColor: "#FFC800",
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 32,
+    marginTop: 10,
+  },
+  pendingBadgeText: {
+    color: "#FFC800",
     fontSize: 16,
     fontWeight: "bold",
   },

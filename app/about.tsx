@@ -36,14 +36,12 @@ export default function AboutScreen() {
         <Text style={styles.paragraph}>
           What if we actually truly shared content with eachother instead of
           just broadcasting it to the world? When I say share I mean share the
-          file through webtorrent? Like Napster and Limewire did, but for social
+          file through webtorrent, like Napster and Limewire did, but for social
           media. Who do you trust with your content with more than your friends?
-          Shouldn't they be the ones who see it instead of a data center that
-          you don't know and can't trust. What if it was centralized with you at
+          What if it was centralized with you at
           the center rippling out to your friends and their friends and so on.
           If everyone is the center it actually becomes a decentralized network
-          of people sharing content with eachother instead of a centralized
-          network of people broadcasting content to eachother.
+          of people sharing content with eachother.
         </Text>
 
         <Text style={styles.bullet}>
