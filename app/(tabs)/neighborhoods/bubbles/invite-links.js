@@ -145,6 +145,35 @@ export default function InviteLinksScreen() {
     Alert.alert("Copied!", "Invite link copied to clipboard");
   };
 
+const handleShareLink = async (url, name) => {
+  // Try the native share sheet first
+  if (typeof navigator !== "undefined" && navigator.share) {
+    try {
+      await navigator.share({ title: name, url });
+      return;
+    } catch (err) {
+      // User cancelled or share failed — fall through to copy
+    }
+  }
+
+  // Fall back to clipboard
+  try {
+    if (
+      typeof navigator !== "undefined" &&
+      navigator.clipboard &&
+      document.hasFocus()
+    ) {
+      await navigator.clipboard.writeText(url);
+      window.alert("Link copied to clipboard");
+      return;
+    }
+  } catch (err) {
+    console.warn("Clipboard write failed:", err.message);
+  }
+
+  // Last resort: show the URL so the user can copy it manually
+  window.prompt("Copy this link:", url);
+};
   const handleDeleteLink = (linkId) => {
     Alert.alert(
       "Delete Invite Link",
@@ -282,14 +311,7 @@ export default function InviteLinksScreen() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, styles.deleteButton]}
-            onPress={() => handleDeleteLink(item.id)}
-          >
-            <Text style={[styles.actionButtonText, styles.deleteButtonText]}>
-              Delete
-            </Text>
-          </TouchableOpacity>
+
         </View>
       </View>
     );
