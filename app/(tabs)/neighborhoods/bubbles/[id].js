@@ -343,6 +343,21 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
             <Text style={styles.button}>👥 Members</Text>
           </TouchableOpacity>
         </BlurView>
+
+        {canInvite && (
+          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+            <TouchableOpacity
+              onPress={() =>
+                router.replace(
+                  `/neighborhoods/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
+                )
+              }
+            >
+              <Text style={styles.button}>📧 Invite Links</Text>
+            </TouchableOpacity>
+          </BlurView>
+        )}
+
         {canInvite && (
           <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
             <TouchableOpacity

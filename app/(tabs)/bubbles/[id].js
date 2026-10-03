@@ -402,7 +402,21 @@ const hasPendingRequest = neighborhood.joinRequests?.some(
                 )
               }
             >
-              <Text style={styles.button}>📧 Invite</Text>
+              <Text style={styles.button}>📧 Invite Links</Text>
+            </TouchableOpacity>
+          </BlurView>
+        )}
+
+        {canInvite && (
+          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+            <TouchableOpacity
+              onPress={() =>
+                router.replace(
+                  `/neighborhoods/bubbles/pending-requests?neighborhoodId=${neighborhood.id}`,
+                )
+              }
+            >
+              <Text style={styles.button}>⏳ Pending Requests</Text>
             </TouchableOpacity>
           </BlurView>
         )}
