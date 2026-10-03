@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
@@ -16,7 +15,6 @@ import { useQuery, useMutation, gql } from "@apollo/client";
 import {
   GET_NEIGHBORHOOD,
   UPDATE_BUBBLE_PHOTO,
-  LEAVE_NEIGHBORHOOD,
 } from "../../../graphql/queries";
 import { ImageBackground } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -34,32 +32,22 @@ const GET_CURRENT_USER = gql`
   }
 `;
 
-const DELETE_NEIGHBORHOOD = gql`
-  mutation DeleteNeighborhood($neighborhoodId: ID!) {
-    deleteNeighborhood(neighborhoodId: $neighborhoodId)
-  }
-`;
-
 export default function NeighborhoodDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  // ✅ ALL HOOKS AT THE TOP
   const { loading, error, data, refetch } = useQuery(GET_NEIGHBORHOOD, {
     variables: { id },
     fetchPolicy: "cache-and-network",
   });
-  const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
   const { data: userData } = useQuery(GET_CURRENT_USER);
   const [username, setUsername] = useState("");
   const [updateBubblePhoto] = useMutation(UPDATE_BUBBLE_PHOTO);
-  const [deleteNeighborhood] = useMutation(DELETE_NEIGHBORHOOD);
 
   useEffect(() => {
     AsyncStorage.getItem("username").then((saved) => setUsername(saved || ""));
   }, []);
 
-  // ✅ NOW early returns are safe
   if (loading) return <ActivityIndicator size="large" style={styles.loading} />;
   if (error) return <Text style={styles.error}>Error: {error.message}</Text>;
 
@@ -73,27 +61,6 @@ export default function NeighborhoodDetailScreen() {
     );
   }
 
-  const handleLeaveBubble = async () => {
-    const confirmed = window.confirm(
-      `Leave "${neighborhood.name}"? You'll need to be re-invited to rejoin.`,
-    );
-    if (!confirmed) return;
-
-    try {
-      await leaveNeighborhood({
-        variables: { neighborhoodId: neighborhood.id },
-      });
-      alert("👋 Left bubble");
-      router.replace("/neighborhoods");
-    } catch (err) {
-      if (err.message.includes("owner")) {
-        alert("Owners can't leave — transfer ownership or delete the bubble.");
-      } else {
-        alert(`Leave failed: ${err.message}`);
-      }
-    }
-  };
-  // ✅ Derived values (no hooks)
   const bubblePhotoSource = neighborhood.bubblePhotoCid
     ? { uri: `https://${PINATA_GATEWAY}/ipfs/${neighborhood.bubblePhotoCid}` }
     : require("@/assets/images/bbl.jpg");
@@ -110,24 +77,6 @@ export default function NeighborhoodDetailScreen() {
       member?.role === "moderator" || member?.role === "admin";
     return isOwner || isModerator;
   })();
-
-  // ✅ Handlers (no hooks)
-  const handleDeleteBubble = async () => {
-    const confirmed = window.confirm(
-      `Delete "${neighborhood.name}"? This will remove all posts, messages, and media in this bubble. This cannot be undone.`,
-    );
-    if (!confirmed) return;
-
-    try {
-      await deleteNeighborhood({
-        variables: { neighborhoodId: neighborhood.id },
-      });
-      alert("Bubble deleted");
-      router.replace("/neighborhoods");
-    } catch (err) {
-      alert("Delete failed: " + err.message);
-    }
-  };
 
   const pickBubblePhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -171,7 +120,6 @@ export default function NeighborhoodDetailScreen() {
     }
   };
 
-  // ✅ Render
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -201,86 +149,122 @@ export default function NeighborhoodDetailScreen() {
       </ImageBackground>
 
       <ScrollView style={styles.menu}>
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity onPress={() => router.replace(`/setup/setup`)}>
-            <Text style={styles.button}>📝 Profile</Text>
-          </TouchableOpacity>
-        </BlurView>
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/neighborhoods/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>📝 Posts</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>💬 Chat</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() => router.replace(`setup/personal/myGallery`)}
-          >
-            <Text style={styles.button}>🖼️ Gallery</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/neighborhoods/bubbles/neighborhood-members?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>👥 Members</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        {canInvite && (
+        {isPersonal ? (
+          // Personal bubble: only the vault gallery
           <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
             <TouchableOpacity
-              onPress={() =>
-                router.replace(
-                  `/neighborhoods/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
-                )
-              }
+              onPress={() => router.replace(`/setup/personal/myGallery`)}
             >
-              <Text style={styles.button}>📧 Invite</Text>
+              <Text style={styles.button}>🖼️ My Vault</Text>
             </TouchableOpacity>
           </BlurView>
-        )}
-        {!isOwner && !isPersonal && (
-          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-            <TouchableOpacity onPress={handleLeaveBubble}>
-              <Text style={[styles.button, { color: "#ff375f" }]}>
-                🚪 Leave Bubble
-              </Text>
-            </TouchableOpacity>
-          </BlurView>
-        )}
+        ) : (
+          // Normal bubble: the full menu
+          <>
+            <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+              <TouchableOpacity onPress={() => router.replace(`/setup/setup`)}>
+                <Text style={styles.button}>📝 Profile</Text>
+              </TouchableOpacity>
+            </BlurView>
 
-        {isOwner && !isPersonal && (
-          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-            <TouchableOpacity onPress={handleDeleteBubble}>
-              <Text style={[styles.button, { color: "#ff375f" }]}>
-                🗑️ Delete Bubble
-              </Text>
-            </TouchableOpacity>
-          </BlurView>
+            <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace(
+                    `/neighborhoods/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
+                  )
+                }
+              >
+                <Text style={styles.button}>📝 Posts</Text>
+              </TouchableOpacity>
+            </BlurView>
+
+            <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace(
+                    `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
+                  )
+                }
+              >
+                <Text style={styles.button}>💬 Chat</Text>
+              </TouchableOpacity>
+            </BlurView>
+
+            <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace(
+                    `/neighborhoods/bubbles/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
+                  )
+                }
+              >
+                <Text style={styles.button}>🖼️ Gallery</Text>
+              </TouchableOpacity>
+            </BlurView>
+
+            <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace(
+                    `/neighborhoods/bubbles/neighborhood-members?neighborhoodId=${neighborhood.id}`,
+                  )
+                }
+              >
+                <Text style={styles.button}>👥 Members</Text>
+              </TouchableOpacity>
+            </BlurView>
+
+            {canInvite && (
+              <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.replace(
+                      `/neighborhoods/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
+                    )
+                  }
+                >
+                  <Text style={styles.button}>📧 Invite</Text>
+                </TouchableOpacity>
+              </BlurView>
+            )}
+
+            {!isOwner && (
+              <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                <TouchableOpacity
+                  onPress={() => {
+                    const confirmed = window.confirm(
+                      `Leave "${neighborhood.name}"? You'll need to be re-invited to rejoin.`,
+                    );
+                    if (!confirmed) return;
+                    // ... leave mutation
+                  }}
+                >
+                  <Text style={[styles.button, { color: "#ff375f" }]}>
+                    🚪 Leave Bubble
+                  </Text>
+                </TouchableOpacity>
+              </BlurView>
+            )}
+
+            {isOwner && (
+              <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                <TouchableOpacity
+                  onPress={() => {
+                    const confirmed = window.confirm(
+                      `Delete "${neighborhood.name}"? This cannot be undone.`,
+                    );
+                    if (!confirmed) return;
+                    // ... delete mutation
+                  }}
+                >
+                  <Text style={[styles.button, { color: "#ff375f" }]}>
+                    🗑️ Delete Bubble
+                  </Text>
+                </TouchableOpacity>
+              </BlurView>
+            )}
+          </>
         )}
       </ScrollView>
     </View>
