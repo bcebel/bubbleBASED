@@ -1,4 +1,4 @@
-// app/neighborhoods/invite-links.js
+// app/(tabs)/neighborhoods/bubbles/invite-links.js
 import React, { useState } from "react";
 import {
   View,
@@ -12,7 +12,10 @@ import {
   TextInput,
   Clipboard,
   Share,
+  Platform,
+  ImageBackground,
 } from "react-native";
+import { BlurView } from "expo-blur";
 import { useRouter, useLocalSearchParams, Link } from "expo-router";
 import { useQuery, useMutation } from "@apollo/client";
 import {
@@ -36,34 +39,22 @@ export default function InviteLinksScreen() {
   const [deleteInviteLink] = useMutation(DELETE_INVITE_LINK);
 
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [selectedLink, setSelectedLink] = useState(null);
 
-  // Create form state
   const [linkName, setLinkName] = useState("Invite Link");
   const [maxUses, setMaxUses] = useState("0");
   const [expiresInDays, setExpiresInDays] = useState("");
   const [role, setRole] = useState("member");
-  // app/neighborhoods/invite-links.js - Update handleCreateLink
+
   const handleCreateLink = async () => {
-    console.log("handleCreateLink called");
     try {
-      // Parse values
       const expiresInDaysValue = expiresInDays.trim();
       const maxUsesValue = parseInt(maxUses) || 0;
 
-      console.log("Parsed values:", {
-        expiresInDays: expiresInDaysValue,
-        maxUses: maxUsesValue,
-      });
-
-      // Validate maxUses
       if (maxUsesValue < 0) {
         Alert.alert("Error", "Max uses cannot be negative");
         return;
       }
 
-      // Prepare variables for GraphQL
       const variables = {
         neighborhoodId,
         name: linkName,
@@ -71,7 +62,6 @@ export default function InviteLinksScreen() {
         role,
       };
 
-      // Only add expiresInDays if it's a valid number > 0
       if (expiresInDaysValue !== "") {
         const days = parseInt(expiresInDaysValue);
         if (!isNaN(days) && days > 0) {
@@ -85,20 +75,15 @@ export default function InviteLinksScreen() {
         }
       }
 
-      console.log("Sending variables:", variables);
-
-      // Use update function to manually update the cache
-      const result = await createInviteLink({
-        variables: variables,
+      await createInviteLink({
+        variables,
         update: (cache, { data: { createInviteLink: newLink } }) => {
-          // Read the existing data from cache
           const existingData = cache.readQuery({
             query: GET_NEIGHBORHOOD_INVITE_LINKS,
             variables: { neighborhoodId },
           });
 
           if (existingData && existingData.neighborhoodInviteLinks) {
-            // Write back to cache with the new link added
             cache.writeQuery({
               query: GET_NEIGHBORHOOD_INVITE_LINKS,
               variables: { neighborhoodId },
@@ -111,7 +96,6 @@ export default function InviteLinksScreen() {
             });
           }
         },
-        // Also refetch to ensure we have the latest data
         refetchQueries: [
           {
             query: GET_NEIGHBORHOOD_INVITE_LINKS,
@@ -120,88 +104,109 @@ export default function InviteLinksScreen() {
         ],
       });
 
-      console.log("Create invite link result:", result);
-
       Alert.alert("Success", "Invite link created!");
       setIsCreateModalVisible(false);
       resetForm();
-
-      // Manually refetch to ensure UI is updated
       await refetch();
     } catch (error) {
       console.error("Error creating invite link:", error);
-      console.error(
-        "Error details:",
-        error.message,
-        error.graphQLErrors,
-        error.networkError,
-      );
       Alert.alert("Error", error.message || "Failed to create invite link");
     }
   };
 
-  const handleCopyLink = (url) => {
-    Clipboard.setString(url);
-    Alert.alert("Copied!", "Invite link copied to clipboard");
+  const handleCopyLink = async (url) => {
+    try {
+      if (
+        Platform.OS === "web" &&
+        typeof navigator !== "undefined" &&
+        navigator.clipboard &&
+        document.hasFocus()
+      ) {
+        await navigator.clipboard.writeText(url);
+        window.alert("Link copied to clipboard");
+        return;
+      }
+      Clipboard.setString(url);
+      Alert.alert("Copied!", "Invite link copied to clipboard");
+    } catch (err) {
+      if (Platform.OS === "web") {
+        window.prompt("Copy this link:", url);
+      }
+    }
   };
 
-const handleShareLink = async (url, name) => {
-  // Try the native share sheet first
-  if (typeof navigator !== "undefined" && navigator.share) {
+  const handleShareLink = async (url, name) => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: name, url });
+        return;
+      } catch (err) {
+        // user cancelled or share failed — fall through
+      }
+    }
     try {
-      await navigator.share({ title: name, url });
-      return;
+      if (
+        typeof navigator !== "undefined" &&
+        navigator.clipboard &&
+        document.hasFocus()
+      ) {
+        await navigator.clipboard.writeText(url);
+        window.alert("Link copied to clipboard");
+        return;
+      }
     } catch (err) {
-      // User cancelled or share failed — fall through to copy
+      console.warn("Clipboard write failed:", err.message);
     }
-  }
-
-  // Fall back to clipboard
-  try {
-    if (
-      typeof navigator !== "undefined" &&
-      navigator.clipboard &&
-      document.hasFocus()
-    ) {
-      await navigator.clipboard.writeText(url);
-      window.alert("Link copied to clipboard");
-      return;
+    if (Platform.OS === "web") {
+      window.prompt("Copy this link:", url);
+    } else {
+      Share.share({
+        message: `Join "${name}": ${url}`,
+        url,
+        title: name,
+      }).catch(() => {});
     }
-  } catch (err) {
-    console.warn("Clipboard write failed:", err.message);
-  }
+  };
 
-  // Last resort: show the URL so the user can copy it manually
-  window.prompt("Copy this link:", url);
-};
-  const handleDeleteLink = (linkId) => {
-    Alert.alert(
-      "Delete Invite Link",
-      "Are you sure you want to delete this invite link? This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteInviteLink({
-                variables: { linkId },
-                refetchQueries: [
-                  {
-                    query: GET_NEIGHBORHOOD_INVITE_LINKS,
-                    variables: { neighborhoodId },
-                  },
-                ],
-              });
-              Alert.alert("Success", "Invite link deleted");
-            } catch (error) {
-              Alert.alert("Error", error.message);
-            }
+  const handleDeleteLink = async (linkId) => {
+    const confirmed =
+      Platform.OS === "web"
+        ? window.confirm("Delete this invite link? This cannot be undone.")
+        : await new Promise((resolve) =>
+            Alert.alert(
+              "Delete Invite Link",
+              "Are you sure you want to delete this invite link? This cannot be undone.",
+              [
+                {
+                  text: "Cancel",
+                  style: "cancel",
+                  onPress: () => resolve(false),
+                },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: () => resolve(true),
+                },
+              ],
+            ),
+          );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteInviteLink({
+        variables: { linkId },
+        refetchQueries: [
+          {
+            query: GET_NEIGHBORHOOD_INVITE_LINKS,
+            variables: { neighborhoodId },
           },
-        },
-      ],
-    );
+        ],
+      });
+      Alert.alert("Success", "Invite link deleted");
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
   };
 
   const handleToggleLinkActive = async (link) => {
@@ -230,90 +235,96 @@ const handleShareLink = async (url, name) => {
     setRole("member");
   };
 
-  // Update the renderInviteLinkItem function to show all data
   const renderInviteLinkItem = ({ item }) => {
     const isExpired = item.expiresAt && new Date(item.expiresAt) < new Date();
     const isMaxUses = item.maxUses > 0 && item.uses >= item.maxUses;
     const isActive = item.isActive && !isExpired && !isMaxUses;
+    const url = item.url || `https://bubblebased.com/join/${item.code}`;
 
     return (
-      <View style={[styles.linkItem, !isActive && styles.disabledLinkItem]}>
-        <View style={styles.linkHeader}>
+      <BlurView
+        intensity={40}
+        tint="dark"
+        style={[styles.linkCard, !isActive && styles.disabledCard]}
+      >
+        <View style={styles.linkTop}>
           <Text style={styles.linkName}>{item.name}</Text>
-          <View style={styles.linkStatusContainer}>
+          <View style={styles.badges}>
             {!item.isActive && (
-              <Text style={styles.statusBadgeInactive}>Inactive</Text>
+              <View style={styles.badgeInactive}>
+                <Text style={styles.badgeText}>Off</Text>
+              </View>
             )}
             {isExpired && (
-              <Text style={styles.statusBadgeExpired}>Expired</Text>
+              <View style={styles.badgeExpired}>
+                <Text style={styles.badgeText}>Expired</Text>
+              </View>
             )}
             {isMaxUses && (
-              <Text style={styles.statusBadgeMaxUses}>Max Uses</Text>
+              <View style={styles.badgeMax}>
+                <Text style={styles.badgeText}>Maxed</Text>
+              </View>
             )}
-            <Text style={styles.linkRole}>{item.role}</Text>
+            <View style={styles.badgeRole}>
+              <Text style={styles.badgeText}>{item.role}</Text>
+            </View>
           </View>
         </View>
 
-        <Text style={styles.linkUrl} numberOfLines={1} selectable={true}>
-          {item.url || `https://bubblebased.com/join/${item.code}`}
-        </Text>
+        <View style={styles.urlPill}>
+          <Text style={styles.urlText} numberOfLines={1} selectable={true}>
+            bubblebased.com/join/{item.code}
+          </Text>
+          <TouchableOpacity
+            style={styles.urlCopyBtn}
+            onPress={() => handleCopyLink(url)}
+          >
+            <Text style={styles.urlCopyText}>Copy</Text>
+          </TouchableOpacity>
+        </View>
 
-        <Text style={styles.linkCode}>Code: {item.code}</Text>
-
-        <View style={styles.linkStats}>
-          <Text style={styles.linkStat}>
-            Uses: {item.uses}
-            {item.maxUses > 0 ? `/${item.maxUses}` : ""}
+        <View style={styles.statsRow}>
+          <Text style={styles.statChip}>
+            {item.uses}
+            {item.maxUses > 0 ? `/${item.maxUses}` : ""} uses
           </Text>
           {item.expiresAt && (
-            <Text style={styles.linkStat}>
-              Expires: {new Date(item.expiresAt).toLocaleDateString()}
+            <Text style={styles.statChip}>
+              Exp {new Date(item.expiresAt).toLocaleDateString()}
             </Text>
+          )}
+          {item.createdBy && (
+            <Text style={styles.statChip}>by {item.createdBy.username}</Text>
           )}
         </View>
 
-        {item.createdBy && (
-          <Text style={styles.createdBy}>
-            Created by: {item.createdBy.username}
-          </Text>
-        )}
-
-        <View style={styles.linkActions}>
+        <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() =>
-              handleCopyLink(
-                item.url || `https://bubblebased.com/join/${item.code}`,
-              )
-            }
+            style={styles.actionBtn}
+            onPress={() => handleShareLink(url, item.name)}
           >
-            <Text style={styles.actionButtonText}>Copy</Text>
+            <Text style={styles.actionBtnText}>Share</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() =>
-              handleShareLink(
-                item.url || `https://bubblebased.com/join/${item.code}`,
-                item.name,
-              )
-            }
-          >
-            <Text style={styles.actionButtonText}>Share</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
+            style={styles.actionBtn}
             onPress={() => handleToggleLinkActive(item)}
           >
-            <Text style={styles.actionButtonText}>
+            <Text style={styles.actionBtnText}>
               {item.isActive ? "Disable" : "Enable"}
             </Text>
           </TouchableOpacity>
 
-
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnDanger]}
+            onPress={() => handleDeleteLink(item.id)}
+          >
+            <Text style={[styles.actionBtnText, styles.actionBtnDangerText]}>
+              Delete
+            </Text>
+          </TouchableOpacity>
         </View>
-      </View>
+      </BlurView>
     );
   };
 
@@ -329,47 +340,64 @@ const handleShareLink = async (url, name) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-         <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
-              <TouchableOpacity style={styles.backButton}>
-                <Text style={styles.backButtonText}>← Back to Bubble</Text>
-              </TouchableOpacity>
-            </Link>
-        <Text style={styles.headerTitle}>Invite Links</Text>
-      </View>
-
-      <View style={styles.subHeader}>
-        <Text style={styles.subHeaderText}>
-          Create shareable links to invite people to your neighborhood
-        </Text>
-      </View>
-
-      <TouchableOpacity
-        style={styles.createButton}
-        onPress={() => setIsCreateModalVisible(true)}
+      <ImageBackground
+        source={require("@/assets/images/bbl.webp")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
       >
-        <Text style={styles.createButtonText}>+ Create New Invite Link</Text>
-      </TouchableOpacity>
+        <View style={styles.header}>
+          <Link
+            href={`/neighborhoods/bubbles/${neighborhoodId}`}
+            replace
+            asChild
+          >
+            <TouchableOpacity style={styles.backPill}>
+              <Text style={styles.backPillText}>← Back</Text>
+            </TouchableOpacity>
+          </Link>
 
-      {links.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>No invite links yet</Text>
-          <Text style={styles.emptySubtext}>
-            Create your first invite link to share with others
+          <Text style={styles.headerTitle}>Invite Links</Text>
+          <Text style={styles.headerSubtitle}>
+            Share a link to bring people into this bubble
           </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={links}
-          keyExtractor={(item) => item.id}
-          renderItem={renderInviteLinkItem}
-          style={styles.linksList}
-          refreshing={loading}
-          onRefresh={refetch}
-        />
-      )}
 
-      {/* Create Link Modal */}
+          <TouchableOpacity
+            style={styles.createButton}
+            onPress={() => setIsCreateModalVisible(true)}
+          >
+            <Text style={styles.createButtonText}>
+              + Create New Invite Link
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {links.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyIcon}>🔗</Text>
+            <Text style={styles.emptyTitle}>No invite links yet</Text>
+            <Text style={styles.emptySubtext}>
+              Create a shareable link and send it to anyone you want in this
+              bubble
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyCta}
+              onPress={() => setIsCreateModalVisible(true)}
+            >
+              <Text style={styles.emptyCtaText}>Create your first link</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <FlatList
+            data={links}
+            keyExtractor={(item) => item.id}
+            renderItem={renderInviteLinkItem}
+            contentContainerStyle={styles.listContent}
+            refreshing={loading}
+            onRefresh={refetch}
+          />
+        )}
+      </ImageBackground>
+
       <Modal
         visible={isCreateModalVisible}
         animationType="slide"
@@ -395,6 +423,7 @@ const handleShareLink = async (url, name) => {
                 value={linkName}
                 onChangeText={setLinkName}
                 placeholder="e.g., Team Invite, Community Link"
+                placeholderTextColor="#666"
               />
 
               <Text style={styles.inputLabel}>Max Uses (0 = unlimited)</Text>
@@ -404,6 +433,7 @@ const handleShareLink = async (url, name) => {
                 onChangeText={setMaxUses}
                 keyboardType="numeric"
                 placeholder="0"
+                placeholderTextColor="#666"
               />
 
               <Text style={styles.inputLabel}>Role for New Members</Text>
@@ -448,19 +478,6 @@ const handleShareLink = async (url, name) => {
               >
                 <Text style={styles.submitButtonText}>Create Invite Link</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.debugButton}
-                onPress={() => {
-                  console.log("Current data:", data);
-                  console.log("Links:", data?.neighborhoodInviteLinks);
-                  console.log(
-                    "Number of links:",
-                    data?.neighborhoodInviteLinks?.length,
-                  );
-                }}
-              >
-                <Text style={styles.debugButtonText}>Debug</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -473,270 +490,329 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#130720",
-    padding: 20,
+  },
+  backgroundImage: {
+    flex: 1,
   },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#130720",
   },
+
+  // Header
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 16,
   },
-  backButton: {
-    marginRight: 15,
+  backPill: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(0, 255, 255, 0.4)",
+    backgroundColor: "rgba(0, 255, 255, 0.08)",
+    marginBottom: 16,
   },
-  backButtonText: {
+  backPillText: {
     color: "#00ffff",
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: "600",
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#00ffff",
-    flex: 1,
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#F5F2FA",
+    marginBottom: 6,
   },
-  subHeader: {
-    marginBottom: 25,
-  },
-  subHeaderText: {
-    fontSize: 16,
-    color: "#888",
-  },
-  createButton: {
-    backgroundColor: "#00ffff",
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
+  headerSubtitle: {
+    fontSize: 15,
+    color: "#9CA3AF",
     marginBottom: 20,
   },
+  createButton: {
+    backgroundColor: "#FF0081",
+    paddingVertical: 14,
+    borderRadius: 24,
+    alignItems: "center",
+    marginBottom: 20,
+    shadowColor: "#FF0081",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
   createButtonText: {
-    color: "#130720",
+    color: "#fff",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "700",
   },
-  linksList: {
-    flex: 1,
+
+  // List
+  listContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 60,
   },
-  linkItem: {
-    backgroundColor: "#111",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 15,
+  linkCard: {
+    borderRadius: 16,
+    overflow: "hidden",
+    padding: 14,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "rgba(0, 255, 255, 0.2)",
+    backgroundColor: "rgba(89, 17, 85, 0.35)",
   },
-  disabledLinkItem: {
-    opacity: 0.7,
-    borderColor: "#555",
+  disabledCard: {
+    opacity: 0.5,
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
-  linkHeader: {
+  linkTop: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     marginBottom: 10,
   },
   linkName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#00ffff",
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#F5F2FA",
     flex: 1,
+    marginRight: 10,
   },
-  linkStatusContainer: {
+  badges: {
+    flexDirection: "row",
+    gap: 6,
+    flexWrap: "wrap",
+  },
+  badgeInactive: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  badgeExpired: {
+    backgroundColor: "rgba(255, 100, 100, 0.2)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  badgeMax: {
+    backgroundColor: "rgba(255, 165, 0, 0.2)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  badgeRole: {
+    backgroundColor: "rgba(0, 255, 255, 0.15)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  badgeText: {
+    color: "#F5F2FA",
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+
+  // URL pill
+  urlPill: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    borderRadius: 10,
+    paddingLeft: 12,
+    paddingRight: 4,
+    paddingVertical: 4,
+    marginBottom: 10,
+  },
+  urlText: {
+    flex: 1,
+    color: "#9CA3AF",
+    fontSize: 13,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+  },
+  urlCopyBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "rgba(0, 255, 255, 0.15)",
+  },
+  urlCopyText: {
+    color: "#00ffff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  // Stats
+  statsRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+    marginBottom: 12,
+  },
+  statChip: {
+    color: "#9CA3AF",
+    fontSize: 11,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+
+  // Actions
+  actionsRow: {
+    flexDirection: "row",
     gap: 8,
   },
-  statusBadgeInactive: {
-    backgroundColor: "#555",
-    color: "#FFF",
-    fontSize: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  statusBadgeExpired: {
-    backgroundColor: "#151159",
-    color: "#FFF",
-    fontSize: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  statusBadgeMaxUses: {
-    backgroundColor: "#FFA500",
-    color: "#FFF",
-    fontSize: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  linkRole: {
-    fontSize: 12,
-    color: "#00AA00",
-    backgroundColor: "#113300",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  linkUrl: {
-    fontSize: 14,
-    color: "#888",
-    marginBottom: 10,
-    fontFamily: "monospace",
-  },
-  linkStats: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
-  linkStat: {
-    fontSize: 12,
-    color: "#CCC",
-  },
-  linkActions: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  actionButton: {
+  actionBtn: {
     flex: 1,
-    backgroundColor: "#333",
-    padding: 10,
-    borderRadius: 6,
+    paddingVertical: 9,
+    borderRadius: 20,
     alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
-  actionButtonText: {
-    color: "#FFF",
-    fontSize: 14,
+  actionBtnText: {
+    color: "#F5F2FA",
+    fontSize: 13,
+    fontWeight: "600",
   },
-  deleteButton: {
-    backgroundColor: "#550000",
+  actionBtnDanger: {
+    backgroundColor: "rgba(255, 55, 95, 0.15)",
+    borderColor: "rgba(255, 55, 95, 0.4)",
   },
-  deleteButtonText: {
-    color: "#FF8888",
+  actionBtnDangerText: {
+    color: "#FF375F",
   },
+
+  // Empty state
   emptyState: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 40,
   },
-  emptyText: {
-    fontSize: 18,
-    color: "#FFF",
-    marginBottom: 10,
+  emptyIcon: {
+    fontSize: 56,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#F5F2FA",
+    marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: "#888",
+    color: "#9CA3AF",
     textAlign: "center",
+    marginBottom: 24,
+    maxWidth: 320,
   },
+  emptyCta: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    backgroundColor: "#FF0081",
+  },
+  emptyCtaText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+
+  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.8)",
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#111",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: "80%",
+    backgroundColor: "#1A0B2E",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: "85%",
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 12,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFF",
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#F5F2FA",
     flex: 1,
   },
   closeButton: {
     padding: 5,
   },
   closeButtonText: {
-    color: "#FFF",
+    color: "#F5F2FA",
     fontSize: 24,
   },
   modalBody: {
-    flex: 1,
+    paddingTop: 4,
   },
   inputLabel: {
-    fontSize: 16,
-    color: "#FFF",
+    fontSize: 14,
+    color: "#9CA3AF",
     marginBottom: 8,
-    marginTop: 15,
+    marginTop: 16,
+    fontWeight: "600",
   },
   textInput: {
-    backgroundColor: "#222",
-    color: "#FFF",
-    padding: 12,
-    borderRadius: 6,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    color: "#F5F2FA",
+    padding: 14,
+    borderRadius: 12,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "rgba(0, 255, 255, 0.2)",
   },
   roleButtons: {
     flexDirection: "row",
     gap: 10,
-    marginBottom: 20,
   },
   roleButton: {
     flex: 1,
-    backgroundColor: "#222",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
     padding: 12,
-    borderRadius: 6,
+    borderRadius: 12,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
   roleButtonSelected: {
-    backgroundColor: "#00ffff",
+    backgroundColor: "rgba(0, 255, 255, 0.15)",
     borderColor: "#00ffff",
   },
   roleButtonText: {
-    color: "#FFF",
+    color: "#F5F2FA",
     fontSize: 14,
   },
   roleButtonTextSelected: {
-    color: "#130720",
-    fontWeight: "bold",
+    color: "#00ffff",
+    fontWeight: "700",
   },
   submitButton: {
-    backgroundColor: "#00ffff",
+    backgroundColor: "#FF0081",
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 24,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 24,
   },
   submitButtonText: {
-    color: "#130720",
+    color: "#fff",
     fontSize: 16,
-    fontWeight: "bold",
-  },
-  // Add to styles
-  debugButton: {
-    backgroundColor: "#FF8800",
-    padding: 10,
-    borderRadius: 6,
-    marginBottom: 10,
-  },
-  debugButtonText: {
-    color: "#FFF",
-    textAlign: "center",
-  },
-  backButton: {
-    color: "#fff",
-  },
-  backButtonText: {
-    fontSize: 20,
-    color: "#fff",
-    padding: 12,
+    fontWeight: "700",
   },
 });
