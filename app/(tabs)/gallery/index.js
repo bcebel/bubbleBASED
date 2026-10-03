@@ -343,7 +343,7 @@ export default function GalleryScreen() {
     return (
       <>
         <Head>
-          <title>bubbleBASED - gallery</title>
+          <title>ebubbl - gallery</title>
           <meta
             name="description"
             content="🫧 Beautiful gallery of all media posted throughout your bubbles."
@@ -364,9 +364,9 @@ export default function GalleryScreen() {
           >
             <View style={styles.brandContainer}>
               <View style={styles.logoBadge}>
-                <Text style={styles.logoBadgeText}>bB</Text>
+                <Text style={styles.logoBadgeText}>e🫧</Text>
               </View>
-              <Text style={styles.brandTitle}>bubbleBASED</Text>
+              <Text style={styles.brandTitle}>ebubbl</Text>
             </View>
 
             <View style={styles.navLinks}>
@@ -407,7 +407,7 @@ export default function GalleryScreen() {
                 </View>
 
                 <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                  Media Gallery Powered by Viewers 🫧
+                  Welcome to ebubbl 🫧
                 </Text>
 
                 <Text style={styles.heroSub}>
@@ -425,9 +425,7 @@ export default function GalleryScreen() {
                       style={styles.primaryButton}
                       onPress={() => router.replace("/register")}
                     >
-                      <Text style={styles.actionButtonText}>
-                        Join bubbleBASED
-                      </Text>
+                      <Text style={styles.actionButtonText}>Join ebubbl</Text>
                     </TouchableOpacity>
                   </BlurView>
 
@@ -473,7 +471,7 @@ export default function GalleryScreen() {
                   </View>
 
                   <View style={styles.mockContentBox}>
-                    <Text style={styles.mockCodeText}>// bubbleBASED</Text>
+                    <Text style={styles.mockCodeText}>// ebubbl</Text>
                     <Text style={styles.mockCodeTextAccent}>
                       video: "shared"
                     </Text>
@@ -728,17 +726,17 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: "#FF0081",
+    backgroundColor: "#000",
     alignItems: "center",
     justifyContent: "center",
   },
   logoBadgeText: {
-    color: "#FFFFFF",
+    color: "#FFCC00",
     fontWeight: "800",
     fontSize: 18,
   },
   brandTitle: {
-    color: "#F5F2FA",
+    color: "#FFCC00",
     fontSize: 22,
     fontWeight: "800",
     letterSpacing: -0.5,

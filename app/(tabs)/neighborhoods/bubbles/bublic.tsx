@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
   ScrollView,
   Platform,
-  Pressable
+  Pressable,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useQuery, useMutation } from "@apollo/client";
@@ -28,10 +28,8 @@ import {
 } from "../../../graphql/queries";
 import WebTorrentMedia from "@/components/TorrentOnlyMedia";
 
-
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-
 
 function NavButton({ title }: { title: string }) {
   const [hovered, setHovered] = useState(false);
@@ -48,12 +46,11 @@ function NavButton({ title }: { title: string }) {
   );
 }
 
-
 export default function NeighborhoodsScreen() {
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
   const router = useRouter();
-    const isDesktop = width >= 768;
+  const isDesktop = width >= 768;
 
   // ✅ Login state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -61,7 +58,7 @@ export default function NeighborhoodsScreen() {
 
   useEffect(() => {
     const checkLogin = async () => {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem("token");
       setIsLoggedIn(!!token);
       setLoading(false);
     };
@@ -69,20 +66,21 @@ export default function NeighborhoodsScreen() {
   }, []);
 
   // ✅ Queries (skipped until logged in)
-  const { loading: loadingNeighborhoods, error, data, refetch } = useQuery(
-    GET_PUBLIC_BUBBLES,
-    {
-      skip: !isLoggedIn,
-      fetchPolicy: "cache-and-network",
-      nextFetchPolicy: "network-only",
-    }
-  );
+  const {
+    loading: loadingNeighborhoods,
+    error,
+    data,
+    refetch,
+  } = useQuery(GET_PUBLIC_BUBBLES, {
+    skip: !isLoggedIn,
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "network-only",
+  });
 
   const [joinNeighborhood] = useMutation(JOIN_NEIGHBORHOOD);
   const [leaveNeighborhood] = useMutation(LEAVE_NEIGHBORHOOD);
 
-
-const handleJoinNeighborhood = async (neighborhoodId) => {
+  const handleJoinNeighborhood = async (neighborhoodId) => {
     try {
       await joinNeighborhood({
         variables: { neighborhoodId },
@@ -112,8 +110,6 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
     }
   };
 
-  
-
   // 🚨 Loading state (only after login check)
   if (loading) return <ActivityIndicator size="large" style={styles.loading} />;
 
@@ -128,14 +124,14 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
             content="🫧  Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always."
           />
         </Head>
- 
-      <View style={styles.container}>
+
+        <View style={styles.container}>
           <ImageBackground
             source={require("@/assets/images/bbl.jpg")}
             style={styles.heroBubble}
             resizeMode="cover"
           />
-    
+
           {/* NAV HEADER */}
           <View
             style={[
@@ -149,12 +145,12 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
               </View>
               <Text style={styles.brandTitle}>bubbleBASED</Text>
             </View>
-    
+
             <View style={styles.navLinks}>
               <NavButton title="" />
               <NavButton title="" />
               <NavButton title="" />
-    
+
               <BlurView
                 intensity={50}
                 tint="dark"
@@ -169,7 +165,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
               </BlurView>
             </View>
           </View>
-    
+
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
@@ -177,7 +173,10 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
           >
             {/* HERO SECTION */}
             <View
-              style={[styles.heroSection, isDesktop && styles.heroSectionDesktop]}
+              style={[
+                styles.heroSection,
+                isDesktop && styles.heroSectionDesktop,
+              ]}
             >
               <View
                 style={[
@@ -190,42 +189,57 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                     Your Own Social Network
                   </Text>
                 </View>
-    
+
                 <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                  Make your own feed  🫧
+                  Make your own feed 🫧
                 </Text>
-     
+
                 <Text style={styles.heroSub}>
-                 "Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always.  Meet new people, or chill with your best friends.  All good.  Different bubbles for different parts of your life.  Assemble your perfect team. 
+                  "Make and join bubbles for whatever topic you would like!
+                  Private and public bubbles, private and public profiles, you
+                  decide what to share with who, always. Meet new people, or
+                  chill with your best friends. All good. Different bubbles for
+                  different parts of your life. Assemble your perfect team.
                 </Text>
-    
+
                 {/* ACTION BUTTONS (Login / Logout / Join) */}
                 <View style={styles.actionsRow}>
-                  <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <BlurView
+                    intensity={50}
+                    tint="dark"
+                    style={styles.bubbleGlass}
+                  >
                     <TouchableOpacity
                       style={styles.primaryButton}
                       onPress={() => router.replace("/register")}
                     >
-                      <Text style={styles.actionButtonText}>Join bubbleBASED</Text>
+                      <Text style={styles.actionButtonText}>Join ebubbl</Text>
                     </TouchableOpacity>
                   </BlurView>
-    
-                  <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+
+                  <BlurView
+                    intensity={50}
+                    tint="dark"
+                    style={styles.bubbleGlass}
+                  >
                     <TouchableOpacity
                       style={styles.secondaryButton}
                       onPress={() => router.replace("/login")}
                     >
-                      <Text style={styles.actionButtonText}>Log in to make one.</Text>
+                      <Text style={styles.actionButtonText}>
+                        Log in to make one.
+                      </Text>
                     </TouchableOpacity>
                   </BlurView>
-    
-                  <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-               
-                
-                  </BlurView>
+
+                  <BlurView
+                    intensity={50}
+                    tint="dark"
+                    style={styles.bubbleGlass}
+                  ></BlurView>
                 </View>
               </View>
-    
+
               {/* CODE / PEER STATUS CARD */}
               <View
                 style={[
@@ -233,7 +247,11 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                   isDesktop && styles.heroVisualDesktop,
                 ]}
               >
-                <BlurView intensity={30} tint="dark" style={styles.demoGlassCard}>
+                <BlurView
+                  intensity={30}
+                  tint="dark"
+                  style={styles.demoGlassCard}
+                >
                   {/* 1. WebTorrent Live Media Player */}
                   <View style={styles.mediaFrame}>
                     <WebTorrentMedia
@@ -251,18 +269,26 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                       <Text style={styles.peerBadgeText}></Text>
                     </View>
                   </View>
-    
+
                   {/* 2. Mock Terminal Status Box */}
                   <View style={styles.mockTerminalBox}>
                     <View style={styles.terminalHeader}>
-                      <View style={[styles.dot, { backgroundColor: "#FF5F56" }]} />
-                      <View style={[styles.dot, { backgroundColor: "#FFBD2E" }]} />
-                      <View style={[styles.dot, { backgroundColor: "#27C93F" }]} />
+                      <View
+                        style={[styles.dot, { backgroundColor: "#FF5F56" }]}
+                      />
+                      <View
+                        style={[styles.dot, { backgroundColor: "#FFBD2E" }]}
+                      />
+                      <View
+                        style={[styles.dot, { backgroundColor: "#27C93F" }]}
+                      />
                       <Text style={styles.terminalTitle}></Text>
                     </View>
                     <View style={styles.mockContentBox}>
-                      <Text style={styles.mockCodeText}>// bubbleBASED</Text>
-                      <Text style={styles.mockCodeTextAccent}>invitation: "based" </Text>
+                      <Text style={styles.mockCodeText}>// ebubbl</Text>
+                      <Text style={styles.mockCodeTextAccent}>
+                        invitation: "based"{" "}
+                      </Text>
                       <Text style={styles.mockCodeText}>privacy: "based" </Text>
                       <Text style={styles.mockCodeText}>context: "based" </Text>
                       <Text style={styles.mockCodeText}>bubble: "based" </Text>
@@ -271,25 +297,30 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                 </BlurView>
               </View>
             </View>
-    
+
             {/* MARGARET MEAD QUOTE */}
             <View style={styles.quoteSection}>
-              <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
+              <BlurView
+                intensity={40}
+                tint="dark"
+                style={styles.quoteGlassCard}
+              >
                 <Text style={styles.quoteText}>
                   "It's a beautiful day in the neighborhood"
                 </Text>
                 <Text style={styles.quoteAuthor}>— Mr. Rogers </Text>
               </BlurView>
             </View>
-    
+
             {/* FOOTER */}
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                © {new Date().getFullYear()} bubbleBASED. Click tabs for more info.
+                © {new Date().getFullYear()} bubbleBASED. Click tabs for more
+                info.
               </Text>
             </View>
           </ScrollView>
-          </View>
+        </View>
       </>
     );
   }
@@ -299,46 +330,43 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
 
   const neighborhoods = data?.discoverNeighborhoods || [];
 
- const renderItem = ({ item }) => {
-   return (
-     <Link href={`/neighborhoods/bubbles/${item.id}`} asChild>
-       <View style={styles.neighborhoodItem}>
-         <ImageBackground
-           source={
-             item.bubblePhotoCid
-               ? {
-                   uri: `https://${PINATA_GATEWAY}/ipfs/${item.bubblePhotoCid}`,
-                 }
-               : {
-                   uri: "/bbl.jpg",
-                 }
-           }
-           style={styles.neighborhoodCardImage}
-           resizeMode="cover"
-         >
-           <LinearGradient
-             colors={["rgba(0,0,0,0.9)", "rgba(0,0,0,0.1)"]}
-             style={styles.neighborhoodCardOverlay}
-           >
-             <Text style={styles.neighborhoodName}>{item.name}</Text>
-             <Text style={styles.neighborhoodType}>
-               {item.type} • {item.members?.length || 0} members
-             </Text>
-             <Text style={styles.neighborhoodDescription}>
-               About: {item.description}
-             </Text>
-           </LinearGradient>
-         </ImageBackground>
-       </View>
-     </Link>
-   );
+  const renderItem = ({ item }) => {
+    return (
+      <Link href={`/neighborhoods/bubbles/${item.id}`} asChild>
+        <View style={styles.neighborhoodItem}>
+          <ImageBackground
+            source={
+              item.bubblePhotoCid
+                ? {
+                    uri: `https://${PINATA_GATEWAY}/ipfs/${item.bubblePhotoCid}`,
+                  }
+                : {
+                    uri: "/bbl.jpg",
+                  }
+            }
+            style={styles.neighborhoodCardImage}
+            resizeMode="cover"
+          >
+            <LinearGradient
+              colors={["rgba(0,0,0,0.9)", "rgba(0,0,0,0.1)"]}
+              style={styles.neighborhoodCardOverlay}
+            >
+              <Text style={styles.neighborhoodName}>{item.name}</Text>
+              <Text style={styles.neighborhoodType}>
+                {item.type} • {item.members?.length || 0} members
+              </Text>
+              <Text style={styles.neighborhoodDescription}>
+                About: {item.description}
+              </Text>
+            </LinearGradient>
+          </ImageBackground>
+        </View>
+      </Link>
+    );
   };
 
   return (
     <View style={styles.container}>
-   
- 
-
       <View style={styles.actions}>
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
           <TouchableOpacity
@@ -382,8 +410,6 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
     </View>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   heroTextContainer: {

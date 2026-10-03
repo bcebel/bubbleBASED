@@ -107,7 +107,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
     return (
             <>
               <Head>
-                <title>bubbleBASED  bubbleBASE</title>
+                <title>ebubbl  home bubbl</title>
                 <meta
                   name="description"
                   content="🫧  Your own personal bubbleBASE.  A central hub in a decentralized world.  Enjoy all of the memories you have posted with others."
@@ -129,9 +129,9 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
         >
           <View style={styles.brandContainer}>
             <View style={styles.logoBadge}>
-              <Text style={styles.logoBadgeText}>bB</Text>
+              <Text style={styles.logoBadgeText}>e🫧</Text>
             </View>
-            <Text style={styles.brandTitle}>bubbleBASED</Text>
+            <Text style={styles.brandTitle}>ebubbl</Text>
           </View>
 
           <View style={styles.navLinks}>
@@ -176,11 +176,11 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
               </View>
 
               <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                Your Home Bubble Base  🫧
+                Welcome to ebubbl  🫧
               </Text>
 
               <Text style={styles.heroSub}>
-                The bubblebase is your home bubble base. Every post you've shared, every bubble you're in, every conversation — it all lands here. It's also where you control how you show up: what each bubble sees, what stays private, and what you share with the world. And if you want to add affiliate links to your profile bubbleBASED will share them throughout the app.
+                Your home bubbl.  It all lands here. It's also where you control how you show up: what each bubble sees, what stays private, and what you share with the world. And if you want to add affiliate links to your profile ebubbl will share them throughout the app.
               </Text>
 
               {/* ACTION BUTTONS (Login / Logout / Join) */}
@@ -191,7 +191,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                     onPress={() => router.replace("/register")}
                   >
                     <Text style={styles.actionButtonText}>
-                      Join bubbleBASED
+                      Join ebubbl
                     </Text>
                   </TouchableOpacity>
                 </BlurView>
@@ -250,7 +250,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                     <Text style={styles.terminalTitle}></Text>
                   </View>
                   <View style={styles.mockContentBox}>
-                    <Text style={styles.mockCodeText}>// bubbleBASED</Text>
+                    <Text style={styles.mockCodeText}>// ebubbl</Text>
                     <Text style={styles.mockCodeTextAccent}>
                       yours: "all of it"{" "}
                     </Text>
@@ -622,25 +622,25 @@ const styles = StyleSheet.create({
       alignItems: "center",
       gap: 12,
     },
-    logoBadge: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
-      backgroundColor: "#FF0081",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    logoBadgeText: {
-      color: "#FFFFFF",
-      fontWeight: "800",
-      fontSize: 18,
-    },
-    brandTitle: {
-      color: "#F5F2FA",
-      fontSize: 22,
-      fontWeight: "800",
-      letterSpacing: -0.5,
-    },
+   logoBadge: {
+    width: 46,
+    height: 46,
+    borderRadius: 20,
+    backgroundColor: "#000",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoBadgeText: {
+    color: "#FFCC00",
+    fontWeight: "800",
+    fontSize: 18,
+  },
+  brandTitle: {
+    color: "#F7D948",
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
     navLinks: {
       flexDirection: "row",
       alignItems: "center",

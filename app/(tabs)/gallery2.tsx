@@ -156,9 +156,7 @@ export default function GalleryScreen() {
                       style={styles.primaryButton}
                       onPress={() => router.replace("/register")}
                     >
-                      <Text style={styles.actionButtonText}>
-                        Join bubbleBASED
-                      </Text>
+                      <Text style={styles.actionButtonText}>Join ebubbl</Text>
                     </TouchableOpacity>
                   </BlurView>
 
@@ -224,7 +222,7 @@ export default function GalleryScreen() {
                       <Text style={styles.terminalTitle}></Text>
                     </View>
                     <View style={styles.mockContentBox}>
-                      <Text style={styles.mockCodeText}>// bubbleBASED</Text>
+                      <Text style={styles.mockCodeText}>// ebubbl</Text>
                       <Text style={styles.mockCodeTextAccent}>
                         video: "shared"{" "}
                       </Text>

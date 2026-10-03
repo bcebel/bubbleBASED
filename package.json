@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.12.6",
+    "@expo-google-fonts/comfortaa": "^0.4.2",
     "@expo/metro-runtime": "~57.0.15",
     "@filebase/sdk": "^1.0.6",
     "@ipld/car": "^5.4.0",
@@ -32,7 +33,7 @@
     "expo-constants": "~57.0.17",
     "expo-document-picker": "~57.0.1",
     "expo-file-system": "~57.0.7",
-    "expo-font": "~57.0.3",
+    "expo-font": "~57.0.4",
     "expo-haptics": "~57.0.3",
     "expo-image": "~57.0.4",
     "expo-image-picker": "~57.0.16",

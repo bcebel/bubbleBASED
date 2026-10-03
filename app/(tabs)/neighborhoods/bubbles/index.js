@@ -119,12 +119,13 @@ const handleScroll = (event) => {
         />
 
         <View style={[styles.navContainer, isDesktop ? styles.navDesktop : styles.navMobile]}>
-          <View style={styles.brandContainer}>
+        <View style={styles.brandContainer}>
             <View style={styles.logoBadge}>
-              <Text style={styles.logoBadgeText}>bB</Text>
+              <Text style={styles.logoBadgeText}>e🫧</Text>
             </View>
-            <Text style={styles.brandTitle}>bubbleBASED</Text>
+            <Text style={styles.brandTitle}>ebubbl</Text>
           </View>
+
 
           <View style={styles.navLinks}>
             <NavButton title="" />
@@ -149,7 +150,7 @@ const handleScroll = (event) => {
               <View style={styles.tagBadge}>
                 <Text style={styles.tagBadgeText}>Your Own Social Network</Text>
               </View>
-              <Text style={styles.heroTitle}>Make your own feed 🫧</Text>
+              <Text style={styles.heroTitle}>Welcome to ebubbl 🫧</Text>
               <Text style={styles.heroSub}>
                 "Make and join bubbles for whatever topic you would like! Private and public bubbles..."
               </Text>
@@ -159,7 +160,7 @@ const handleScroll = (event) => {
                     style={styles.primaryButton}
                     onPress={() => router.replace("/register")}
                   >
-                    <Text style={styles.actionButtonText}>Join bubbleBASED</Text>
+                    <Text style={styles.actionButtonText}>Join ebubbl</Text>
                   </TouchableOpacity>
                 </BlurView>
                 <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
@@ -206,7 +207,7 @@ const handleScroll = (event) => {
                                     <Text style={styles.terminalTitle}></Text>
                                   </View>
                                   <View style={styles.mockContentBox}>
-                                    <Text style={styles.mockCodeText}>// bubbleBASED</Text>
+                                    <Text style={styles.mockCodeText}>// ebubbl</Text>
                                     <Text style={styles.mockCodeTextAccent}>
                                       invitation: "BASED"{" "}
                                     </Text>
@@ -455,17 +456,21 @@ const styles = StyleSheet.create({
   },
   navMobile: { flexDirection: "column", gap: 16 },
   brandContainer: { flexDirection: "row", alignItems: "center", gap: 12 },
-  logoBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "#FF0081",
+   logoBadge: {
+    width: 46,
+    height: 46,
+    borderRadius: 20,
+    backgroundColor: "#fffff",
     alignItems: "center",
     justifyContent: "center",
   },
-  logoBadgeText: { color: "#FFFFFF", fontWeight: "800", fontSize: 18 },
+  logoBadgeText: {
+    color: "#FFCC00",
+    fontWeight: "800",
+    fontSize: 18,
+  },
   brandTitle: {
-    color: "#F5F2FA",
+    color: "#F7D948",
     fontSize: 22,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -638,7 +643,7 @@ const styles = StyleSheet.create({
     },
     mockCodeTextAccent: {
       fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-      color: "#10B981",
+      color: "#FF6EA9",
       fontSize: 14,
       fontWeight: "600",
     },

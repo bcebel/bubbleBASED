@@ -53,7 +53,7 @@ export default function HomeScreen() {
   return (
     <>
       <Head>
-        <title>bubbleBASED</title>
+        <title>ebubbl</title>
         <meta
           name="description"
           content="🫧  Private & public bubbles 🫧 where your content lives in context. No algorithms. Community ads. Just your people."
@@ -75,9 +75,9 @@ export default function HomeScreen() {
         >
           <View style={styles.brandContainer}>
             <View style={styles.logoBadge}>
-              <Text style={styles.logoBadgeText}>bB</Text>
+              <Text style={styles.logoBadgeText}>e🫧</Text>
             </View>
-            <Text style={styles.brandTitle}>bubbleBASED</Text>
+            <Text style={styles.brandTitle}>ebubbl</Text>
           </View>
 
           <View style={styles.navLinks}>
@@ -117,12 +117,12 @@ export default function HomeScreen() {
             >
               <View style={styles.tagBadge}>
                 <Text style={styles.tagBadgeText}>
-                  A Neighborhood on the Internet
+                  From the Global Village
                 </Text>
               </View>
 
               <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                Your people. Your stuff. Your bubble.  🫧
+                welcome to ebubbl 🫧
               </Text>
 
               <Text style={styles.heroSub}>
@@ -139,7 +139,7 @@ export default function HomeScreen() {
                     onPress={() => router.replace("/register")}
                   >
                     <Text style={styles.actionButtonText}>
-                      Join bubbleBASED
+                      Join ebubbl
                     </Text>
                   </TouchableOpacity>
                 </BlurView>
@@ -205,11 +205,11 @@ export default function HomeScreen() {
                     <Text style={styles.terminalTitle}></Text>
                   </View>
                   <View style={styles.mockContentBox}>
-                    <Text style={styles.mockCodeText}>// bubbleBASED</Text>
+                    <Text style={styles.mockCodeText}>// ebubbl</Text>
                     <Text style={styles.mockCodeTextAccent}>
-                      feel: "small"{" "}
+                      vibe: "chill"
                     </Text>
-                    <Text style={styles.mockCodeText}>people: "you know" </Text>
+                    <Text style={styles.mockCodeText}>people: "cool" </Text>
                     <Text style={styles.mockCodeText}>algorithm: "none" </Text>
                     <Text style={styles.mockCodeText}>bubble: "based" </Text>
                   </View>
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
 
   // Nav Header
   navContainer: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 14,
     paddingVertical: 18,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.1)",
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 48,
+    paddingHorizontal: 28,
   },
   navMobile: {
     flexDirection: "column",
@@ -298,20 +298,20 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   logoBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "#FF0081",
+    width: 46,
+    height: 46,
+    borderRadius: 20,
+    backgroundColor: "#000",
     alignItems: "center",
     justifyContent: "center",
   },
   logoBadgeText: {
-    color: "#FFFFFF",
+    color: "#FFCC00",
     fontWeight: "800",
     fontSize: 18,
   },
   brandTitle: {
-    color: "#F5F2FA",
+    color: "#F7D948",
     fontSize: 22,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
   },
   mockCodeTextAccent: {
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-    color: "#10B981",
+    color: "#F55C9C",
     fontSize: 14,
     fontWeight: "600",
   },

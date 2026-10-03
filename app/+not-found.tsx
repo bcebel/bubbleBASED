@@ -25,7 +25,7 @@ export default function NotFoundScreen() {
               <View style={[styles.dot, { backgroundColor: "#27C93F" }]} />
             </View>
             <View style={styles.terminalContent}>
-              <Text style={styles.codeText}>// bubbleBASED</Text>
+              <Text style={styles.codeText}>// ebubbl</Text>
               <Text style={styles.codeAccent}>circular: "logic" </Text>
               <Text style={styles.codeText}>logic: "circular" </Text>
               <Text style={styles.codeText}>404: "still loading" </Text>

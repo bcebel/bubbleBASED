@@ -5,7 +5,7 @@ import VerificationText from "../components/verification";
 export default function Root({ children }: PropsWithChildren) {
   const title = "BubbleBased 🫧";
   const description =
-    "Join bubblebased.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based.";
+    "Join ebubbl.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based.";
   const url = "https://bubblebased.com";
   const image = "https://bubblebased.com/bble.png";
 
@@ -280,7 +280,7 @@ window.WebTorrent = WebTorrent;
               color: "#20B2AA",
             }}
           >
-            🫧 BubbleBased 🫧
+            ebubbl
           </h1>
 
           <p style={{ fontSize: "1.2rem", color: "#ccc", maxWidth: "500px" }}>

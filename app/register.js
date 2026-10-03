@@ -144,7 +144,7 @@ const RegistrationScreen = () => {
       />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>Join bubbleBASED</Text>
+          <Text style={styles.title}>Join ebubbl</Text>
           <Text style={styles.subtitle}>
             Create your space in the digital community
           </Text>
