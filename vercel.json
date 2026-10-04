@@ -2,6 +2,10 @@
   "cleanUrls": true,
   "rewrites": [
     {
+  "source": "/_expo/:path*",
+  "destination": "/_expo/:path*"
+},
+    {
   "source": "/api/media/:path*",
   "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/media/:path*"
 },
@@ -16,15 +20,7 @@
   ],
   "headers": [
     {
-  "source": "/api/media/:path*",
-  "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }]
-},
-    {
-  "source": "/api/webseed/:path*",
-  "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }]
-},
-    {
-      "source": "/assets/(.*)",
+      "source": "/_expo/static/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -32,6 +28,15 @@
         }
       ]
     },
+    {
+      "source": "/api/media/:path*",
+      "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }]
+    },
+    {
+      "source": "/api/webseed/:path*",
+      "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }]
+    },
+
     {
       "source": "/webtorrent.min.js",
       "headers": [
@@ -41,21 +46,22 @@
         }
       ]
     },
-    {
-  "source": "/_expo/static/(.*)",
-  "headers": [
-    {
-      "key": "Cache-Control",
-      "value": "public, max-age=31536000, immutable"
-    }
-  ]
-},
+
     {
       "source": "/:path*.(png|jpg|jpeg|gif|webp|avif|ico)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=86400"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
         }
       ]
     }
