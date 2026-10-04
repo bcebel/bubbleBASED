@@ -376,171 +376,141 @@ export default function GalleryScreen() {
 
   // ─── LOGGED OUT SPLASH ─────────────────────────────────
   if (!isLoggedIn) {
-    return (
-      <>
+  return (
+      <View style={styles.container}>
         <Head>
-          <title>ebubbl - gallery</title>
+          <title>bubbleBASED - bubblehub</title>
           <meta
             name="description"
-            content="🫧 Beautiful gallery of all media posted throughout your bubbles."
+            content="🫧 Make and join bubbles for whatever topic you would like!"
           />
         </Head>
-        <View style={styles.splashContainer}>
-          <ImageBackground
-            source={require("@/assets/images/bbl.webp")}
-            style={styles.heroBubble}
-            resizeMode="cover"
-          />
+        <ImageBackground
+          source={require("@/assets/images/bbl.jpg")}
+          style={styles.heroBubble}
+          resizeMode="cover"
+        />
 
-          <View
-            style={[
-              styles.navContainer,
-              isDesktop ? styles.navDesktop : styles.navMobile,
-            ]}
-          >
-            <View style={styles.brandContainer}>
-              <View style={styles.logoBadge}>
-                <Text style={styles.logoBadgeText}>e🫧</Text>
-              </View>
-              <Text style={styles.brandTitle}>ebubbl</Text>
+        <View style={[styles.navContainer, isDesktop ? styles.navDesktop : styles.navMobile]}>
+        <View style={styles.brandContainer}>
+            <View style={styles.logoBadge}>
+              <Text style={styles.logoBadgeText}>e🫧</Text>
             </View>
-
-            <View style={styles.navLinks}>
-              <BlurView
-                intensity={50}
-                tint="dark"
-                style={styles.bubbleGlassCompact}
-              >
-                <TouchableOpacity
-                  style={styles.navActionButton}
-                  onPress={() => router.replace("/login")}
-                >
-                  <Text style={styles.navActionButtonText}>Sign In</Text>
-                </TouchableOpacity>
-              </BlurView>
-            </View>
+            <Text style={styles.brandTitle}>ebubbl</Text>
           </View>
 
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <View
-              style={[
-                styles.heroSection,
-                isDesktop && styles.heroSectionDesktop,
-              ]}
-            >
-              <View
-                style={[
-                  styles.heroTextContainer,
-                  isDesktop && styles.heroTextDesktop,
-                ]}
+
+          <View style={styles.navLinks}>
+            <NavButton title="" />
+            <BlurView intensity={50} tint="dark" style={styles.bubbleGlassCompact}>
+              <TouchableOpacity
+                style={styles.navActionButton}
+                onPress={() => router.replace("/login")}
               >
-                <View style={styles.tagBadge}>
-                  <Text style={styles.tagBadgeText}>Peer-to-peer playback</Text>
-                </View>
+                <Text style={styles.navActionButtonText}>Sign In</Text>
+              </TouchableOpacity>
+            </BlurView>
+          </View>
+        </View>
 
-                <Text style={styles.heroTitle} role="heading" aria-level={1}>
-                  Welcome to ebubbl 🫧
-                </Text>
-
-                <Text style={styles.heroSub}>
-                  Instead of every video loading from a massive data center,
-                  users help host the content they're watching.
-                </Text>
-
-                <View style={styles.actionsRow}>
-                  <BlurView
-                    intensity={50}
-                    tint="dark"
-                    style={styles.bubbleGlass}
-                  >
-                    <TouchableOpacity
-                      style={styles.primaryButton}
-                      onPress={() => router.replace("/register")}
-                    >
-                      <Text style={styles.actionButtonText}>Join ebubbl</Text>
-                    </TouchableOpacity>
-                  </BlurView>
-
-                  <BlurView
-                    intensity={50}
-                    tint="dark"
-                    style={styles.bubbleGlass}
-                  >
-                    <TouchableOpacity
-                      style={styles.secondaryButton}
-                      onPress={() => router.replace("/login")}
-                    >
-                      <Text style={styles.actionButtonText}>
-                        Log in to see yours.
-                      </Text>
-                    </TouchableOpacity>
-                  </BlurView>
-                </View>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.heroSection, isDesktop && styles.heroSectionDesktop]}>
+            <View style={[styles.heroTextContainer, isDesktop && styles.heroTextDesktop]}>
+              <View style={styles.tagBadge}>
+                <Text style={styles.tagBadgeText}>Your Own Social Network</Text>
               </View>
-
-              <View
-                style={[
-                  styles.heroVisualCard,
-                  isDesktop && styles.heroVisualDesktop,
-                ]}
-              >
-                <BlurView
-                  intensity={30}
-                  tint="dark"
-                  style={styles.demoGlassCard}
-                >
-                  <View style={styles.mediaFrame}>
-                    <WebTorrentMedia
-                      media={{
-                        cid: "QmZd15VPt9KXtn9svRk77LrheBtu9Gkhdv9ALphug9C3L3",
-                        magnetLink:
-                          "magnet:?xt=urn:btih:b4496f8e52e074b5a233814b0cd83785211a1393&dn=video-QmZd15VPt9KXtn9svRk77LrheBtu9Gkhdv9ALphug9C3L3",
-                        fileName: "post_1789941383843.mp4w",
-                        fileType: "video",
-                      }}
-                      isFocused={true}
-                    />
-                  </View>
-
-                  <View style={styles.mockContentBox}>
-                    <Text style={styles.mockCodeText}>// ebubbl</Text>
-                    <Text style={styles.mockCodeTextAccent}>
-                      video: "shared"
-                    </Text>
-                    <Text style={styles.mockCodeText}>photo: "shared"</Text>
-                    <Text style={styles.mockCodeText}>network: "shared"</Text>
-                    <Text style={styles.mockCodeText}>bubble: "based"</Text>
-                  </View>
+              <Text style={styles.heroTitle}>Welcome to ebubbl 🫧</Text>
+              <Text style={styles.heroSub}>
+                "Make and join bubbles for whatever topic you would like! Private and public bubbles..."
+              </Text>
+              <View style={styles.actionsRow}>
+                <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <TouchableOpacity
+                    style={styles.primaryButton}
+                    onPress={() => router.replace("/register")}
+                  >
+                    <Text style={styles.actionButtonText}>Join ebubbl</Text>
+                  </TouchableOpacity>
+                </BlurView>
+                <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={() => router.replace("/login")}
+                  >
+                    <Text style={styles.actionButtonText}>Log in to make one.</Text>
+                  </TouchableOpacity>
                 </BlurView>
               </View>
             </View>
 
-            <View style={styles.quoteSection}>
-              <BlurView
-                intensity={40}
-                tint="dark"
-                style={styles.quoteGlassCard}
-              >
-                <Text style={styles.quoteText}>
-                  "The best thing about a picture is that it never changes, even
-                  when the people in it do."
-                </Text>
-                <Text style={styles.quoteAuthor}>— Andy Warhol</Text>
-              </BlurView>
-            </View>
-
-            <View style={styles.footerContainer}>
-              <Text style={styles.footerText}>
-                © {new Date().getFullYear()} bubbleBASED.
-              </Text>
-            </View>
-          </ScrollView>
-        </View>
-      </>
+            <View style={[styles.heroVisualCard, isDesktop && styles.heroVisualDesktop]}>
+              <BlurView intensity={30} tint="dark" style={styles.demoGlassCard}>
+                <View style={styles.mediaFramey}>
+                  <WebTorrentMedia
+    media={{
+      cid: "QmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj",
+      magnetLink: "magnet:?xt=urn:btih:a98117648438fd9089ccaba4a1285f16ff5189db&dn=image-QmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Fbubblebased.com%2Fapi%2Fwebseed%2FQmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj",
+      fileName: "post_1790983248629.jpg",
+      fileType: "image",
+    }}
+    isFocused={true}
+  />
+                  <View style={styles.peerBadge}>
+                                    <View style={styles.liveDot} />
+                                    <Text style={styles.peerBadgeText}></Text>
+                                  </View>
+                                </View>
+                
+                                {/* 2. Mock Terminal Status Box */}
+                                <View style={styles.mockTerminalBox}>
+                                  <View style={styles.terminalHeader}>
+                                    <View
+                                      style={[styles.dot, { backgroundColor: "#FF5F56" }]}
+                                    />
+                                    <View
+                                      style={[styles.dot, { backgroundColor: "#FFBD2E" }]}
+                                    />
+                                    <View
+                                      style={[styles.dot, { backgroundColor: "#27C93F" }]}
+                                    />
+                                    <Text style={styles.terminalTitle}></Text>
+                                  </View>
+                                  <View style={styles.mockContentBox}>
+                                    <Text style={styles.mockCodeText}>// ebubbl</Text>
+                                    <Text style={styles.mockCodeTextAccent}>
+                                      invitation: "BASED"{" "}
+                                    </Text>
+                                    <Text style={styles.mockCodeText}>privacy: "BASED" </Text>
+                                    <Text style={styles.mockCodeText}>context: "BASED" </Text>
+                                    <Text style={styles.mockCodeText}>bubble: "BASED" </Text>
+                                  </View>
+                                </View>
+                              </BlurView>
+                            </View>
+                          </View>
+                
+                          {/* MARGARET MEAD QUOTE */}
+                          <View style={styles.quoteSection}>
+                            <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
+                              <Text style={styles.quoteText}>
+                               "The revolution will not be televised"
+                              </Text>
+                              <Text style={styles.quoteAuthor}>— Gil Scott-Heron</Text>
+                            </BlurView>
+                          </View>
+                
+                          {/* FOOTER */}
+                          <View style={styles.footerContainer}>
+                            <Text style={styles.footerText}>
+                              © {new Date().getFullYear()} bubbleBASED.  Click tabs for more info.
+                            </Text>
+                          </View>
+        </ScrollView>
+      </View>
     );
   }
 
@@ -898,6 +868,25 @@ const styles = StyleSheet.create({
   },
 
   // Visual card
+  neighborhoodCardImage: {
+    width: "100%",
+    aspectRatio: 1,
+    overflow: "scroll",
+    justifyContent: "flex-end",
+    borderWidth: 2,
+    borderColor: "#008888",
+    borderRadius: 48,
+  },
+  neighborhoodCardOverlay: { flex: 1, borderRadius: 48, aspectRatio: 1 },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 20,
+    justifyContent: "center",
+    paddingBottom: 120,
+  },
+  gridItem: { width: "100%" },
+  gridItemWide: { width: "30%" },
   heroVisualCard: {
     width: "100%",
     backgroundColor: "rgba(19, 23, 31, 0.8)",
@@ -907,88 +896,40 @@ const styles = StyleSheet.create({
     padding: 16,
     minHeight: 200,
   },
-  heroVisualDesktop: {
+  heroVisualDesktop: { flex: 1, maxWidth: 480 },
+  mediaFrame: { borderRadius: 12, overflow: "hidden" },
+  visualCardInner: {
     flex: 1,
-    maxWidth: 480,
-  },
-  demoGlassCard: {
-    flex: 1,
-    borderRadius: 12,
-    overflow: "hidden",
-    padding: 12,
-    backgroundColor: "rgba(13, 16, 23, 0.85)",
-  },
-  mediaFrame: {
-    width: "100%",
-    height: 180,
-    borderRadius: 8,
-    overflow: "hidden",
-    backgroundColor: "#000",
-    marginBottom: 12,
-  },
-  peerBadge: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#10B981",
-  },
-  peerBadgeText: {
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  mockTerminalBox: {
     backgroundColor: "#0D1017",
-    borderRadius: 8,
-    overflow: "hidden",
+    borderRadius: 10,
+    padding: 16,
   },
-  terminalHeader: {
+  visualCardHeader: {
     flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    gap: 6,
-  },
-  terminalTitle: {
-    color: "#6B7280",
-    fontSize: 11,
-    marginLeft: 6,
+    gap: 8,
+    marginBottom: 20,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   mockContentBox: {
-    padding: 10,
-    gap: 4,
+    gap: 12,
   },
   mockCodeText: {
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     color: "#6B7280",
-    fontSize: 13,
+    fontSize: 14,
   },
   mockCodeTextAccent: {
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-    color: "#10B981",
-    fontSize: 13,
+    color: "#FF6EA9",
+    fontSize: 14,
     fontWeight: "600",
   },
 
-  // Quote
+  // Quote Section
   quoteSection: {
     paddingHorizontal: 24,
     paddingVertical: 40,
