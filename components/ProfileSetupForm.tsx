@@ -53,6 +53,7 @@ const UPDATE_PROFILE = gql`
         id
         url
         title
+        description
         clicks
         imageUrl
       }

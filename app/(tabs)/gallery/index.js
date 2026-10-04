@@ -174,7 +174,7 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused }) => {
 };
 
 // ─── BUBBLE CAROUSEL ─────────────────────────────────────
-function BubbleCarousel({ posts }) {
+function BubbleCarousel({ posts, ad }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef(null);
 
@@ -215,8 +215,18 @@ function BubbleCarousel({ posts }) {
         });
       }
     }
+
+    // Insert one ad at position 4, only if the bubble has enough content
+    if (ad && items.length >= 6) {
+      items.splice(4, 0, {
+        isAd: true,
+        id: `ad-${ad.id}`,
+        ad,
+      });
+    }
+
     return items;
-  }, [posts]);
+  }, [posts, ad]);
 
   const handleScroll = (e) => {
     const newIndex = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);
@@ -247,12 +257,30 @@ function BubbleCarousel({ posts }) {
         {mediaItems.map((item, index) => {
           const isFocused = index === activeIndex;
           const isAlmostFocused = Math.abs(index - activeIndex) <= 3;
-          return (
-            <View
-              key={`${item.id}-${index}`}
-              style={{ width: CARD_WIDTH, height: CAROUSEL_HEIGHT }}
-            >
-              {item.isTextOnly ? (
+
+          // ─── AD CARD ───
+          if (item.isAd) {
+            return (
+              <View
+                key={`${item.id}-${index}`}
+                style={{
+                  width: CARD_WIDTH,
+                  height: CAROUSEL_HEIGHT,
+                  padding: 8,
+                }}
+              >
+                <AdMessage ad={item.ad} />
+              </View>
+            );
+          }
+
+          // ─── TEXT-ONLY CARD ───
+          if (item.isTextOnly) {
+            return (
+              <View
+                key={`${item.id}-${index}`}
+                style={{ width: CARD_WIDTH, height: CAROUSEL_HEIGHT }}
+              >
                 <View style={styles.textPostContainer}>
                   <ScrollView
                     contentContainerStyle={styles.textScrollContent}
@@ -266,20 +294,28 @@ function BubbleCarousel({ posts }) {
                     </Text>
                   </View>
                 </View>
-              ) : (
-                <View style={{ flex: 1, width: "100%", height: "100%" }}>
-                  <MediaDisplay
-                    item={item}
-                    isFocused={isFocused}
-                    isAlmostFocused={isAlmostFocused}
-                  />
-                  <View style={styles.mediaFooter}>
-                    <Text style={styles.mediaFooterText}>
-                      🫧 {item.author?.username || "unknown"}
-                    </Text>
-                  </View>
+              </View>
+            );
+          }
+
+          // ─── MEDIA CARD ───
+          return (
+            <View
+              key={`${item.id}-${index}`}
+              style={{ width: CARD_WIDTH, height: CAROUSEL_HEIGHT }}
+            >
+              <View style={{ flex: 1, width: "100%", height: "100%" }}>
+                <MediaDisplay
+                  item={item}
+                  isFocused={isFocused}
+                  isAlmostFocused={isAlmostFocused}
+                />
+                <View style={styles.mediaFooter}>
+                  <Text style={styles.mediaFooterText}>
+                    🫧 {item.author?.username || "unknown"}
+                  </Text>
                 </View>
-              )}
+              </View>
             </View>
           );
         })}
@@ -541,7 +577,10 @@ export default function GalleryScreen() {
                     {neighborhood.type}
                   </Text>
                 </View>
-                <BubbleCarousel posts={posts} />
+                <BubbleCarousel
+                  posts={posts}
+                  ad={adData?.randomAffiliateLink}
+                />
               </View>
             );
           })

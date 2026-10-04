@@ -6,139 +6,159 @@ import {
   TouchableOpacity,
   StyleSheet,
   Linking,
-  Alert,
   Platform,
 } from "react-native";
-import { Image } from "expo-image"; // 👈 Swap this in
+import { Image } from "expo-image";
 
-// Inside your AdMessage return:
-
-interface AdProps {
-  ad: {
-    id: string;
-    url: string;
-    title: string;
-    description?: string;
-    imageUrl?: string; // ← Now this exists!
-    clicks?: number;
-  };
-}
-
-export default function AdMessage({ ad }: AdProps) {
+export default function AdMessage({ ad, style }) {
   const handlePress = async () => {
     try {
-      if (!ad.url) {
-        Alert.alert("Error", "No link available");
-        return;
-      }
-
-      console.log("Opening affiliate link:", ad.url);
+      if (!ad.url) return;
       if (Platform.OS === "web") {
-        // On web, open in new tab with no referrer
-        const newWindow = window.open(ad.url, "_blank", "noopener,noreferrer");
-        if (newWindow) newWindow.opener = null;
+        const w = window.open(ad.url, "_blank", "noopener,noreferrer");
+        if (w) w.opener = null;
       } else {
-        // On mobile, use Linking
         await Linking.openURL(ad.url);
       }
-    } catch (error) {
-      console.error("Failed to open link:", error);
-      Alert.alert("Error", "Could not open link");
+    } catch (err) {
+      console.error("Failed to open link:", err);
     }
   };
 
+  const domain = (() => {
+    try {
+      return new URL(ad.url).hostname.replace(/^www\./, "");
+    } catch {
+      return "";
+    }
+  })();
+
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={handlePress}
-      activeOpacity={0.7}
-    >
+    <View style={[styles.container, style]}>
+      <View style={styles.badge}>
+        <Text style={styles.badgeText}>SPONSOR</Text>
+      </View>
+
       {ad.imageUrl ? (
-<Image
-  source={{ uri: ad.imageUrl }}
-  style={styles.image}
-  contentFit="cover" 
-  transition={200} 
-  cachePolicy="memory-disk"
-/>
+        <Image
+          source={{ uri: ad.imageUrl }}
+          style={styles.image}
+          contentFit="contain"
+          transition={200}
+          cachePolicy="memory-disk"
+        />
       ) : (
         <View style={styles.imagePlaceholder}>
-          <Text style={styles.placeholderText}>Ad</Text>
+          <Text style={styles.placeholderText}>📢</Text>
         </View>
       )}
 
       <View style={styles.content}>
-    
-      
-          <Text style={styles.defaultDescription}>
-            Visit our partner's website
+        <Text style={styles.title} numberOfLines={2}>
+          {ad.title || "Sponsored Link"}
+        </Text>
+        {domain ? (
+          <Text style={styles.domain} numberOfLines={1}>
+            {domain}
           </Text>
-      
-
+        ) : null}
         <View style={styles.footer}>
-          <Text style={styles.cta}>Visit Partner Site →</Text>
+          <TouchableOpacity
+            style={styles.visitButton}
+            onPress={handlePress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.cta}>Visit →</Text>
+          </TouchableOpacity>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#1C0A2E",
-    borderLeftWidth: 4,
-    borderRadius: 8,
-    marginVertical: 4,
+    backgroundColor: "rgba(89, 17, 85, 0.4)",
+    borderWidth: 1,
+    borderColor: "rgba(0, 255, 255, 0.2)",
+    borderRadius: 12,
     overflow: "hidden",
-    maxWidth: 500,
-    alignSelf: "flex-start",
-    width: "90%",
+    width: "100%",
+    height: "100%",
+    alignSelf: "stretch",
+    position: "relative",
+  },
+  badge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: "rgba(0, 255, 255, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(0, 255, 255, 0.4)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    zIndex: 5,
+  },
+  badgeText: {
+    color: "#00ffff",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1.2,
   },
   image: {
-    width: 200,
-    height: 200,
-    borderRadius: 10,
+    width: "100%",
+    height: "55%", // ← was 65%
+    backgroundColor: "#130720",
   },
   imagePlaceholder: {
     width: "100%",
-    height: 150,
-    backgroundColor: "#130720ff",
+    height: "55%", // ← was 65%
+    backgroundColor: "#130720",
     justifyContent: "center",
     alignItems: "center",
   },
   placeholderText: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 64,
   },
   content: {
-    padding: 12,
+    flex: 1,
+    padding: 20,
+    justifyContent: "space-between",
+    minHeight: 120, // ← ensures the footer has room
   },
   title: {
     color: "#F5F2FA",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 6,
   },
-  description: {
-    color: "#cccccc",
-    fontSize: 14,
-    marginBottom: 8,
-    lineHeight: 18,
-  },
-  defaultDescription: {
-    color: "#888888",
-    fontSize: 14,
-    marginBottom: 8,
-    fontStyle: "italic",
+  domain: {
+    color: "#9CA3AF",
+    fontSize: 13,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
   footer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 12,
+  },
+  visitButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: "rgba(0, 255, 255, 0.15)",
+    borderWidth: 1.5,
+    borderColor: "#00ffff",
+    borderRadius: 24,
+    minWidth: 100,
+    alignItems: "center",
+    justifyContent: "center",
   },
   cta: {
-    fontWeight: "bold",
-    fontSize: 14,
+    color: "#00ffff",
+    fontWeight: "700",
+    fontSize: 15,
+    letterSpacing: 0.3,
   },
 });
