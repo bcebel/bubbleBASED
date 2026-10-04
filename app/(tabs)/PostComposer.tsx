@@ -403,6 +403,7 @@ const styles = StyleSheet.create({
   feed: {
     paddingHorizontal: 16,
     paddingBottom: 80,
+
   },
   postCard: {
     backgroundColor: "#1A0B2E",
@@ -430,6 +431,7 @@ const styles = StyleSheet.create({
     color: "#F5F2FA",
     fontSize: 15,
     marginBottom: 8,
+
   },
   postMedia: {
     marginTop: 8,

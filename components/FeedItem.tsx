@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     color: "#E0D8F0",
     fontSize: 15,
     lineHeight: 21,
-    marginBottom: 10,
+    margin: 15,
   },
   mediaContainer: {
     borderRadius: 8,
