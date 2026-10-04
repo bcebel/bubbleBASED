@@ -32,6 +32,27 @@ import GlobalScreen from "./global";
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 
+const BUBBLE_TYPE_COLORS = {
+  global: "#880088",   // pink — matches your accent
+  private: "#008888",    // cyan
+  public: "#FFCC00",    // the ebubbl yellow
+  personal: "#9CA3AF",  // gray, since personal is the vault
+};
+
+const BUBBLE_TYPE_BORDER_COLORS = {
+  global: "#880088",
+  private: "#008888",
+  public: "#FFCC00",
+  personal: "rgba(156, 163, 175, 0.4)",
+};
+
+const BUBBLE_TYPE_BACKGROUNDS = {
+  global: "#880088",
+  private: "#008888",
+  public: "#FFCC00",
+  personal: "rgba(156, 163, 175, 0.3)",
+};
+
 function NavButton({ title }: { title: string }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -355,12 +376,23 @@ const handleScroll = (event) => {
       ) : (
         <View style={styles.grid}>
           {neighborhoods.map((item) => (
-            <View
-              key={item.id}
-              style={[styles.gridItem, isWide && styles.gridItemWide]}
-            >
-              {renderItem({ item })}
-            </View>
+    <View
+  key={item.id}
+  style={[
+    styles.gridItem,
+    isWide && styles.gridItemWide,
+    {
+      borderColor: BUBBLE_TYPE_BORDER_COLORS[item.type] || "rgba(0, 255, 255, 0.25)",
+      backgroundColor: BUBBLE_TYPE_BACKGROUNDS[item.type] || "rgba(89, 17, 85, 0.1)",
+      borderWidth: 3,
+      borderRadius: 48,
+      overflow: "hidden",
+      padding: 0,
+    },
+  ]}
+>
+  {renderItem({ item })}
+</View>
           ))}
         </View>
       )}
@@ -458,7 +490,7 @@ const styles = StyleSheet.create({
   },
   navMobile: { flexDirection: "column", gap: 16 },
   brandContainer: { flexDirection: "row", alignItems: "center", gap: 12 },
-   logoBadge: {
+  logoBadge: {
     width: 46,
     height: 46,
     borderRadius: 20,
@@ -555,7 +587,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   createButtonText: { color: "#ffffff", fontWeight: "bold", fontSize: 20 },
-  neighborhoodItem: { borderRadius: 48, marginBottom: 15, overflow: "hidden" },
+  neighborhoodItem: { borderRadius: 48, overflow: "hidden" },
   neighborhoodName: {
     fontSize: 26,
     fontWeight: "bold",
@@ -595,7 +627,6 @@ const styles = StyleSheet.create({
     overflow: "scroll",
     justifyContent: "flex-end",
     borderWidth: 2,
-    borderColor: "#008888",
     borderRadius: 48,
   },
   neighborhoodCardOverlay: { flex: 1, borderRadius: 48, aspectRatio: 1 },
@@ -619,75 +650,76 @@ const styles = StyleSheet.create({
   },
   heroVisualDesktop: { flex: 1, maxWidth: 480 },
   mediaFrame: { borderRadius: 12, overflow: "hidden" },
-     visualCardInner: {
-      flex: 1,
-      backgroundColor: "#0D1017",
-      borderRadius: 10,
-      padding: 16,
-    },
-    visualCardHeader: {
-      flexDirection: "row",
-      gap: 8,
-      marginBottom: 20,
-    },
-    dot: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-    },
-    mockContentBox: {
-      gap: 12,
-    },
-    mockCodeText: {
-      fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-      color: "#6B7280",
-      fontSize: 14,
-    },
-    mockCodeTextAccent: {
-      fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-      color: "#FF6EA9",
-      fontSize: 14,
-      fontWeight: "600",
-    },
+  visualCardInner: {
+    flex: 1,
+    backgroundColor: "#0D1017",
+    borderRadius: 10,
+    padding: 16,
+  },
+  visualCardHeader: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 20,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  mockContentBox: {
+    gap: 12,
+  },
+  mockCodeText: {
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    color: "#6B7280",
+    fontSize: 14,
+  },
+  mockCodeTextAccent: {
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    color: "#FF6EA9",
+    fontSize: 14,
+    fontWeight: "600",
+  },
   
-    // Quote Section
-    quoteSection: {
-      paddingHorizontal: 24,
-      paddingVertical: 40,
-      alignItems: "center",
-    },
-    quoteGlassCard: {
-      maxWidth: 700,
-      width: "100%",
-      padding: 32,
-      borderRadius: 24,
-      borderWidth: 1,
-      borderColor: "rgba(255, 255, 255, 0.15)",
-      backgroundColor: "rgba(255, 0, 129, 0.1)",
-    },
-    quoteText: {
-      color: "#F5F2FA",
-      fontSize: 20,
-      lineHeight: 30,
-      textAlign: "center",
-      fontStyle: "italic",
-      marginBottom: 16,
-    },
-    quoteAuthor: {
-      color: "#FF5CB0",
-      fontSize: 16,
-      fontWeight: "700",
-      textAlign: "right",
-    },
+  // Quote Section
+  quoteSection: {
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+    alignItems: "center",
+  },
+  quoteGlassCard: {
+    maxWidth: 700,
+    width: "100%",
+    padding: 32,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.15)",
+    backgroundColor: "rgba(255, 0, 129, 0.1)",
+  },
+  quoteText: {
+    color: "#F5F2FA",
+    fontSize: 20,
+    lineHeight: 30,
+    textAlign: "center",
+    fontStyle: "italic",
+    marginBottom: 16,
+  },
+  quoteAuthor: {
+    color: "#FF5CB0",
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "right",
+  },
   
-    // Footer
-    footerContainer: {
-      paddingTop: 20,
-      paddingBottom: 20,
-      alignItems: "center",
-    },
-    footerText: {
-      color: "#6B7280",
-      fontSize: 14,
-    },
+  // Footer
+  footerContainer: {
+    paddingTop: 20,
+    paddingBottom: 20,
+    alignItems: "center",
+  },
+  footerText: {
+    color: "#6B7280",
+    fontSize: 14,
+  },
+  neighborhoodCard: {},
 });

@@ -31,6 +31,26 @@ if (SCREEN_WIDTH > SCREEN_HEIGHT) {
   AUTHOR = 100;
 }
 
+const BUBBLE_TYPE_COLORS = {
+  private: "#ff0081", // pink — matches your accent
+  public: "#00ffff", // cyan
+  global: "#FFCC00", // the ebubbl yellow
+  personal: "#9CA3AF", // gray, since personal is the vault
+};
+
+const BUBBLE_TYPE_BORDER_COLORS = {
+  private: "rgba(0, 255, 255, 0.4)",
+  public: "rgba(255, 0, 129, 0.4)",
+  global: "rgba(255, 204, 0, 0.4)",
+  personal: "rgba(156, 163, 175, 0.4)",
+};
+
+const BUBBLE_TYPE_BACKGROUNDS = {
+  private: "rgba(0, 255, 255, 0.06)",
+  public: "rgba(255, 0, 129, 0.06)",
+  global: "rgba(255, 204, 0, 0.08)",
+  personal: "rgba(156, 163, 175, 0.06)",
+};
 // ─── NAV BUTTON (used in the splash) ─────────────────────
 function NavButton({ title }) {
   const [hovered, setHovered] = useState(false);
@@ -557,14 +577,36 @@ export default function GalleryScreen() {
           visibleNeighborhoods.map((neighborhood) => {
             const posts = postsByNeighborhood[neighborhood.id] || [];
             return (
-              <View key={neighborhood.id} style={styles.neighborhoodCard}>
+              <View
+                key={neighborhood.id}
+                style={[
+                  styles.neighborhoodCard,
+                  {
+                    borderColor:
+                      BUBBLE_TYPE_BORDER_COLORS[neighborhood.type] ||
+                      "rgba(0, 255, 255, 0.25)",
+                    backgroundColor:
+                      BUBBLE_TYPE_BACKGROUNDS[neighborhood.type] ||
+                      "rgba(89, 17, 85, 0.1)",
+                  },
+                ]}
+              >
+                {" "}
                 <View style={styles.rowHeaderRow}>
                   <Text style={styles.neighborhoodTitle}>
                     🫧 {neighborhood.name}
                   </Text>
-                  <Text style={styles.neighborhoodTypeBadge}>
+                  <Text
+                    style={[
+                      styles.neighborhoodTypeBadge,
+                      {
+                        color:
+                          BUBBLE_TYPE_COLORS[neighborhood.type] || "#ff0081",
+                      },
+                    ]}
+                  >
                     {neighborhood.type}
-                  </Text>
+                  </Text>{" "}
                 </View>
                 <BubbleCarousel
                   posts={posts}
@@ -606,7 +648,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     padding: 5,
     marginBottom: 5,
-    borderColor: "rgba(0,255,255, .25)",
   },
   rowHeaderRow: {
     flexDirection: "row",
@@ -618,7 +659,6 @@ const styles = StyleSheet.create({
   neighborhoodTitle: { fontSize: 18, fontWeight: "700", color: "#ffffff" },
   neighborhoodTypeBadge: {
     fontSize: 11,
-    color: "#ff0081",
     fontWeight: "bold",
     backgroundColor: "rgba(89, 17, 85, 0.1)",
     paddingHorizontal: 8,
