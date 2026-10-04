@@ -117,7 +117,9 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
         <ImageBackground
           source={require("@/assets/images/bbl.jpg")}
           style={styles.heroBubble}
-          resizeMode="cover"
+            resizeMode="cover"
+                      fetchPriority="high"
+
         />
 
         {/* NAV HEADER */}

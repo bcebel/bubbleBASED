@@ -1,37 +1,42 @@
+
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
 } from "expo-router/react-navigation";
 import { useFonts } from "expo-font";
-import { Stack, usePathname } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { useEffect } from "react";
 import { ApolloProviderWrapper } from "../context/apolloProvider";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Platform, View } from "react-native";
+import Head from "expo-router/head";
+
+// Correct import pattern for Vercel on Expo Web
 import { inject } from "@vercel/analytics";
-import  Head  from "expo-router/head";
+import { injectSpeedInsights } from "@vercel/speed-insights";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const pathname = usePathname();
-
-  if (typeof window !== "undefined") {
-    import("@vercel/analytics").then(({ inject }) => inject());
-  }
-
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [loaded] = useFonts({
-    Montserrat: require("../assets/fonts/Montserrat-Medium.ttf"),
-  });
 
+  // ⚡ Optimization: Use web-optimized formats for web if possible, or swap TTF out entirely
+ const [loaded] = useFonts({
+   Montserrat: require("../assets/fonts/Montserrat-Medium.ttf"),
+ });
 
+  useEffect(() => {
+    // ⚡ Optimization: Initialize Vercel Analytics only once on the client side
+    if (Platform.OS === "web") {
+      inject();
+      injectSpeedInsights();
+    }
+  }, []);
 
   useEffect(() => {
     if (loaded) {
@@ -39,9 +44,8 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
+  // ❌ REMOVED: if (!loaded) return null;
+  // This ensures Google Bot sees HTML immediately instead of a blank screen.
 
   return (
     <SafeAreaProvider>
@@ -51,23 +55,27 @@ export default function RootLayout() {
           name="description"
           content="Join bubblebased.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based."
         />
+        {/* ⚡ Optimization: Ensure fonts don't cause layout shifts */}
+        <style>{`
+          body {
+            font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+            font-display: swap; 
+          }
+        `}</style>
       </Head>
       <ApolloProviderWrapper>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          {/* ✅ Add semantic roles for the web */}
+        <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
           <View role="banner" style={{ flex: 0 }}>
             <StatusBar style={isDark ? "light" : "dark"} />
           </View>
 
+          {/* ⚡ Content renders immediately even if font is downloading */}
           <View role="main" style={{ flex: 1 }}>
             <Stack
               screenOptions={{
                 headerShown: false,
                 contentStyle: {
-                  backgroundColor:
-                    colorScheme === "dark" ? "#1C0A2E" : "#FFFFFF",
+                  backgroundColor: isDark ? "#1C0A2E" : "#FFFFFF",
                 },
               }}
             >

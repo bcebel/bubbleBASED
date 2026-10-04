@@ -116,6 +116,8 @@ const handleScroll = (event) => {
           source={require("@/assets/images/bbl.jpg")}
           style={styles.heroBubble}
           resizeMode="cover"
+                    fetchPriority="high"
+
         />
 
         <View style={[styles.navContainer, isDesktop ? styles.navDesktop : styles.navMobile]}>

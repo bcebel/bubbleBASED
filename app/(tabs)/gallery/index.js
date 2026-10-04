@@ -377,141 +377,160 @@ export default function GalleryScreen() {
   // ─── LOGGED OUT SPLASH ─────────────────────────────────
   if (!isLoggedIn) {
   return (
-      <View style={styles.container}>
-        <Head>
-          <title>bubbleBASED - bubblehub</title>
-          <meta
-            name="description"
-            content="🫧 Make and join bubbles for whatever topic you would like!"
-          />
-        </Head>
-        <ImageBackground
-          source={require("@/assets/images/bbl.jpg")}
-          style={styles.heroBubble}
-          resizeMode="cover"
+    <View style={styles.container}>
+      <Head>
+        <title>bubbleBASED - bubblehub</title>
+        <meta
+          name="description"
+          content="🫧 Make and join bubbles for whatever topic you would like!"
         />
+      </Head>
+      <ImageBackground
+        source={require("@/assets/images/bbl.jpg")}
+        style={styles.heroBubble}
+        resizeMode="cover"
+        fetchPriority="high"
+      />
 
-        <View style={[styles.navContainer, isDesktop ? styles.navDesktop : styles.navMobile]}>
+      <View
+        style={[
+          styles.navContainer,
+          isDesktop ? styles.navDesktop : styles.navMobile,
+        ]}
+      >
         <View style={styles.brandContainer}>
-            <View style={styles.logoBadge}>
-              <Text style={styles.logoBadgeText}>e🫧</Text>
+          <View style={styles.logoBadge}>
+            <Text style={styles.logoBadgeText}>e🫧</Text>
+          </View>
+          <Text style={styles.brandTitle}>ebubbl</Text>
+        </View>
+
+        <View style={styles.navLinks}>
+          <NavButton title="" />
+          <BlurView
+            intensity={50}
+            tint="dark"
+            style={styles.bubbleGlassCompact}
+          >
+            <TouchableOpacity
+              style={styles.navActionButton}
+              onPress={() => router.replace("/login")}
+            >
+              <Text style={styles.navActionButtonText}>Sign In</Text>
+            </TouchableOpacity>
+          </BlurView>
+        </View>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View
+          style={[styles.heroSection, isDesktop && styles.heroSectionDesktop]}
+        >
+          <View
+            style={[
+              styles.heroTextContainer,
+              isDesktop && styles.heroTextDesktop,
+            ]}
+          >
+            <View style={styles.tagBadge}>
+              <Text style={styles.tagBadgeText}>Your Own Social Network</Text>
             </View>
-            <Text style={styles.brandTitle}>ebubbl</Text>
+            <Text style={styles.heroTitle}>Welcome to ebubbl 🫧</Text>
+            <Text style={styles.heroSub}>
+              "Make and join bubbles for whatever topic you would like! Private
+              and public bubbles..."
+            </Text>
+            <View style={styles.actionsRow}>
+              <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={() => router.replace("/register")}
+                >
+                  <Text style={styles.actionButtonText}>Join ebubbl</Text>
+                </TouchableOpacity>
+              </BlurView>
+              <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={() => router.replace("/login")}
+                >
+                  <Text style={styles.actionButtonText}>
+                    Log in to make one.
+                  </Text>
+                </TouchableOpacity>
+              </BlurView>
+            </View>
           </View>
 
+          <View
+            style={[
+              styles.heroVisualCard,
+              isDesktop && styles.heroVisualDesktop,
+            ]}
+          >
+            <BlurView intensity={30} tint="dark" style={styles.demoGlassCard}>
+              <View style={styles.mediaFramey}>
+                <WebTorrentMedia
+                  media={{
+                    cid: "QmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj",
+                    magnetLink:
+                      "magnet:?xt=urn:btih:a98117648438fd9089ccaba4a1285f16ff5189db&dn=image-QmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Fbubblebased.com%2Fapi%2Fwebseed%2FQmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj",
+                    fileName: "post_1790983248629.jpg",
+                    fileType: "image",
+                  }}
+                  isFocused={true}
+                />
+                <View style={styles.peerBadge}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.peerBadgeText}></Text>
+                </View>
+              </View>
 
-          <View style={styles.navLinks}>
-            <NavButton title="" />
-            <BlurView intensity={50} tint="dark" style={styles.bubbleGlassCompact}>
-              <TouchableOpacity
-                style={styles.navActionButton}
-                onPress={() => router.replace("/login")}
-              >
-                <Text style={styles.navActionButtonText}>Sign In</Text>
-              </TouchableOpacity>
+              {/* 2. Mock Terminal Status Box */}
+              <View style={styles.mockTerminalBox}>
+                <View style={styles.terminalHeader}>
+                  <View style={[styles.dot, { backgroundColor: "#FF5F56" }]} />
+                  <View style={[styles.dot, { backgroundColor: "#FFBD2E" }]} />
+                  <View style={[styles.dot, { backgroundColor: "#27C93F" }]} />
+                  <Text style={styles.terminalTitle}></Text>
+                </View>
+                <View style={styles.mockContentBox}>
+                  <Text style={styles.mockCodeText}>// ebubbl</Text>
+                  <Text style={styles.mockCodeTextAccent}>
+                    invitation: "BASED"{" "}
+                  </Text>
+                  <Text style={styles.mockCodeText}>privacy: "BASED" </Text>
+                  <Text style={styles.mockCodeText}>context: "BASED" </Text>
+                  <Text style={styles.mockCodeText}>bubble: "BASED" </Text>
+                </View>
+              </View>
             </BlurView>
           </View>
         </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={[styles.heroSection, isDesktop && styles.heroSectionDesktop]}>
-            <View style={[styles.heroTextContainer, isDesktop && styles.heroTextDesktop]}>
-              <View style={styles.tagBadge}>
-                <Text style={styles.tagBadgeText}>Your Own Social Network</Text>
-              </View>
-              <Text style={styles.heroTitle}>Welcome to ebubbl 🫧</Text>
-              <Text style={styles.heroSub}>
-                "Make and join bubbles for whatever topic you would like! Private and public bubbles..."
-              </Text>
-              <View style={styles.actionsRow}>
-                <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-                  <TouchableOpacity
-                    style={styles.primaryButton}
-                    onPress={() => router.replace("/register")}
-                  >
-                    <Text style={styles.actionButtonText}>Join ebubbl</Text>
-                  </TouchableOpacity>
-                </BlurView>
-                <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-                  <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={() => router.replace("/login")}
-                  >
-                    <Text style={styles.actionButtonText}>Log in to make one.</Text>
-                  </TouchableOpacity>
-                </BlurView>
-              </View>
-            </View>
+        {/* MARGARET MEAD QUOTE */}
+        <View style={styles.quoteSection}>
+          <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
+            <Text style={styles.quoteText}>
+              "The revolution will not be televised"
+            </Text>
+            <Text style={styles.quoteAuthor}>— Gil Scott-Heron</Text>
+          </BlurView>
+        </View>
 
-            <View style={[styles.heroVisualCard, isDesktop && styles.heroVisualDesktop]}>
-              <BlurView intensity={30} tint="dark" style={styles.demoGlassCard}>
-                <View style={styles.mediaFramey}>
-                  <WebTorrentMedia
-    media={{
-      cid: "QmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj",
-      magnetLink: "magnet:?xt=urn:btih:a98117648438fd9089ccaba4a1285f16ff5189db&dn=image-QmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Fbubblebased.com%2Fapi%2Fwebseed%2FQmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj",
-      fileName: "post_1790983248629.jpg",
-      fileType: "image",
-    }}
-    isFocused={true}
-  />
-                  <View style={styles.peerBadge}>
-                                    <View style={styles.liveDot} />
-                                    <Text style={styles.peerBadgeText}></Text>
-                                  </View>
-                                </View>
-                
-                                {/* 2. Mock Terminal Status Box */}
-                                <View style={styles.mockTerminalBox}>
-                                  <View style={styles.terminalHeader}>
-                                    <View
-                                      style={[styles.dot, { backgroundColor: "#FF5F56" }]}
-                                    />
-                                    <View
-                                      style={[styles.dot, { backgroundColor: "#FFBD2E" }]}
-                                    />
-                                    <View
-                                      style={[styles.dot, { backgroundColor: "#27C93F" }]}
-                                    />
-                                    <Text style={styles.terminalTitle}></Text>
-                                  </View>
-                                  <View style={styles.mockContentBox}>
-                                    <Text style={styles.mockCodeText}>// ebubbl</Text>
-                                    <Text style={styles.mockCodeTextAccent}>
-                                      invitation: "BASED"{" "}
-                                    </Text>
-                                    <Text style={styles.mockCodeText}>privacy: "BASED" </Text>
-                                    <Text style={styles.mockCodeText}>context: "BASED" </Text>
-                                    <Text style={styles.mockCodeText}>bubble: "BASED" </Text>
-                                  </View>
-                                </View>
-                              </BlurView>
-                            </View>
-                          </View>
-                
-                          {/* MARGARET MEAD QUOTE */}
-                          <View style={styles.quoteSection}>
-                            <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
-                              <Text style={styles.quoteText}>
-                               "The revolution will not be televised"
-                              </Text>
-                              <Text style={styles.quoteAuthor}>— Gil Scott-Heron</Text>
-                            </BlurView>
-                          </View>
-                
-                          {/* FOOTER */}
-                          <View style={styles.footerContainer}>
-                            <Text style={styles.footerText}>
-                              © {new Date().getFullYear()} bubbleBASED.  Click tabs for more info.
-                            </Text>
-                          </View>
-        </ScrollView>
-      </View>
-    );
+        {/* FOOTER */}
+        <View style={styles.footerContainer}>
+          <Text style={styles.footerText}>
+            © {new Date().getFullYear()} bubbleBASED. Click tabs for more info.
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
   }
 
   // ─── LOGGED IN GALLERY ─────────────────────────────────

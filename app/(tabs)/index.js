@@ -64,6 +64,7 @@ export default function HomeScreen() {
           source={require("@/assets/images/bbl.webp")}
           style={styles.heroBubble}
           resizeMode="cover"
+          fetchPriority="high"
         />
 
         {/* NAV HEADER */}
