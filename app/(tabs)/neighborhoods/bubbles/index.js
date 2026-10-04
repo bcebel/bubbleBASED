@@ -384,7 +384,7 @@ const handleScroll = (event) => {
     {
       borderColor: BUBBLE_TYPE_BORDER_COLORS[item.type] || "rgba(0, 255, 255, 0.25)",
       backgroundColor: BUBBLE_TYPE_BACKGROUNDS[item.type] || "rgba(89, 17, 85, 0.1)",
-      borderWidth: 3,
+      borderWidth: 1,
       borderRadius: 48,
       overflow: "hidden",
       padding: 0,
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     overflow: "scroll",
     justifyContent: "flex-end",
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: 48,
   },
   neighborhoodCardOverlay: { flex: 1, borderRadius: 48, aspectRatio: 1 },

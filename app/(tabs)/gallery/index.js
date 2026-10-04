@@ -32,16 +32,16 @@ if (SCREEN_WIDTH > SCREEN_HEIGHT) {
 }
 
 const BUBBLE_TYPE_COLORS = {
-  private: "#ff0081", // pink — matches your accent
-  public: "#00ffff", // cyan
-  global: "#FFCC00", // the ebubbl yellow
+  global: "#ff0081", // pink — matches your accent
+  private: "#00ffff", // cyan
+  public: "#FFCC00", // the ebubbl yellow
   personal: "#9CA3AF", // gray, since personal is the vault
 };
 
 const BUBBLE_TYPE_BORDER_COLORS = {
-  private: "rgba(0, 255, 255, 0.4)",
-  public: "rgba(255, 0, 129, 0.4)",
-  global: "rgba(255, 204, 0, 0.4)",
+  private: "#008888",
+  global: "#880088",
+  public: "#FFCC00",
   personal: "rgba(156, 163, 175, 0.4)",
 };
 
