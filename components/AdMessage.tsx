@@ -77,16 +77,17 @@ export default function AdMessage({ ad, style }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "rgba(89, 17, 85, 0.4)",
-    borderWidth: 1,
-    borderColor: "rgba(0, 255, 255, 0.2)",
-    borderRadius: 12,
-    overflow: "hidden",
-    width: "100%",
-    height: "100%",
-    alignSelf: "stretch",
-    position: "relative",
+container: {
+  backgroundColor: "rgba(89, 17, 85, 0.4)",
+  borderWidth: 1,
+  borderColor: "rgba(0, 255, 255, 0.2)",
+  borderRadius: 12,
+  overflow: "hidden",
+  width: "100%",
+  minHeight: 220,     // ← natural floor for feed context
+  flex: 1,            // ← stretches in carousel context
+  position: "relative",
+
   },
   badge: {
     position: "absolute",

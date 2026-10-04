@@ -19,7 +19,7 @@ import { BlurView } from "expo-blur";
 import { useQuery, gql } from "@apollo/client";
 import WebTorrentMedia from "../../../components/WebTorrentMedia";
 import { Image } from "expo-image";
-import AdMessage from "../../../components/AdMessage";
+import AdMessage from "../../../components/RandomAd";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 let CARD_WIDTH = SCREEN_WIDTH - 32;
