@@ -28,8 +28,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 const API_BASE = "https://minnowspacebackend-e6635e46c3d0.herokuapp.com";
 
 const GET_ACTIVE_LIVESTREAMS = gql`
-  query GetActiveLivestreams {
-    streams(status: "live") {
+  query GetActiveLivestreams($neighborhoodId: ID) {
+    streams(status: "live", neighborhoodId: $neighborhoodId) {
       id
       title
       sessionId
