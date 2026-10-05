@@ -1,5 +1,5 @@
 // context/apolloProvider.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   ApolloClient,
   InMemoryCache,
@@ -30,7 +30,6 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
 const WS_URL = BACKEND_URL.replace(/^https?:\/\//, "");
 
-
 export async function clearApolloStore() {
   if (globalApolloClient) {
     // 1. Clear in-memory Apollo cache
@@ -43,9 +42,9 @@ export async function clearApolloStore() {
 export function useApolloClient() {
   const [client, setClient] = useState(null);
   const [cacheReady, setCacheReady] = useState(false);
- 
+
   useEffect(() => {
-     console.log("🔌 [WS] Connecting to:", `wss://${WS_URL}/graphql`);
+    console.log("🔌 [WS] Connecting to:", `wss://${WS_URL}/graphql`);
     const initializeClient = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
@@ -169,16 +168,24 @@ export function useApolloClient() {
   return cacheReady ? client : null;
 }
 
-export function ApolloProviderWrapper({ children }) {
-  const client = useApolloClient();
+function createSSRClient() {
+  return new ApolloClient({
+    // No link needed for static rendering — queries won't execute server-side
+    link: new HttpLink({
+      uri: `${process.env.EXPO_PUBLIC_HEROKU_URL}/graphql`,
+      credentials: "include",
+    }),
+    cache: new InMemoryCache(),
+    // Minimal defaults
+  });
+}
 
-  if (!client) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00ffff" />
-      </View>
-    );
-  }
+export function ApolloProviderWrapper({ children }) {
+  const asyncClient = useApolloClient(); // Returns null initially
+  const fallbackClient = useMemo(() => createSSRClient(), []);
+
+  // ✅ Always provide a client, even if it's the minimal fallback
+  const client = asyncClient || fallbackClient;
 
   return <ApolloProvider client={client}>{children}</ApolloProvider>;
 }
