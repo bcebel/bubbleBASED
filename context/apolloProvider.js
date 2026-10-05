@@ -181,11 +181,23 @@ function createSSRClient() {
 }
 
 export function ApolloProviderWrapper({ children }) {
-  const asyncClient = useApolloClient(); // Returns null initially
-  const fallbackClient = useMemo(() => createSSRClient(), []);
+  const asyncClient = useApolloClient();
+  const fallbackClient = useMemo(
+    () => (typeof window === "undefined" ? createSSRClient() : null),
+    [],
+  );
 
-  // ✅ Always provide a client, even if it's the minimal fallback
   const client = asyncClient || fallbackClient;
+
+  // If we're on the client and the real client isn't ready yet,
+  // show the loading spinner instead of the fallback.
+  if (!client) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00ffff" />
+      </View>
+    );
+  }
 
   return <ApolloProvider client={client}>{children}</ApolloProvider>;
 }

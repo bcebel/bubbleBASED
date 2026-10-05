@@ -298,6 +298,17 @@ const hasPendingRequest = neighborhood.joinRequests?.some(
               <Text style={styles.button}>📝 Posts</Text>
             </TouchableOpacity>
           </BlurView>
+          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+            <TouchableOpacity
+              onPress={() =>
+                router.replace(
+                  `/bubbles/neighborhood-livestream?neighborhoodId=${neighborhood.id}`,
+                )
+              }
+            >
+              <Text style={styles.button}>📝 Livestream</Text>
+            </TouchableOpacity>
+          </BlurView>
         </ScrollView>
       </View>
     );
