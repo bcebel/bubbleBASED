@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
 import NeighborhoodLiveStreamRecorder from "../../../components/NeighborhoodLiveStreamRecorder";
-import { useRouter, Link } from "expo-router";
+import { useRouter, Link, useLocalSearchParams } from "expo-router";
 
 
 const GET_ME = gql`
@@ -31,13 +31,15 @@ const GET_MY_NEIGHBORHOODS = gql`
 `;
 
 export default function SelectorScreen() {
-   const router = useRouter();
+  const router = useRouter();
+    const { neighborhoodId: preselect } = useLocalSearchParams();
   const [isRecording, setIsRecording] = useState(false);
-  const [selectedHood, setSelectedHood] = useState<string | null>(null);
-
+  const [selectedHood, setSelectedHood] = useState(preselect || null);
   const { data: meData } = useQuery(GET_ME);
   const { data: hoodsData, loading: lHoods } = useQuery(GET_MY_NEIGHBORHOODS);
-
+useEffect(() => {
+  if (preselect) setSelectedHood(preselect);
+}, [preselect]);
   if (isRecording) {
     return (
       <NeighborhoodLiveStreamRecorder
@@ -92,7 +94,7 @@ export default function SelectorScreen() {
             selectedHood ? setIsRecording(true) : alert("Pick a bubble")
           }
         >
-          <Text style={styles.btnText}>GO LIVE</Text>
+          <Text style={styles.btnText}>Get Ready</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

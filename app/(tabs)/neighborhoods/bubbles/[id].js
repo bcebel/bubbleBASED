@@ -244,6 +244,7 @@ export default function NeighborhoodDetailScreen() {
 
   const isOwner = neighborhood.owner?.username === username;
   const isPersonal = neighborhood.type === "personal";
+  const neighborhoodId = neighborhood.id;
 
   const canInvite = (() => {
     if (!neighborhood || !username) return false;
@@ -299,6 +300,17 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
           <TouchableOpacity
             onPress={() =>
+              router.push(
+                `/livestream/selector?neighborhoodId=${neighborhoodId}`,
+              )
+            }
+          >
+            <Text style={styles.button}>+ Go Live</Text>
+          </TouchableOpacity>
+        </BlurView>
+        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+          <TouchableOpacity
+            onPress={() =>
               router.replace(
                 `/neighborhoods/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
               )
@@ -329,6 +341,18 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
             }
           >
             <Text style={styles.button}>🖼️ Gallery</Text>
+          </TouchableOpacity>
+        </BlurView>
+
+        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+          <TouchableOpacity
+            onPress={() =>
+              router.replace(
+                `/neighborhoods/bubbles/neighborhood-livestream?neighborhoodId=${neighborhood.id}`,
+              )
+            }
+          >
+            <Text style={styles.button}>📺 Livestream</Text>
           </TouchableOpacity>
         </BlurView>
 
