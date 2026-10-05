@@ -40,9 +40,16 @@ const RegistrationScreen = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  
+
   const handleRegister = async () => {
     if (!username || !email || !password) {
       Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    if (password.length < 8) {
+      alert("Password must be at least 8 characters");
       return;
     }
 
@@ -182,12 +189,13 @@ const RegistrationScreen = () => {
             <Text style={styles.inputLabel}>Password</Text>
             <RNTextInput
               style={styles.input}
-              placeholder="Create a password"
+              placeholder="Create a password (min 8 characters)"
               placeholderTextColor="#888"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
               onSubmitEditing={handleRegister}
+              
             />
           </View>
 
