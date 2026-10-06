@@ -396,7 +396,8 @@ export const MY_NEIGHBORHOODS = gql`
       name
       description
       bubblePhotoCid
-      type 
+      isDefault
+      type
       owner {
         id
         username

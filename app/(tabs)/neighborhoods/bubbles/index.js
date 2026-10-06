@@ -14,7 +14,7 @@ import {
   Pressable
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation, gql } from "@apollo/client";
 import { BlurView } from "expo-blur";
 import Head from "expo-router/head";
 import { Link } from "expo-router";
@@ -25,10 +25,21 @@ import {
   LEAVE_NEIGHBORHOOD,
 } from "../../../graphql/queries";
 import WebTorrentMedia from "@/components/WebTorrentMedia";
+import { getNeighborhoodDisplayName } from "../../../utils/neighborhoodDisplay";
 
 // Import your sibling tab components (Adjust relative paths if needed)
 import BublicScreen from "./bublic";
 import GlobalScreen from "./global";
+
+const GET_ME_ID = gql`
+  query GetMeId {
+    me {
+      id
+    }
+  }
+`;
+
+
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 
@@ -97,6 +108,9 @@ const handleScroll = (event) => {
   // Login state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const { data: meData } = useQuery(GET_ME_ID, { skip: !isLoggedIn });
+const currentUserId = meData?.me?.id;
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -267,7 +281,7 @@ const handleScroll = (event) => {
   if (error) return <Text style={styles.error}>Error: {error.message}</Text>;
 
   const neighborhoods = data?.myNeighborhoods || [];
-
+  console.log(neighborhoods);
   const renderItem = ({ item }) => (
     <Link href={`/neighborhoods/bubbles/${item.id}`} asChild key={item.id}>
       <View style={styles.neighborhoodItem}>
@@ -284,13 +298,14 @@ const handleScroll = (event) => {
             colors={["rgba(0,0,0,0.9)", "rgba(0,0,0,0.1)"]}
             style={styles.neighborhoodCardOverlay}
           >
-            <Text style={styles.neighborhoodName}>{item.name}</Text>
+            <Text style={styles.neighborhoodName}>  {getNeighborhoodDisplayName(item, currentUserId)}</Text>
             <Text style={[styles.neighborhoodType, { color: BUBBLE_TYPE_COLORS[item.type] }]}>
               {item.type} • {item.members?.length || 0} members
             </Text>
             <Text style={styles.neighborhoodDescription}>
               About: {item.description}
             </Text>
+            
           </LinearGradient>
         </ImageBackground>
       </View>

@@ -163,7 +163,7 @@ export default function NeighborhoodsScreen() {
             <Text style={styles.createButtonText}>➕ Create New Bubble</Text>
           </TouchableOpacity>
         </BlurView>
-        <Text style={styles.bubbleGlass2}>Discoverable Outside of App</Text>
+        <Text style={styles.bubbleGlass2}>Publishes to web</Text>
         <Text style={styles.bubbleGlass2}>if your user setting is public</Text>
       </View>
 
