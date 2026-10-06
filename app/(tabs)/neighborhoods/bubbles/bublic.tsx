@@ -118,7 +118,7 @@ export default function NeighborhoodsScreen() {
     return (
       <>
         <Head>
-          <title>bubbleBASED - bubblehub</title>
+          <title>ebubbl - bubblehub</title>
           <meta
             name="description"
             content="🫧  Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always."
@@ -143,7 +143,7 @@ export default function NeighborhoodsScreen() {
               <View style={styles.logoBadge}>
                 <Text style={styles.logoBadgeText}>bB</Text>
               </View>
-              <Text style={styles.brandTitle}>bubbleBASED</Text>
+              <Text style={styles.brandTitle}>ebubbl</Text>
             </View>
 
             <View style={styles.navLinks}>
@@ -315,8 +315,7 @@ export default function NeighborhoodsScreen() {
             {/* FOOTER */}
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                © {new Date().getFullYear()} bubbleBASED. Click tabs for more
-                info.
+                © {new Date().getFullYear()} ebubbl. Click tabs for more info.
               </Text>
             </View>
           </ScrollView>

@@ -5,10 +5,10 @@ export default function PrivacyScreen() {
   return (
     <>
       <Head>
-        <title>bubbleBASED - Privacy Policy</title>
+        <title>ebubbl - Privacy Policy</title>
         <meta
           name="description"
-          content="How bubbleBASED handles your data. No selling, no tracking, no shadow profiles. Read the full policy."
+          content="How ebubbl handles your data. No selling, no tracking, no shadow profiles. Read the full policy."
         />
       </Head>
       <ScrollView
@@ -21,14 +21,14 @@ export default function PrivacyScreen() {
         </Text>
 
         <Text style={styles.paragraph}>
-          bubbleBASED respects your privacy and is committed to protecting the
+          ebubbl respects your privacy and is committed to protecting the
           information you share with us. This Privacy Policy describes how we
           collect, use, and protect your data.
         </Text>
 
         <Text style={styles.heading}>1. Information We Collect</Text>
         <Text style={styles.paragraph}>
-          We may collect the following information when you use bubbleBASED:
+          We may collect the following information when you use ebubbl:
         </Text>
         <Text style={styles.bullet}>
           • Personal Information: Name, email address, or other data you
@@ -55,12 +55,12 @@ export default function PrivacyScreen() {
 
         <Text style={styles.heading}>3. Sharing Your Information</Text>
         <Text style={styles.paragraph}>
-          BubbleBased uses peer-to-peer sharing. When you post media, your
-          device helps share it with others in this bubble. Your IP address is
-          visible to them while they're watching.  We do not sell or share your
-          personal data with third parties except: with your consent, to comply
-          with legal obligations, or with service providers who assist in
-          operating our app.
+          ebubbl uses peer-to-peer sharing. When you post media, your device
+          helps share it with others in this bubble. Your IP address is visible
+          to them while they're watching. We do not sell or share your personal
+          data with third parties except: with your consent, to comply with
+          legal obligations, or with service providers who assist in operating
+          our app.
         </Text>
 
         <Text style={styles.heading}>4. Data Security</Text>
@@ -88,8 +88,8 @@ export default function PrivacyScreen() {
 
         <Text style={styles.heading}>7. Children's Privacy</Text>
         <Text style={styles.paragraph}>
-          bubbleBASED is not intended for use by children under the age of 13.
-          We do not knowingly collect personal information from children.
+          ebubbl is not intended for use by children under the age of 13. We do
+          not knowingly collect personal information from children.
         </Text>
 
         <Text style={styles.heading}>8. Changes to This Privacy Policy</Text>
@@ -100,7 +100,7 @@ export default function PrivacyScreen() {
 
         <Text style={styles.heading}>9. Contact Us</Text>
         <Text style={styles.paragraph}>
-          If you have any questions, contact us at privacy@bubblebased.com.
+          If you have any questions, contact us at privacy@ebubbl.com.
         </Text>
       </ScrollView>
     </>

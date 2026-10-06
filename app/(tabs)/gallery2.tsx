@@ -65,7 +65,7 @@ export default function GalleryScreen() {
     return (
       <>
         <Head>
-          <title>bubbleBASED - gallery</title>
+          <title>ebubbl - gallery</title>
           <meta
             name="description"
             content="🫧  Beautiful gallery of all media posted throughout your bubbles.  Social media is supposed to be enjoyable after all, post events and memories that YOU love, join bubbles you would want to be in.  No clickbait and comment sniping."
@@ -89,7 +89,7 @@ export default function GalleryScreen() {
               <View style={styles.logoBadge}>
                 <Text style={styles.logoBadgeText}>bB</Text>
               </View>
-              <Text style={styles.brandTitle}>bubbleBASED</Text>
+              <Text style={styles.brandTitle}>ebubbl</Text>
             </View>
 
             <View style={styles.navLinks}>
@@ -255,8 +255,7 @@ export default function GalleryScreen() {
             {/* FOOTER */}
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                © {new Date().getFullYear()} bubbleBASED. Click tabs for more
-                info.
+                © {new Date().getFullYear()} ebubbl. Click tabs for more info.
               </Text>
             </View>
           </ScrollView>

@@ -1,12 +1,12 @@
-# bubbleBASED
+# ebubbl
 
-bubbleBASED is a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Our platform uses peer-to-peer (P2P) technology for fast, community-powered media sharing.  It's 🫧 Based.  
+ebubbl is a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Our platform uses peer-to-peer (P2P) technology for fast, community-powered media sharing.  It's 🫧 Based.  
 
 ## Main Pages
 
-- [Home](https://bubblebased.com/)
-- [Bubbles](https://bubblebased.com/neighborhoods)
-- [Livestream](https://bubblebased.com/livestream)
-- [Login](https://bubblebased.com/login)
-- [Privacy Policy](https://bubblebased.com/privacy)
-- [Terms of Service](https://bubblebased.com/tos)
+- [Home](https://ebubbl.com/)
+- [Bubbles](https://ebubbl.com/neighborhoods)
+- [Livestream](https://ebubbl.com/livestream)
+- [Login](https://ebubbl.com/login)
+- [Privacy Policy](https://ebubbl.com/privacy)
+- [Terms of Service](https://ebubbl.com/tos)

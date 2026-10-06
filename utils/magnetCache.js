@@ -11,9 +11,7 @@ try {
 export async function getMagnetForCid(cid) {
   if (magnetCache.has(cid)) return magnetCache.get(cid);
 
-  const res = await fetch(
-    `https://bubblebased.com/api/media/${cid}`,
-  );
+  const res = await fetch(`https://ebubbl.com/api/media/${cid}`);
   if (!res.ok) return null;
 
   const meta = await res.json();

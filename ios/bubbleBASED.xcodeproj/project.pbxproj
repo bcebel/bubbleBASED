@@ -12,24 +12,24 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		BC53F745988A87A731132A30 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 830A860E8FD1AF9F91D1BA49 /* PrivacyInfo.xcprivacy */; };
-		DA99044E445DF2D331D7008F /* libPods-bubbleBASED.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2CB36BC243B18D31892590B7 /* libPods-bubbleBASED.a */; };
+		DA99044E445DF2D331D7008F /* libPods-ebubbl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2CB36BC243B18D31892590B7 /* libPods-ebubbl.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		13B07F961A680F5B00A75B9A /* bubbleBASED.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = bubbleBASED.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = bubbleBASED/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = bubbleBASED/Info.plist; sourceTree = "<group>"; };
-		2CB36BC243B18D31892590B7 /* libPods-bubbleBASED.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-bubbleBASED.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		31E7875199823F617216AE57 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-bubbleBASED/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		53FA9E6266052ABB805C5478 /* Pods-bubbleBASED.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bubbleBASED.debug.xcconfig"; path = "Target Support Files/Pods-bubbleBASED/Pods-bubbleBASED.debug.xcconfig"; sourceTree = "<group>"; };
-		830A860E8FD1AF9F91D1BA49 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = bubbleBASED/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		A403C924032D9EFF3D3A688A /* Pods-bubbleBASED.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bubbleBASED.release.xcconfig"; path = "Target Support Files/Pods-bubbleBASED/Pods-bubbleBASED.release.xcconfig"; sourceTree = "<group>"; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = bubbleBASED/SplashScreen.storyboard; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* ebubbl.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ebubbl.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = ebubbl/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ebubbl/Info.plist; sourceTree = "<group>"; };
+		2CB36BC243B18D31892590B7 /* libPods-ebubbl.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ebubbl.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		31E7875199823F617216AE57 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ebubbl/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		53FA9E6266052ABB805C5478 /* Pods-ebubbl.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ebubbl.debug.xcconfig"; path = "Target Support Files/Pods-ebubbl/Pods-ebubbl.debug.xcconfig"; sourceTree = "<group>"; };
+		830A860E8FD1AF9F91D1BA49 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = ebubbl/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A403C924032D9EFF3D3A688A /* Pods-ebubbl.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ebubbl.release.xcconfig"; path = "Target Support Files/Pods-ebubbl/Pods-ebubbl.release.xcconfig"; sourceTree = "<group>"; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = ebubbl/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = bubbleBASED/AppDelegate.swift; sourceTree = "<group>"; };
-		F11748442D0722820044C1D9 /* bubbleBASED-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "bubbleBASED-Bridging-Header.h"; path = "bubbleBASED/bubbleBASED-Bridging-Header.h"; sourceTree = "<group>"; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = ebubbl/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* ebubbl-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "ebubbl-Bridging-Header.h"; path = "ebubbl/ebubbl-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,42 +37,42 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DA99044E445DF2D331D7008F /* libPods-bubbleBASED.a in Frameworks */,
+				DA99044E445DF2D331D7008F /* libPods-ebubbl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* bubbleBASED */ = {
+		13B07FAE1A68108700A75B9A /* ebubbl */ = {
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				F11748442D0722820044C1D9 /* bubbleBASED-Bridging-Header.h */,
+				F11748442D0722820044C1D9 /* ebubbl-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				830A860E8FD1AF9F91D1BA49 /* PrivacyInfo.xcprivacy */,
 			);
-			name = bubbleBASED;
+			name = ebubbl;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				2CB36BC243B18D31892590B7 /* libPods-bubbleBASED.a */,
+				2CB36BC243B18D31892590B7 /* libPods-ebubbl.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		421F6E8277ACC78DDC2F9D91 /* bubbleBASED */ = {
+		421F6E8277ACC78DDC2F9D91 /* ebubbl */ = {
 			isa = PBXGroup;
 			children = (
 				31E7875199823F617216AE57 /* ExpoModulesProvider.swift */,
 			);
-			name = bubbleBASED;
+			name = ebubbl;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -85,7 +85,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				13B07FAE1A68108700A75B9A /* bubbleBASED */,
+				13B07FAE1A68108700A75B9A /* ebubbl */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
@@ -100,7 +100,7 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* bubbleBASED.app */,
+				13B07F961A680F5B00A75B9A /* ebubbl.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -111,13 +111,13 @@
 				BB2F792C24A3F905000567C9 /* Expo.plist */,
 			);
 			name = Supporting;
-			path = bubbleBASED/Supporting;
+			path = ebubbl/Supporting;
 			sourceTree = "<group>";
 		};
 		D559D8FE20F6B1E9A7FA71A2 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				421F6E8277ACC78DDC2F9D91 /* bubbleBASED */,
+				421F6E8277ACC78DDC2F9D91 /* ebubbl */,
 			);
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
@@ -125,8 +125,8 @@
 		EEF535007636D4C281C3FB2D /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				53FA9E6266052ABB805C5478 /* Pods-bubbleBASED.debug.xcconfig */,
-				A403C924032D9EFF3D3A688A /* Pods-bubbleBASED.release.xcconfig */,
+				53FA9E6266052ABB805C5478 /* Pods-ebubbl.debug.xcconfig */,
+				A403C924032D9EFF3D3A688A /* Pods-ebubbl.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
@@ -135,9 +135,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* bubbleBASED */ = {
+		13B07F861A680F5B00A75B9A /* ebubbl */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "bubbleBASED" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "ebubbl" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
 				F3CADDC7AAE1605005AE9913 /* [Expo] Configure project */,
@@ -152,9 +152,9 @@
 			);
 			dependencies = (
 			);
-			name = bubbleBASED;
-			productName = bubbleBASED;
-			productReference = 13B07F961A680F5B00A75B9A /* bubbleBASED.app */;
+			name = ebubbl;
+			productName = ebubbl;
+			productReference = 13B07F961A680F5B00A75B9A /* ebubbl.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -170,7 +170,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "bubbleBASED" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "ebubbl" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -183,7 +183,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* bubbleBASED */,
+				13B07F861A680F5B00A75B9A /* ebubbl */,
 			);
 		};
 /* End PBXProject section */
@@ -235,7 +235,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-bubbleBASED-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-ebubbl-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -248,7 +248,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-bubbleBASED/Pods-bubbleBASED-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-ebubbl/Pods-ebubbl-frameworks.sh",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ExpoCamera/ExpoCamera.framework/ExpoCamera",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ExpoCameraBarcodeScanning/ExpoCameraBarcodeScanning.framework/ExpoCameraBarcodeScanning",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ExpoCameraBarcodeScanning/ZXingObjC.framework/ZXingObjC",
@@ -291,7 +291,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-bubbleBASED/Pods-bubbleBASED-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ebubbl/Pods-ebubbl-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
@@ -300,7 +300,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-bubbleBASED/Pods-bubbleBASED-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-ebubbl/Pods-ebubbl-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
@@ -321,7 +321,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-bubbleBASED/Pods-bubbleBASED-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ebubbl/Pods-ebubbl-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		F3CADDC7AAE1605005AE9913 /* [Expo] Configure project */ = {
@@ -335,18 +335,18 @@
 			inputPaths = (
 				"$(SRCROOT)/.xcode.env",
 				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/bubbleBASED/bubbleBASED.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-bubbleBASED/expo-configure-project.sh",
+				"$(SRCROOT)/ebubbl/ebubbl.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-ebubbl/expo-configure-project.sh",
 			);
 			name = "[Expo] Configure project";
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-bubbleBASED/ExpoModulesProvider.swift",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-ebubbl/ExpoModulesProvider.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-bubbleBASED/expo-configure-project.sh\"\n";
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-ebubbl/expo-configure-project.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -365,18 +365,18 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 53FA9E6266052ABB805C5478 /* Pods-bubbleBASED.debug.xcconfig */;
+			baseConfigurationReference = 53FA9E6266052ABB805C5478 /* Pods-ebubbl.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = bubbleBASED/bubbleBASED.entitlements;
+				CODE_SIGN_ENTITLEMENTS = ebubbl/ebubbl.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = bubbleBASED/Info.plist;
+				INFOPLIST_FILE = ebubbl/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -390,9 +390,9 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.anonymous.bubbleBASED;
-				PRODUCT_NAME = bubbleBASED;
-				SWIFT_OBJC_BRIDGING_HEADER = "bubbleBASED/bubbleBASED-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = com.anonymous.ebubbl;
+				PRODUCT_NAME = ebubbl;
+				SWIFT_OBJC_BRIDGING_HEADER = "ebubbl/ebubbl-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -402,13 +402,13 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A403C924032D9EFF3D3A688A /* Pods-bubbleBASED.release.xcconfig */;
+			baseConfigurationReference = A403C924032D9EFF3D3A688A /* Pods-ebubbl.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = bubbleBASED/bubbleBASED.entitlements;
+				CODE_SIGN_ENTITLEMENTS = ebubbl/ebubbl.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				INFOPLIST_FILE = bubbleBASED/Info.plist;
+				INFOPLIST_FILE = ebubbl/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -422,9 +422,9 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.anonymous.bubbleBASED;
-				PRODUCT_NAME = bubbleBASED;
-				SWIFT_OBJC_BRIDGING_HEADER = "bubbleBASED/bubbleBASED-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = com.anonymous.ebubbl;
+				PRODUCT_NAME = ebubbl;
+				SWIFT_OBJC_BRIDGING_HEADER = "ebubbl/ebubbl-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -570,7 +570,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "bubbleBASED" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "ebubbl" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -579,7 +579,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "bubbleBASED" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "ebubbl" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,

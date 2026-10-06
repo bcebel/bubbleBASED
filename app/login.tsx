@@ -100,7 +100,7 @@ export default function LoginScreen() {
   return (
     <>
       <Head>
-        <title>Log In | bubbleBASED</title>
+        <title>Log In | ebubbl</title>
         <meta
           name="description"
           content="Welcome back to your digital neighborhoods. Log in to see what your bubbles have been up to."
@@ -113,7 +113,7 @@ export default function LoginScreen() {
           resizeMode="cover"
         />
         <Text style={styles.title}>Sign In</Text>
-        <Text style={styles.subtitle}>Enter bubbleBASED</Text>
+        <Text style={styles.subtitle}>Enter ebubbl</Text>
 
         <View style={styles.form}>
           {errorMessage && (

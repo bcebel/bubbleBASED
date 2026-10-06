@@ -46,7 +46,6 @@ const DELETE_STREAM = gql`
   }
 `;
 
-
 const LIVESTREAM_CHUNK_SUBSCRIPTION = gql`
   subscription OnLivestreamChunkAdded($sessionId: String!) {
     livestreamChunkAdded(sessionId: $sessionId) {
@@ -260,14 +259,14 @@ export default function StreamsScreen() {
     checkLogin();
   }, []);
 
-const {
-  data: streamsData,
-  loading,
-  refetch,
-} = useQuery(GET_ACTIVE_LIVESTREAMS, {
-  pollInterval: 5000,
-  skip: !isLoggedIn,
-});
+  const {
+    data: streamsData,
+    loading,
+    refetch,
+  } = useQuery(GET_ACTIVE_LIVESTREAMS, {
+    pollInterval: 5000,
+    skip: !isLoggedIn,
+  });
 
   // 1. auth not resolved yet
   if (!authChecked) {
@@ -283,7 +282,7 @@ const {
     return (
       <>
         <Head>
-          <title>bubbleBASED - livestream</title>
+          <title>ebubbl - livestream</title>
           <meta
             name="description"
             content="🫧  Live streams from your bubbles. Peer-to-peer video, no middlemen, no replay tracking. Watch what your people are sharing right now."
@@ -415,7 +414,7 @@ const {
                       media={{
                         cid: "QmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj",
                         magnetLink:
-                          "magnet:?xt=urn:btih:a98117648438fd9089ccaba4a1285f16ff5189db&dn=image-QmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Fbubblebased.com%2Fapi%2Fwebseed%2FQmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj",
+                          "magnet:?xt=urn:btih:a98117648438fd9089ccaba4a1285f16ff5189db&dn=image-QmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Febubbl.com%2Fapi%2Fwebseed%2FQmNPmuK8zEW6bM6hsDQSK82dQorXyft5wDKDLSoHo7LXLj",
                         fileName: "post_1790983248629.jpg",
                         fileType: "image",
                       }}
@@ -476,8 +475,7 @@ const {
             {/* FOOTER */}
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                © {new Date().getFullYear()} bubbleBASED. Click tabs for more
-                info.
+                © {new Date().getFullYear()} ebubbl. Click tabs for more info.
               </Text>
             </View>
           </ScrollView>

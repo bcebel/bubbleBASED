@@ -40,7 +40,7 @@ export default function CreateNeighborhoodScreen() {
   const [description, setDescription] = useState("");
   const [type, setType] = useState("private");
   const [createNeighborhood] = useMutation(CREATE_NEIGHBORHOOD);
-const [joinPolicy, setJoinPolicy] = useState("invite_only");
+  const [joinPolicy, setJoinPolicy] = useState("invite_only");
 
   const handleCreate = async () => {
     if (!name.trim()) {
@@ -49,14 +49,14 @@ const [joinPolicy, setJoinPolicy] = useState("invite_only");
     }
 
     try {
-   const { data } = await createNeighborhood({
-     variables: {
-       name: name.trim(),
-       description: description.trim(),
-       type,
-       joinPolicy,
-     },
-   });
+      const { data } = await createNeighborhood({
+        variables: {
+          name: name.trim(),
+          description: description.trim(),
+          type,
+          joinPolicy,
+        },
+      });
 
       alert(`Neighborhood "${data.createNeighborhood.name}" created!`);
       router.replace(`neighborhoods/bubbles/${data.createNeighborhood.id}`);
@@ -110,7 +110,7 @@ const [joinPolicy, setJoinPolicy] = useState("invite_only");
               >
                 {option === "private" && "🔒 PRIVATE - Visible to Members only"}
                 {option === "public" &&
-                  "👥 BUBLIC - Visible to Users of bubbleBASED Only"}
+                  "👥 BUBLIC - Visible to Users of ebubbl Only"}
                 {option === "global" &&
                   "🌍 GLOBAL Visible to The Entire Internet"}
               </Text>

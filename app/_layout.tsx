@@ -1,4 +1,3 @@
-
 import {
   DarkTheme,
   DefaultTheme,
@@ -26,9 +25,9 @@ export default function RootLayout() {
   const isDark = colorScheme === "dark";
 
   // ⚡ Optimization: Use web-optimized formats for web if possible, or swap TTF out entirely
- const [loaded] = useFonts({
-   Montserrat: require("../assets/fonts/Montserrat-Medium.ttf"),
- });
+  const [loaded] = useFonts({
+    Montserrat: require("../assets/fonts/Montserrat-Medium.ttf"),
+  });
 
   useEffect(() => {
     // ⚡ Optimization: Initialize Vercel Analytics only once on the client side
@@ -50,10 +49,10 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <Head>
-        <title>bubbleBASED 🫧</title>
+        <title>ebubbl 🫧</title>
         <meta
           name="description"
-          content="Join bubblebased.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based."
+          content="Join ebubbl.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based."
         />
         {/* ⚡ Optimization: Ensure fonts don't cause layout shifts */}
         <style>{`
@@ -82,8 +81,14 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="login" options={{ title: "Login" }} />
               <Stack.Screen name="register" options={{ title: "Register" }} />
-              <Stack.Screen name="forgotpassword" options={{ title: "Forgotpassword" }} />
-              <Stack.Screen name="reset-password" options={{ title: "Reset-password" }} />
+              <Stack.Screen
+                name="forgotpassword"
+                options={{ title: "Forgotpassword" }}
+              />
+              <Stack.Screen
+                name="reset-password"
+                options={{ title: "Reset-password" }}
+              />
               <Stack.Screen
                 name="+not-found"
                 options={{ title: "Not Found" }}

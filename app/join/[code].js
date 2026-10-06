@@ -194,7 +194,7 @@ export default function JoinViaLinkScreen() {
               });
             }}
           >
-            <Text style={styles.mainTitle}>bubbleBASED.com</Text>
+            <Text style={styles.mainTitle}>ebubbl.com</Text>
           </TouchableOpacity>
           <Text style={styles.title}>
             Your formal invitation to the {neighborhood.name} bubble.

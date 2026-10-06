@@ -3,17 +3,17 @@ import { type PropsWithChildren } from "react";
 import VerificationText from "../components/verification";
 
 export default function Root({ children }: PropsWithChildren) {
-  const title = "BubbleBased 🫧";
+  const title = "ebubbl 🫧";
   const description =
     "Join ebubbl.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based.";
-  const url = "https://bubblebased.com";
-  const image = "https://bubblebased.com/bble.png";
+  const url = "https://ebubbl.com";
+  const image = "https://ebubbl.com/bble.png";
 
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <title>bubbleBASED 🫧</title>
+        <title>ebubbl 🫧</title>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
@@ -45,23 +45,23 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="description" content={description} />
         <meta
           name="keywords"
-          content="social network, privacy, digital neighborhoods, affiliate marketing, community, bubbleBASED, 🫧, webtorrent, p2p, social media, privacy, context"
+          content="social network, privacy, digital neighborhoods, affiliate marketing, community, ebubbl, 🫧, webtorrent, p2p, social media, privacy, context"
         />
-        <meta name="author" content="BubbleBased" />
+        <meta name="author" content="ebubbl" />
         <meta name="robots" content="index, follow" />
 
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={url} />
-        <meta property="og:title" content="bubbleBASED" />
+        <meta property="og:title" content="ebubbl" />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={image} />
         <meta
           property="og:image:secure_url"
-          content="https://bubblebased.com/bbl-og.jpg"
+          content="https://ebubbl.com/bbl-og.jpg"
         />
         <meta property="og:image:type" content="image/png" />
-        <meta property="og:site_name" content="BubbleBased" />
+        <meta property="og:site_name" content="ebubbl" />
         <meta property="og:locale" content="en_US" />
         <meta
           name="root.txt"
@@ -70,14 +70,11 @@ export default function Root({ children }: PropsWithChildren) {
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@bubbleBASED_" />
-        <meta name="twitter:creator" content="@bubbleBASED_" />
-        <meta name="twitter:title" content="bubbleBASED" />
+        <meta name="twitter:site" content="@ebubbl_" />
+        <meta name="twitter:creator" content="@ebubbl_" />
+        <meta name="twitter:title" content="ebubbl" />
         <meta name="twitter:description" content={description} />
-        <meta
-          name="twitter:image"
-          content="https://bubblebased.com/bbl-og.jpg"
-        />
+        <meta name="twitter:image" content="https://ebubbl.com/bbl-og.jpg" />
 
         <script
           type="application/ld+json"
@@ -113,12 +110,12 @@ export default function Root({ children }: PropsWithChildren) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Organization",
-              name: "BubbleBased",
+              name: "ebubbl",
               url: url,
-              logo: "https://bubblebased.com/logo.png",
+              logo: "https://ebubbl.com/logo.png",
               description: description,
               sameAs: [
-                "https://twitter.com/bubbleBASED_",
+                "https://twitter.com/ebubbl_",
                 "https://instagram.com/bubblebase",
               ],
               address: {

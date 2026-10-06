@@ -239,7 +239,7 @@ export default function InviteLinksScreen() {
     const isExpired = item.expiresAt && new Date(item.expiresAt) < new Date();
     const isMaxUses = item.maxUses > 0 && item.uses >= item.maxUses;
     const isActive = item.isActive && !isExpired && !isMaxUses;
-    const url = item.url || `https://bubblebased.com/join/${item.code}`;
+    const url = item.url || `https://ebubbl.com/join/${item.code}`;
 
     return (
       <BlurView
@@ -273,7 +273,7 @@ export default function InviteLinksScreen() {
 
         <View style={styles.urlPill}>
           <Text style={styles.urlText} numberOfLines={1} selectable={true}>
-            bubblebased.com/join/{item.code}
+            ebubbl.com/join/{item.code}
           </Text>
           <TouchableOpacity
             style={styles.urlCopyBtn}

@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.bubbleBASED'
+    namespace 'com.anonymous.ebubbl'
     defaultConfig {
-        applicationId 'com.anonymous.bubbleBASED'
+        applicationId 'com.anonymous.ebubbl'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -1,4 +1,4 @@
-package com.anonymous.bubbleBASED
+package com.anonymous.ebubbl
 
 import android.app.Application
 import android.content.res.Configuration

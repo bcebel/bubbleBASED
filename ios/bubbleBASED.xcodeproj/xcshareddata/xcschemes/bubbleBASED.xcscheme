@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "bubbleBASED.app"
-               BlueprintName = "bubbleBASED"
-               ReferencedContainer = "container:bubbleBASED.xcodeproj">
+               BuildableName = "ebubbl.app"
+               BlueprintName = "ebubbl"
+               ReferencedContainer = "container:ebubbl.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "bubbleBASEDTests.xctest"
-               BlueprintName = "bubbleBASEDTests"
-               ReferencedContainer = "container:bubbleBASED.xcodeproj">
+               BuildableName = "ebubblTests.xctest"
+               BlueprintName = "ebubblTests"
+               ReferencedContainer = "container:ebubbl.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "bubbleBASED.app"
-            BlueprintName = "bubbleBASED"
-            ReferencedContainer = "container:bubbleBASED.xcodeproj">
+            BuildableName = "ebubbl.app"
+            BlueprintName = "ebubbl"
+            ReferencedContainer = "container:ebubbl.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "bubbleBASED.app"
-            BlueprintName = "bubbleBASED"
-            ReferencedContainer = "container:bubbleBASED.xcodeproj">
+            BuildableName = "ebubbl.app"
+            BlueprintName = "ebubbl"
+            ReferencedContainer = "container:ebubbl.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

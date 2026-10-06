@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.bubbleBASED",
+      "bundleIdentifier": "com.anonymous.ebubbl",
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#F5F2FA"
       },
-      "package": "com.anonymous.bubbleBASED",
+      "package": "com.anonymous.ebubbl",
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.CAMERA",
@@ -39,8 +39,8 @@
         "publicFolder": "public"
       },
       "manifest": {
-        "name": "bubbleBASED - Digital Neighborhoods",
-        "short_name": "bubbleBASED",
+        "name": "ebubbl - Digital Neighborhoods",
+        "short_name": "ebubbl",
         "description": "A private social network where you control your privacy...",
         "theme_color": "#1C0A2E",
         "background_color": "#1C0A2E",

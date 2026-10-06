@@ -1,4 +1,4 @@
-package com.anonymous.bubbleBASED
+package com.anonymous.ebubbl
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
