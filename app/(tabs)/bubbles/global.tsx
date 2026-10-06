@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
 
-    backgroundColor: "#130720",
+    backgroundColor: "#cf8fad33",
   },
   header: {
     fontSize: 24,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 0, 129, 0.4)",
+    borderColor: "#cf8fad",
   },
   tagBadgeText: {
     color: "#FF5CB0",
@@ -393,14 +393,14 @@ const styles = StyleSheet.create({
     borderRadius: 48,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255, 0, 129, 0.3)",
+    borderColor: "#cf8fad",
     backgroundColor: "rgba(255, 0, 129, 0.2)",
   },
   bubbleGlassCompact: {
     borderRadius: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255, 0, 129, 0.3)",
+    borderColor: "#cf8fad",
     backgroundColor: "rgba(255, 0, 129, 0.2)",
   },
   browseButton: {
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#130720",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#cf8fad",
     marginTop: 20,
   },
   emptyStateText: {
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
     overflow: "scroll",
     justifyContent: "flex-end",
     borderWidth: 2,
-    borderColor: "#880088",
+    borderColor: "#cf8fad",
     borderRadius: 48,
   },
   neighborhoodCardOverlay: {
@@ -577,9 +577,9 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     alignSelf: "center",
 
-    backgroundColor: "#00ffff", // Semi-transparent background
+    backgroundColor: "#cf8fad", // Semi-transparent background
     borderWidth: 1,
-    borderColor: "rgba(255, 0, 129, 0.3)",
+    borderColor: "#cf8fad",
     borderRadius: 48,
 
     // Web only (React Native Web supports this)
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(19, 23, 31, 0.8)",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "#cf8fad",
     padding: 16,
     minHeight: 200, // Reduced from 280 for mobile screens
   },
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
     padding: 32,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.15)",
+    borderColor: "#cf8fad",
     backgroundColor: "rgba(255, 0, 129, 0.1)",
   },
   quoteText: {

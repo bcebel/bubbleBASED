@@ -163,6 +163,8 @@ export default function NeighborhoodsScreen() {
             <Text style={styles.createButtonText}>➕ Create New Bubble</Text>
           </TouchableOpacity>
         </BlurView>
+        <Text style={styles.bubbleGlass2}>Discoverable Outside of App</Text>
+        <Text style={styles.bubbleGlass2}>if your user setting is public</Text>
       </View>
 
       {neighborhoods.length === 0 ? (
@@ -234,7 +236,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
 
-    backgroundColor: "#130720",
+    backgroundColor: "#d7900833",
   },
   header: {
     fontSize: 24,
@@ -389,13 +391,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap", // Prevents buttons from spilling into the card below
     marginBottom: 24, // Adds explicit margin beneath the buttons
   },
-  bubbleGlass: {
-    borderRadius: 48,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255, 0, 129, 0.3)",
-    backgroundColor: "rgba(255, 0, 129, 0.2)",
-  },
+
   bubbleGlassCompact: {
     borderRadius: 20,
     overflow: "hidden",
@@ -467,7 +463,7 @@ const styles = StyleSheet.create({
   },
   neighborhoodType: {
     fontSize: 18,
-    color: "rgba(255, 0, 129, 1)",
+    color: "#d79008",
     marginBottom: 8,
     alignSelf: "center",
   },
@@ -550,8 +546,8 @@ const styles = StyleSheet.create({
     aspectRatio: 1, // square, scales with whatever width the wrapper gives it
     overflow: "scroll",
     justifyContent: "flex-end",
-    borderWidth: 2,
-    borderColor: "#880088",
+    borderWidth: 0.5,
+    borderColor: "#d96769",
     borderRadius: 48,
   },
   neighborhoodCardOverlay: {
@@ -585,6 +581,20 @@ const styles = StyleSheet.create({
     // Web only (React Native Web supports this)
     boxShadow:
       "inset 1px 1px 1px 0px rgba(255, 255, 255, 0.6), inset -1px -1px 2px 0px rgba(0, 0, 0, 0.2), 0 12px 32px 0 rgba(0, 0, 0, 0.15)",
+
+    // Web only (Safari needs the prefix)
+    backdropFilter: "blur(16px) saturate(190%) brightness(1.1)",
+    WebkitBackdropFilter: "blur(16px) saturate(190%) brightness(1.1)",
+  },
+  bubbleGlass2: {
+    maxWidth: 600,
+    alignSelf: "center",
+    color: "#d79008", // Semi-transparent background
+    borderRadius: 48,
+
+    // Web only (React Native Web supports this)
+    boxShadow:
+      "inset 1px 1px 1px 0px rgba(255, 255, 255, 0.2), inset -1px -1px 2px 0px rgba(0, 0, 0, 0.2), 0 12px 32px 0 rgba(0, 0, 0, 0.15)",
 
     // Web only (Safari needs the prefix)
     backdropFilter: "blur(16px) saturate(190%) brightness(1.1)",

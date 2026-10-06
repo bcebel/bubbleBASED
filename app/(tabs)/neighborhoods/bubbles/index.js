@@ -33,23 +33,23 @@ import GlobalScreen from "./global";
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 
 const BUBBLE_TYPE_COLORS = {
-  global: "#880088",   // pink — matches your accent
-  private: "#008888",    // cyan
-  public: "#FFCC00",    // the ebubbl yellow
+  global: "#d79008",   // pink — matches your accent
+  private: "#67bed9",    // cyan
+  public: "#cf8fad",    // the ebubbl yellow
   personal: "#9CA3AF",  // gray, since personal is the vault
 };
 
 const BUBBLE_TYPE_BORDER_COLORS = {
-  global: "#880088",
-  private: "#008888",
-  public: "#FFCC00",
+  global: "#d96769",
+  private: "#67bed977",
+  public: "#c467d977",
   personal: "rgba(156, 163, 175, 0.4)",
 };
 
 const BUBBLE_TYPE_BACKGROUNDS = {
-  global: "#880088",
-  private: "#008888",
-  public: "#FFCC00",
+  global: "#2d231c",
+  private: "#E9F2EE",
+  public: "#4f4415",
   personal: "rgba(156, 163, 175, 0.3)",
 };
 
@@ -285,7 +285,7 @@ const handleScroll = (event) => {
             style={styles.neighborhoodCardOverlay}
           >
             <Text style={styles.neighborhoodName}>{item.name}</Text>
-            <Text style={styles.neighborhoodType}>
+            <Text style={[styles.neighborhoodType, { color: BUBBLE_TYPE_COLORS[item.type] }]}>
               {item.type} • {item.members?.length || 0} members
             </Text>
             <Text style={styles.neighborhoodDescription}>
@@ -384,6 +384,7 @@ const handleScroll = (event) => {
     {
       borderColor: BUBBLE_TYPE_BORDER_COLORS[item.type] || "rgba(0, 255, 255, 0.25)",
       backgroundColor: BUBBLE_TYPE_BACKGROUNDS[item.type] || "rgba(89, 17, 85, 0.1)",
+
       borderWidth: 1,
       borderRadius: 48,
       overflow: "hidden",
@@ -446,15 +447,15 @@ const styles = StyleSheet.create({
   },
   activeTabButton: {
     borderBottomWidth: 2,
-    borderBottomColor: "#00ffff",
+    borderBottomColor: "#E9F2EE",
   },
   headerButtons: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#ff00ff",
+    color: "#b1b092",
   },
   activeHeaderText: {
-    color: "#00ffff",
+    color: "#E9F2EE",
   },
   heroTextContainer: { flex: 1 },
   heroBubble: { ...StyleSheet.absoluteFillObject, opacity: 0.75 },
@@ -535,7 +536,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     marginBottom: 16,
-    borderWidth: 1,
+    borderWidth: .1,
     borderColor: "rgba(255, 0, 129, 0.4)",
   },
   tagBadgeText: { color: "#FF5CB0", fontSize: 13, fontWeight: "600" },
@@ -545,14 +546,14 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     alignSelf: "center",
     backgroundColor: "rgba(0, 255, 255, 0.15)",
-    borderWidth: 1,
+    borderWidth: .1,
     borderColor: "rgba(255, 0, 129, 0.3)",
     borderRadius: 48,
   },
   bubbleGlassCompact: {
     borderRadius: 20,
     overflow: "hidden",
-    borderWidth: 1,
+    borderWidth: .1,
     borderColor: "rgba(255, 0, 129, 0.3)",
     backgroundColor: "rgba(255, 0, 129, 0.2)",
   },
@@ -597,7 +598,7 @@ const styles = StyleSheet.create({
   },
   neighborhoodType: {
     fontSize: 18,
-    color: "rgba(255, 0, 129, 1)",
+
     marginBottom: 8,
     alignSelf: "center",
   },
@@ -615,7 +616,7 @@ const styles = StyleSheet.create({
     padding: 40,
     backgroundColor: "#130720",
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: .1,
     borderColor: "#333",
     marginTop: 20,
   },
@@ -626,7 +627,6 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     overflow: "scroll",
     justifyContent: "flex-end",
-    borderWidth: 1,
     borderRadius: 48,
   },
   neighborhoodCardOverlay: { flex: 1, borderRadius: 48, aspectRatio: 1 },
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "rgba(19, 23, 31, 0.8)",
     borderRadius: 16,
-    borderWidth: 1,
+    borderWidth: .1,
     borderColor: "rgba(255, 255, 255, 0.1)",
     padding: 16,
     minHeight: 200,
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
     width: "100%",
     padding: 32,
     borderRadius: 24,
-    borderWidth: 1,
+    borderWidth: .1,
     borderColor: "rgba(255, 255, 255, 0.15)",
     backgroundColor: "rgba(255, 0, 129, 0.1)",
   },
