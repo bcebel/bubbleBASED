@@ -1959,8 +1959,17 @@ export default function NeighborhoodChatScreen() {
     }
   };
 
-  const neighborhoodName =
-    neighborhoodData?.neighborhood?.name || "Neighborhood";
+const neighborhoodName = useMemo(() => {
+  const n = neighborhoodData?.neighborhood;
+  if (!n) return "Neighborhood";
+  if (n.type === "direct") {
+    const other = n.members?.find(
+      (m) => String(m.user?.id) !== String(currentUserId),
+    );
+    return other?.user?.username || "Direct Message";
+  }
+  return n.name;
+}, [neighborhoodData, currentUserId]);
 
   if (!isAuthenticated) {
     return (
