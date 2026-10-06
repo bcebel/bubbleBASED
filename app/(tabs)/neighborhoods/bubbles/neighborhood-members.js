@@ -273,10 +273,7 @@ export default function NeighborhoodMembersScreen() {
                   {member.role === "owner" && " 👑"}
                   {member.role === "moderator" && " ⭐"}
                 </Text>
-                <Text style={styles.memberInfo}>
-                  {member.role} • Joined{" "}
-                  {new Date(member.joinedAt).toLocaleDateString()}
-                </Text>
+             
               </View>
               {member.role !== "owner" && (
                 <TouchableOpacity
