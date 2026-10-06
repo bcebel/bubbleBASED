@@ -156,6 +156,10 @@ export default function TabLayout() {
         options={{ href: null }}
       />
       <Tabs.Screen
+        name="neighborhoods/bubbles/neighborhood-livestream"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
         name="neighborhoods/bubbles/invite-links"
         options={{ href: null }}
       />
