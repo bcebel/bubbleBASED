@@ -162,6 +162,13 @@ export default function HomeScreen() {
                     <Text style={styles.actionButtonText}>Logout</Text>
                   </TouchableOpacity>
                 </BlurView>
+                    <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <TouchableOpacity
+       onPress={() => router.replace("/bubbles/global")}                    style={styles.thirdButton}
+                  >
+                    <Text style={styles.actionButtonText}>Check Out Global Bubbles</Text>
+                  </TouchableOpacity>
+                </BlurView>
               </View>
             </View>
 
@@ -209,7 +216,7 @@ export default function HomeScreen() {
                     <Text style={styles.mockCodeTextAccent}>
                       vibe: "chill"
                     </Text>
-                    <Text style={styles.mockCodeText}>people: "cool" </Text>
+                    <Text style={styles.mockCodeText}>network: "decentralized" </Text>
                     <Text style={styles.mockCodeText}>algorithm: "none" </Text>
                     <Text style={styles.mockCodeText}>bubble: "based" </Text>
                   </View>
@@ -222,10 +229,12 @@ export default function HomeScreen() {
           <View style={styles.quoteSection}>
             <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
               <Text style={styles.quoteText}>
-                based (adj.) Unconcerned with what others think. Being yourself,
-                not scared of what people think about you. Opposite of cringe.
+                We don't need a clique
+To make our clock tick -
+Our clique is the world
+The world is our clique
               </Text>
-              <Text style={styles.quoteAuthor}>— Mirriam Webster</Text>
+              <Text style={styles.quoteAuthor}>— Lady Kier</Text>
             </BlurView>
           </View>
 
@@ -421,6 +430,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(21, 17, 89, 0.6)",
   },
   secondaryButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 48,
+    alignItems: "center",
+    backgroundColor: "rgba(57, 17, 89, 0.6)",
+  },
+    thirdButton: {
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 48,
