@@ -110,7 +110,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                 <title>ebubbl  home bubbl</title>
                 <meta
                   name="description"
-                  content="🫧  Your own personal bubbleBASE.  A central hub in a decentralized world.  Enjoy all of the memories you have posted with others."
+                  content="🫧  Your own personal ebubbl.  A central hub in a decentralized world.  Enjoy all of the memories you have posted with others."
                 />
               </Head>
     <View style={styles.container}>

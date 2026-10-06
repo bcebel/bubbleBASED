@@ -82,7 +82,7 @@ export default function Root({ children }: PropsWithChildren) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebApplication",
-              name: "BubbleBase",
+              name: "ebubbl",
               description: description,
               url: url,
               applicationCategory: "SocialNetworkApplication",
@@ -90,7 +90,7 @@ export default function Root({ children }: PropsWithChildren) {
               permissions: "browser",
               author: {
                 "@type": "Organization",
-                name: "BubbleBase",
+                name: "ebubbl",
                 url: url,
               },
               featureList: [
@@ -116,7 +116,7 @@ export default function Root({ children }: PropsWithChildren) {
               description: description,
               sameAs: [
                 "https://twitter.com/ebubbl_",
-                "https://instagram.com/bubblebase",
+                "https://instagram.com/ebubbl",
               ],
               address: {
                 "@type": "PostalAddress",

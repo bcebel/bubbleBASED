@@ -214,7 +214,7 @@ export default function HomeScreen() {
                   <View style={styles.mockContentBox}>
                     <Text style={styles.mockCodeText}>// ebubbl</Text>
                     <Text style={styles.mockCodeTextAccent}>
-                      vibe: "chill"
+                      code: "switch"
                     </Text>
                     <Text style={styles.mockCodeText}>network: "decentralized" </Text>
                     <Text style={styles.mockCodeText}>algorithm: "none" </Text>
