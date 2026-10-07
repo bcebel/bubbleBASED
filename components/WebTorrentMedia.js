@@ -20,6 +20,7 @@ function FocusedVideo({ src }) {
     p.loop = true;
     p.muted = globalMuted;
     p.volume = globalVolume;
+      p.play();   
   });
 
   useEventListener(player, "mutedChange", ({ muted }) => {
@@ -45,9 +46,10 @@ function FocusedVideo({ src }) {
       player={player}
       style={styles.video}
       contentFit="contain"
+      nativeControls={false}
       allowsFullscreen
       allowsPictureInPicture
-      nativeControls
+ 
     />
   );
 }
