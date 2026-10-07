@@ -46,10 +46,9 @@ function FocusedVideo({ src }) {
       player={player}
       style={styles.video}
       contentFit="contain"
-      nativeControls={false}
-      allowsFullscreen
-      allowsPictureInPicture
- 
+      nativeControls={true}
+      allowsFullscreen={false}
+      allowsPictureInPicture={false}
     />
   );
 }
