@@ -53,7 +53,7 @@ export default function HomeScreen() {
   return (
     <>
       <Head>
-        <title>ebubbl</title>
+        <title>ebubbl.com</title>
         <meta
           name="description"
           content="🫧  Private & public bubbles 🫧 where your content lives in context. No algorithms. Community ads. Just your people."
