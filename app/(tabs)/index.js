@@ -122,7 +122,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
 
-              <Text style={styles.heroTitle} role="heading" aria-level={1}>
+              <Text style={styles.heroTitle} role="heading" aria-level={2}>
                 welcome to ebubbl 🫧
               </Text>
 
