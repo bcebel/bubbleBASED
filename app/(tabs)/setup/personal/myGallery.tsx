@@ -16,6 +16,8 @@ import WebTorrentMedia from "../../../../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "../../../../components/AdMessage";
 import { enqueueDownload, cancelOutsideSet } from "../../../../components/downloadQueue";
+import { useRouter } from "expo-router";
+
 
 import {
   GET_MY_NEIGHBORHOODS_POSTS,
@@ -23,7 +25,7 @@ import {
   GET_MY_POSTS,
 } from "../../../graphql/queries";
 
-
+const router = useRouter();
 
 const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = width;
@@ -112,17 +114,23 @@ const MediaDisplay = ({
   if (item.magnetLink && (isImage || isVideo)) {
     return (
       <View style={styles.magnetContainer}>
-        <WebTorrentMedia
-          media={{
-            ...item,
-            imageUrl: isImage ? displayUrl : null,
-            videoUrl: isVideo ? displayUrl : null,
-            fileType: fileType,
-            isGif: isGif,
-          }}
-          isFocused={isFocused}
-          isAlmostFocused={isAlmostFocused}
-        />
+        <TouchableOpacity
+          onPress={() =>
+            router.push(`/post/${item.postId}?from=/setup/personal/myGallery`)
+          }
+        >
+          <WebTorrentMedia
+            media={{
+              ...item,
+              imageUrl: isImage ? displayUrl : null,
+              videoUrl: isVideo ? displayUrl : null,
+              fileType: fileType,
+              isGif: isGif,
+            }}
+            isFocused={isFocused}
+            isAlmostFocused={isAlmostFocused}
+          />
+        </TouchableOpacity>
       </View>
     );
   }

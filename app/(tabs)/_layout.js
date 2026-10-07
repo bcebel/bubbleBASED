@@ -125,6 +125,11 @@ export default function TabLayout() {
         name="neighborhoods/bubbles/PostFeed"
         options={{ href: null }}
       />
+      <Tabs.Screen
+        name="post/[id]"
+        options={{ href: null }}
+      />
+
       <Tabs.Screen name="gallery2" options={{ href: null }} />
       <Tabs.Screen
         name="neighborhoods/bubbles/bublic"
