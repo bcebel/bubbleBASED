@@ -29,7 +29,7 @@ export default function NotFoundScreen() {
               <Text style={styles.codeAccent}>circular: "logic" </Text>
               <Text style={styles.codeText}>logic: "circular" </Text>
               <Text style={styles.codeText}>404: "still loading" </Text>
-              <Text style={styles.codeText}>bubble: "based" </Text>
+              <Text style={styles.codeText}> </Text>
             </View>
           </BlurView>
 

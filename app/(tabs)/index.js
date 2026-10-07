@@ -218,7 +218,7 @@ export default function HomeScreen() {
                     </Text>
                     <Text style={styles.mockCodeText}>network: "decentralized" </Text>
                     <Text style={styles.mockCodeText}>algorithm: "none" </Text>
-                    <Text style={styles.mockCodeText}>bubble: "based" </Text>
+                    <Text style={styles.mockCodeText}> </Text>
                   </View>
                 </View>
               </BlurView>
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 0, 129, 0.4)",
+    borderColor: "#FF5CB0",
   },
   tagBadgeText: {
     color: "#FF5CB0",
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     borderRadius: 48,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255, 0, 129, 0.3)",
+    borderColor: "#FF5CB0",
     backgroundColor: "rgba(255, 0, 129, 0.2)",
   },
   bubbleGlassCompact: {
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   },
   mockCodeTextAccent: {
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-    color: "#F55C9C",
+    color: "#FF5CB0",
     fontSize: 14,
     fontWeight: "600",
   },

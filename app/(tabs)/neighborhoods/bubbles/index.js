@@ -248,9 +248,9 @@ const currentUserId = meData?.me?.id;
                                     <Text style={styles.mockCodeTextAccent}>
                                       invitation: "BASED"{" "}
                                     </Text>
-                                    <Text style={styles.mockCodeText}>privacy: "BASED" </Text>
-                                    <Text style={styles.mockCodeText}>context: "BASED" </Text>
-                                    <Text style={styles.mockCodeText}>bubble: "BASED" </Text>
+                                    <Text style={styles.mockCodeText}>bubbles: "swipe" </Text>
+                                    <Text style={styles.mockCodeText}>posts: "scroll" </Text>
+                                    <Text style={styles.mockCodeText}> </Text>
                                   </View>
                                 </View>
                               </BlurView>
@@ -562,14 +562,14 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     backgroundColor: "rgba(0, 255, 255, 0.15)",
     borderWidth: .1,
-    borderColor: "rgba(255, 0, 129, 0.3)",
+    borderColor: "#FF5CB0",
     borderRadius: 48,
   },
   bubbleGlassCompact: {
     borderRadius: 20,
     overflow: "hidden",
     borderWidth: .1,
-    borderColor: "rgba(255, 0, 129, 0.3)",
+    borderColor: "#FF5CB0",
     backgroundColor: "rgba(255, 0, 129, 0.2)",
   },
   browseButton: {

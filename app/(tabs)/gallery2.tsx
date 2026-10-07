@@ -230,7 +230,7 @@ export default function GalleryScreen() {
                       <Text style={styles.mockCodeText}>
                         network: "shared"{" "}
                       </Text>
-                      <Text style={styles.mockCodeText}>bubble: "based" </Text>
+                      <Text style={styles.mockCodeText}> </Text>
                     </View>
                   </View>
                 </BlurView>

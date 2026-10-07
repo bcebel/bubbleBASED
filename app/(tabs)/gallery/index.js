@@ -527,11 +527,11 @@ export default function GalleryScreen() {
                   <View style={styles.mockContentBox}>
                     <Text style={styles.mockCodeText}>// ebubbl</Text>
                     <Text style={styles.mockCodeTextAccent}>
-                      invitation: "BASED"{" "}
+                      gallery: "bubbles"{" "}
                     </Text>
-                    <Text style={styles.mockCodeText}>privacy: "BASED" </Text>
-                    <Text style={styles.mockCodeText}>context: "BASED" </Text>
-                    <Text style={styles.mockCodeText}>bubble: "BASED" </Text>
+                    <Text style={styles.mockCodeText}>swipe: "around" </Text>
+                    <Text style={styles.mockCodeText}>re: "connect" </Text>
+                    <Text style={styles.mockCodeText}> </Text>
                   </View>
                 </View>
               </BlurView>
@@ -902,14 +902,14 @@ const styles = StyleSheet.create({
     borderRadius: 48,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255, 0, 129, 0.3)",
+    borderColor: "#FF5CB0",
     backgroundColor: "rgba(255, 0, 129, 0.2)",
   },
   bubbleGlassCompact: {
     borderRadius: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255, 0, 129, 0.3)",
+    borderColor: "#FF5CB0",
     backgroundColor: "rgba(255, 0, 129, 0.2)",
   },
   primaryButton: {

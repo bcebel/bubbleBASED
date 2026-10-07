@@ -253,11 +253,11 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
                   <View style={styles.mockContentBox}>
                     <Text style={styles.mockCodeText}>// ebubbl</Text>
                     <Text style={styles.mockCodeTextAccent}>
-                      yours: "all of it"{" "}
+                      platform: "us"{" "}
                     </Text>
-                    <Text style={styles.mockCodeText}>privacy: "your call" </Text>
-                    <Text style={styles.mockCodeText}>links: "we share" </Text>
-                    <Text style={styles.mockCodeText}>bubble: "based" </Text>
+                    <Text style={styles.mockCodeText}>privacy: "respected" </Text>
+                    <Text style={styles.mockCodeText}>network: "distributed" </Text>
+                    <Text style={styles.mockCodeText}> </Text>
                   </View>
                 </View>
               </BlurView>
@@ -729,14 +729,14 @@ const styles = StyleSheet.create({
       borderRadius: 48,
       overflow: "hidden",
       borderWidth: 1,
-      borderColor: "rgba(255, 0, 129, 0.3)",
+      borderColor: "#FF5CB0",
       backgroundColor: "rgba(255, 0, 129, 0.2)",
     },
     bubbleGlassCompact: {
       borderRadius: 20,
       overflow: "hidden",
       borderWidth: 1,
-      borderColor: "rgba(255, 0, 129, 0.3)",
+      borderColor: "#FF5CB0",
       backgroundColor: "rgba(255, 0, 129, 0.2)",
     },
     primaryButton: {
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
     },
     mockCodeTextAccent: {
       fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
-      color: "#10B981",
+      color: "#FF5CB0",
       fontSize: 14,
       fontWeight: "600",
     },

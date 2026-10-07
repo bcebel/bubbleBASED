@@ -291,7 +291,7 @@ export default function NeighborhoodsScreen() {
                       </Text>
                       <Text style={styles.mockCodeText}>privacy: "based" </Text>
                       <Text style={styles.mockCodeText}>context: "based" </Text>
-                      <Text style={styles.mockCodeText}>bubble: "based" </Text>
+                      <Text style={styles.mockCodeText}> </Text>
                     </View>
                   </View>
                 </BlurView>
