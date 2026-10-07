@@ -298,7 +298,7 @@ const currentUserId = meData?.me?.id;
             colors={["rgba(0,0,0,0.9)", "rgba(0,0,0,0.1)"]}
             style={styles.neighborhoodCardOverlay}
           >
-            <Text style={styles.neighborhoodName}>  {getNeighborhoodDisplayName(item, currentUserId)}</Text>
+          <Text style={styles.neighborhoodName}>{item.name}</Text>
             <Text style={[styles.neighborhoodType, { color: BUBBLE_TYPE_COLORS[item.type] }]}>
               {item.type} • {item.members?.length || 0} members
             </Text>
