@@ -8,8 +8,8 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import React, { useState, useEffect } from "react";
 import FeedItem from "../../components/FeedItem";
-const router = useRouter();
 
 const GET_POST = gql`
   query GetPost($id: ID!) {
@@ -38,22 +38,29 @@ const GET_POST = gql`
 `;
 
 export default function SinglePost() {
+  const router = useRouter();
   const { id, from } = useLocalSearchParams();
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const { data, loading, error } = useQuery(GET_POST, {
+    variables: { id },
+    skip: !id || !mounted, // ← don't fetch during static export
+  });
+
   const handleBack = () => {
-    if (from) {
+    if (from && typeof from === "string" && from.startsWith("/")) {
       router.replace(from);
     } else if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/gallery"); // or wherever
+      router.replace("/");
     }
   };
 
-  const { data, loading, error } = useQuery(GET_POST, {
-    variables: { id },
-    skip: !id,
-  });
+  // Don't render anything on the server / first paint
+  if (!mounted) return null;
 
   if (loading) return <ActivityIndicator size="large" />;
   if (error) return <Text>Error: {error.message}</Text>;
@@ -61,7 +68,7 @@ export default function SinglePost() {
 
   return (
     <ScrollView>
-      <TouchableOpacity onPress={() => handleBack()}>
+      <TouchableOpacity onPress={handleBack}>
         <Text style={styles.back}>← Back</Text>
       </TouchableOpacity>
       <FeedItem post={data.post} onDelete={() => router.back()} />
@@ -70,5 +77,5 @@ export default function SinglePost() {
 }
 
 const styles = StyleSheet.create({
-  back: { color: "#ffff" },
+  back: { color: "#fff", padding: 12, fontSize: 16 },
 });
