@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, gql } from "@apollo/client";
 import {
