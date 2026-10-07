@@ -1,7 +1,15 @@
+export const dynamic = "force-dynamic";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, gql } from "@apollo/client";
-import { View, ActivityIndicator, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
-import FeedItem from "../../../components/FeedItem";
+import {
+  View,
+  ActivityIndicator,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import FeedItem from "../../components/FeedItem";
 const router = useRouter();
 
 const GET_POST = gql`
@@ -31,17 +39,17 @@ const GET_POST = gql`
 `;
 
 export default function SinglePost() {
-    const { id, from } = useLocalSearchParams();
-    
-    const handleBack = () => {
-      if (from) {
-        router.replace(from);
-      } else if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace("/gallery"); // or wherever
-      }
-    };
+  const { id, from } = useLocalSearchParams();
+
+  const handleBack = () => {
+    if (from) {
+      router.replace(from);
+    } else if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/gallery"); // or wherever
+    }
+  };
 
   const { data, loading, error } = useQuery(GET_POST, {
     variables: { id },
@@ -55,16 +63,13 @@ export default function SinglePost() {
   return (
     <ScrollView>
       <TouchableOpacity onPress={() => handleBack()}>
-              <Text style={styles.back}>← Back</Text>
+        <Text style={styles.back}>← Back</Text>
       </TouchableOpacity>
       <FeedItem post={data.post} onDelete={() => router.back()} />
     </ScrollView>
   );
 }
 
-
 const styles = StyleSheet.create({
-    
-        back: {color: "#ffff"       
-    },
-})
+  back: { color: "#ffff" },
+});
