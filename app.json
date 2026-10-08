@@ -98,7 +98,13 @@
           "supportsPictureInPicture": true
         }
       ],
-      "expo-router",
+      [
+        "expo-router",
+        {
+          "origin": "https://ebubbl.com",
+          "asyncRoutes": "production"
+        }
+      ],
       [
         "expo-splash-screen",
         {
