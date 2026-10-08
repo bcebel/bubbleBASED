@@ -279,7 +279,7 @@ window.WebTorrent = WebTorrent;
               color: "#FF5CB0",
             }}
           >
-            ebubbl{" "}
+            ebubbl
           </h1>
 
           <p
@@ -316,8 +316,8 @@ window.WebTorrent = WebTorrent;
                   textDecoration: "none",
                   padding: "8px 16px",
                   borderRadius: "20px",
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  border: "#FFC800",
+                  borderStyle: "groove",
                   backdropFilter: "blur(5px)",
                   transition: "all 0.2s ease",
                 }}
