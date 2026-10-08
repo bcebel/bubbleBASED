@@ -256,8 +256,8 @@ export default function Root({ children }: PropsWithChildren) {
           type="module"
           dangerouslySetInnerHTML={{
             __html: `
-  import WebTorrent from '/webtorrent.min.js';
-window.WebTorrent = WebTorrent;
+      import WebTorrent from '/webtorrent.min.js';
+      window.WebTorrent = WebTorrent;
 
       window.enhancedTrackers = [
         "wss://tracker-0ad4cca9fd92.herokuapp.com",
@@ -278,72 +278,61 @@ window.WebTorrent = WebTorrent;
         "udp://tracker3.itzmx.com:6961/announce"
       ];
 
-      try {
-        if (typeof window !== "undefined" && window.WebTorrent) {
+      function runWebTorrentServer(targetController) {
+        if (window.WebTorrent && !window.globalWebTorrentClient) {
           window.globalWebTorrentClient = new window.WebTorrent({
             tracker: {
               announce: window.enhancedTrackers,
               rtcConfig: {
-    iceServers: [
-      {
-        urls: "stun:stun.relay.metered.ca:80",
-      },
-      {
-        urls: "turn:standard.relay.metered.ca:80",
-        username: "fe67734f65cabae0c1f0bf61",
-        credential: "AY3FDMwL9QjEIZ2R",
-      },
-      {
-        urls: "turn:standard.relay.metered.ca:80?transport=tcp",
-        username: "fe67734f65cabae0c1f0bf61",
-        credential: "AY3FDMwL9QjEIZ2R",
-      },
-      {
-        urls: "turn:standard.relay.metered.ca:443",
-        username: "fe67734f65cabae0c1f0bf61",
-        credential: "AY3FDMwL9QjEIZ2R",
-      },
-      {
-        urls: "turns:standard.relay.metered.ca:443?transport=tcp",
-        username: "fe67734f65cabae0c1f0bf61",
-        credential: "AY3FDMwL9QjEIZ2R",
-      },
-
+                iceServers: [
+                  { urls: "stun:stun.relay.metered.ca:80" },
+                  { urls: "turn:standard.relay.metered.ca:80", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                  { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                  { urls: "turn:standard.relay.metered.ca:443", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                  { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
                   { urls: "stun:stun.l.google.com:19302" },
                   { urls: "stun:stun1.l.google.com:19302" },
-                     { urls: "stun:global.stun.twilio.com:3478" }
+                  { urls: "stun:global.stun.twilio.com:3478" }
                 ],
               },
             },
             webSeeds: true,
           });
+
+          window.globalWebTorrentClient.createServer({
+            controller: targetController
+          });
+          window.__canStream = true;
+          console.log("🌪️ CHAMP INITIALIZED WITH UNIFIED CONTROL ROUTE");
         }
+      }
 
-        console.log("🌪️ CHAMP INITIALIZED WITH HEROKU TRACKER");
-
+      try {
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker
-            .register("/sw.min.js", { scope: "/" })
-            .then((registration) => navigator.serviceWorker.ready.then(() => registration))
-            .then((registration) => {
-              window.globalWebTorrentClient.createServer({
-                controller: registration,
-              });
-              window.__canStream = true;
-              console.log("🎬 Service worker registered and server created");
-              setTimeout(() => {
-  console.log("server:", !!window.globalWebTorrentClient?._server);
-  console.log("SW controller:", navigator.serviceWorker.controller);
-}, 3000);
-            })
-
-            .catch((e) => {
-              console.error("🎬 Service worker failed:", e);
-              window.__canStream = false;
-            });
+          window.addEventListener('load', () => {
+            if (navigator.serviceWorker.controller) {
+              console.log("🎬 Service worker already controlling page. Re-attaching server channel.");
+              runWebTorrentServer(navigator.serviceWorker.controller);
+            } else {
+              navigator.serviceWorker
+                .register("/sw.js", { scope: "/" })
+                .then((registration) => navigator.serviceWorker.ready.then(() => registration))
+                .then((registration) => {
+                  runWebTorrentServer(navigator.serviceWorker.controller || registration.active);
+                  setTimeout(() => {
+                    console.log("server:", !!window.globalWebTorrentClient?._server);
+                    console.log("SW controller:", navigator.serviceWorker.controller);
+                  }, 3000);
+                })
+                .catch((e) => {
+                  console.error("🎬 Service worker compilation fallback error:", e);
+                  window.__canStream = false;
+                });
+            }
+          });
         }
       } catch (e) {
-        console.error("🌪️ CHAMP FAILED:", e);
+        console.error("🌪️ CHAMP BLOCK CRASHED:", e);
       }
     `,
           }}
