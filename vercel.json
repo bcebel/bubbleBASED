@@ -2,19 +2,15 @@
   "cleanUrls": true,
   "rewrites": [
     {
-  "source": "/_expo/:path*",
-  "destination": "/_expo/:path*"
-},
-    {
-  "source": "/api/media/:path*",
-  "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/media/:path*"
-},
+      "source": "/api/media/:path*",
+      "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/media/:path*"
+    },
     {
       "source": "/api/webseed/:path*",
       "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/webseed/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!_expo|assets|.*\\..*$).*)",
       "destination": "/"
     }
   ],
@@ -36,7 +32,6 @@
       "source": "/api/webseed/:path*",
       "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }]
     },
-
     {
       "source": "/webtorrent.min.js",
       "headers": [
@@ -46,7 +41,6 @@
         }
       ]
     },
-
     {
       "source": "/:path*.(png|jpg|jpeg|gif|webp|avif|ico)",
       "headers": [

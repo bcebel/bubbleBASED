@@ -176,7 +176,7 @@ export default function Root({ children }: PropsWithChildren) {
           <h1
             style={{
               fontSize: "2rem",
-              color: "#FF5CB0",
+              color: "#FF0081",
               margin: 0,
             }}
           >
