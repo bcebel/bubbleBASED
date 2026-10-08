@@ -192,6 +192,7 @@ export default function Root({ children }: PropsWithChildren) {
               maxHeight: "50vh",
               objectFit: "contain",
             }}
+            fetchPriority="high"
           />
 
           {/* Bottom: nav */}
