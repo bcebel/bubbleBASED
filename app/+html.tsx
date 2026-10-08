@@ -260,8 +260,7 @@ window.WebTorrent = WebTorrent;
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#130720",
-            backgroundImage: "url(/1024.webp)",
+            backgroundColor: "#FFFFFF",
             backgroundSize: "cover",
             backgroundPosition: "center",
             color: "#ffffff",
@@ -277,15 +276,18 @@ window.WebTorrent = WebTorrent;
             style={{
               fontSize: "2.5rem",
               marginBottom: "0.5rem",
-              color: "#20B2AA",
+              color: "#FF5CB0",
             }}
           >
-            ebubbl
+            ebubbl{" "}
           </h1>
 
-          <p style={{ fontSize: "1.2rem", color: "#ccc", maxWidth: "500px" }}>
+          <p
+            style={{ fontSize: "1.2rem", color: "#0A0C10", maxWidth: "500px" }}
+          >
             Digital Bubbles 🫧 For Everyone
           </p>
+          <h2 style={{ color: "#0A0C10" }}>🫧🫧🫧🫧🫧🫧🫧🫧🫧🫧</h2>
           <nav
             style={{
               display: "flex",
@@ -310,7 +312,7 @@ window.WebTorrent = WebTorrent;
                 href={link.href}
                 style={{
                   fontSize: "0.9rem",
-                  color: "#ffffff",
+                  color: "#0A0C10",
                   textDecoration: "none",
                   padding: "8px 16px",
                   borderRadius: "20px",
