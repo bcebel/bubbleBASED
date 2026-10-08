@@ -45,6 +45,7 @@ export default function NeighborhoodGalleryScreen() {
           source={require("@/assets/images/bbl.webp")}
           style={styles.heroBubble}
           resizeMode="cover"
+          fetchPriority="high"
         />
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}

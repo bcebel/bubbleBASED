@@ -177,6 +177,7 @@ export default function JoinViaLinkScreen() {
           source={require("@/assets/images/bbl.webp")}
           style={styles.heroBubble}
           resizeMode="cover"
+          fetchPriority="high"
         />
         <View style={styles.header}>
           <TouchableOpacity

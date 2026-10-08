@@ -148,6 +148,7 @@ const RegistrationScreen = () => {
         source={require("@/assets/images/bbl.webp")}
         style={styles.heroBubble}
         resizeMode="cover"
+        fetchPriority="high"
       />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
@@ -195,7 +196,6 @@ const RegistrationScreen = () => {
               onChangeText={setPassword}
               secureTextEntry
               onSubmitEditing={handleRegister}
-              
             />
           </View>
 

@@ -54,6 +54,7 @@ function PreviewView({ neighborhood, onJoin, onBrowse, hasPendingRequest }) {
         source={bubblePhotoSource}
         style={styles.bubbleHeader}
         resizeMode="cover"
+        fetchPriority="high"
       >
         <LinearGradient
           colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.2)"]}
@@ -272,6 +273,7 @@ const hasPendingRequest = neighborhood.joinRequests?.some(
           source={bubblePhotoSource}
           style={styles.bubbleHeader}
           resizeMode="cover"
+          fetchPriority="high"
         >
           <LinearGradient
             colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.2)"]}

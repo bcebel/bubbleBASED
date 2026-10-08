@@ -307,6 +307,7 @@ const handleJoinNeighborhood = async (neighborhoodId) => {
            }
            style={styles.neighborhoodCardImage}
            resizeMode="cover"
+            fetchPriority="high"
          >
            <LinearGradient
              colors={["rgba(0,0,0,0.9)", "rgba(0,0,0,0.1)"]}

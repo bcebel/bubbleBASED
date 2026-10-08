@@ -20,6 +20,7 @@ export default function Root({ children }: PropsWithChildren) {
         />
         <link rel="manifest" href="/manifest.json" />
         <link rel="canonical" href="https://ebubbl.com/" />
+        <link rel="preload" as="image" href="/bbl.webp" fetchPriority="high" />
         <script dangerouslySetInnerHTML={{ __html: sw }} />
         <ScrollViewStyleReset />
         <style
@@ -137,7 +138,6 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="apple-touch-icon" sizes="180x180" href="/180.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/16.png" />
-
 
         <meta name="theme-color" content="#20B2AA" />
         <meta name="msapplication-TileColor" content="#20B2AA" />

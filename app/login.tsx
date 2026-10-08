@@ -111,6 +111,7 @@ export default function LoginScreen() {
           source={require("@/assets/images/bbl.webp")}
           style={styles.heroBubble}
           resizeMode="cover"
+          fetchPriority="high"
         />
         <Text style={styles.title}>Sign In</Text>
         <Text style={styles.subtitle}>Enter ebubbl</Text>

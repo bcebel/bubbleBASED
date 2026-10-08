@@ -503,6 +503,7 @@ export default function GalleryScreen() {
                       fileType: "image",
                     }}
                     isFocused={true}
+                    fetchPriority="high"
                   />
                   <View style={styles.peerBadge}>
                     <View style={styles.liveDot} />

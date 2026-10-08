@@ -126,6 +126,7 @@ export default function NeighborhoodDetailScreen() {
         source={bubblePhotoSource}
         style={styles.bubbleHeader}
         resizeMode="cover"
+        fetchPriority="high"
       >
         <LinearGradient
           colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.2)"]}
@@ -157,11 +158,11 @@ export default function NeighborhoodDetailScreen() {
             >
               <Text style={styles.button}>🖼️ My Vault</Text>
             </TouchableOpacity>
-   
-              <TouchableOpacity onPress={() => router.replace(`/setup/setup`)}>
-                <Text style={styles.button}>📝 Profile</Text>
-              </TouchableOpacity>
-            </BlurView>
+
+            <TouchableOpacity onPress={() => router.replace(`/setup/setup`)}>
+              <Text style={styles.button}>📝 Profile</Text>
+            </TouchableOpacity>
+          </BlurView>
         ) : (
           // Normal bubble: the full menu
           <>
