@@ -4,7 +4,7 @@ import {
   ThemeProvider,
 } from "expo-router/react-navigation";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -21,6 +21,7 @@ import { injectSpeedInsights } from "@vercel/speed-insights";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+    const pathname = usePathname();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -28,6 +29,15 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     Montserrat: require("../assets/fonts/Montserrat-Medium.ttf"),
   });
+
+  useEffect(() => {
+    console.log("[splash] pathname:", pathname);
+    if (typeof window === "undefined") return;
+    if (pathname && pathname !== "/") {
+      console.log("[splash] hiding");
+      window.__hideSplash?.();
+    }
+  }, [pathname]);
 
   useEffect(() => {
     // ⚡ Optimization: Initialize Vercel Analytics only once on the client side

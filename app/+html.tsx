@@ -131,8 +131,7 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
         <link
           rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
+          href="https://minnowspacebackend-e6635e46c3d0.herokuapp.com"
         />
         <link rel="icon" href="/48.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/180.png" />
@@ -303,6 +302,7 @@ window.WebTorrent = WebTorrent;
               { label: "Login", href: "/login" },
               { label: "Gallery", href: "/gallery" },
               { label: "Livestream", href: "/livestream" },
+              { label: "Register", href: "/register" },
               { label: "Inbox", href: "/inbox" },
               { label: "Setup", href: "/setup" },
               { label: "Sitemap", href: "/sitemap.xml" },
@@ -317,7 +317,8 @@ window.WebTorrent = WebTorrent;
                   padding: "8px 16px",
                   borderRadius: "20px",
                   border: "#FFC800",
-                  borderStyle: "groove",
+                  borderStyle: "solid",
+                  borderWidth: "1px",
                   backdropFilter: "blur(5px)",
                   transition: "all 0.2s ease",
                 }}
@@ -333,16 +334,13 @@ window.WebTorrent = WebTorrent;
         <script
           dangerouslySetInnerHTML={{
             __html: `
-      window.addEventListener('DOMContentLoaded', () => {
-        const checkReact = setInterval(() => {
-          const root = document.getElementById('root');
-          if (root && root.children.length > 0) {
-            const splash = document.getElementById('splash-screen');
-            if (splash) splash.style.display = 'none';
-            clearInterval(checkReact);
-          }
-        }, 50);
-      });
+      // No auto-hide. The app controls this.
+      window.__hideSplash = () => {
+        const splash = document.getElementById("splash-screen");
+        if (!splash) return;
+        splash.style.opacity = "0";
+        setTimeout(() => { splash.style.display = "none"; }, 200);
+      };
     `,
           }}
         />

@@ -5,10 +5,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 
 export default function TabLayout() {
+  
   const insets = useSafeAreaInsets();
 
   // (tabs)/_layout.tsx
   const [wakeKey, setWakeKey] = useState(0);
+
+
+  
+  
   useEffect(() => {
  const onVisible = () => {
    if (document.visibilityState !== "visible") return;
