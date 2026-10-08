@@ -161,35 +161,40 @@ export default function Root({ children }: PropsWithChildren) {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "space-between", // ← top/bottom anchoring
             backgroundColor: "#FFFFFF",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            color: "#ffffff",
+            color: "#0A0C10",
             fontFamily:
               '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             textAlign: "center",
-            padding: "20px",
+            padding: "40px 20px",
             boxSizing: "border-box",
             zIndex: 99999,
           }}
         >
+          {/* Top: heading */}
           <h1
             style={{
-              fontSize: "2.5rem",
-              marginBottom: "0.5rem",
+              fontSize: "2rem",
               color: "#FF5CB0",
+              margin: 0,
             }}
           >
-            ebubbl
+            digital bubbles 🫧 for everyone
           </h1>
 
-          <p
-            style={{ fontSize: "1.2rem", color: "#0A0C10", maxWidth: "500px" }}
-          >
-            Digital Bubbles 🫧 For Everyone
-          </p>
-          <h2 style={{ color: "#0A0C10" }}>🫧🫧🫧🫧🫧🫧🫧🫧🫧🫧</h2>
+          {/* Middle: image */}
+          <img
+            src="/ebubbl.png"
+            alt=""
+            style={{
+              maxWidth: "80%",
+              maxHeight: "50vh",
+              objectFit: "contain",
+            }}
+          />
+
+          {/* Bottom: nav */}
           <nav
             style={{
               display: "flex",
