@@ -139,6 +139,114 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="icon" type="image/png" sizes="16x16" href="/16.png" />
 
         {/* Unified WebTorrent Initialization */}
+
+        <meta name="theme-color" content="#20B2AA" />
+        <meta name="msapplication-TileColor" content="#20B2AA" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="format-detection" content="telephone=no" />
+        <link rel="canonical" href={url} />
+        <meta
+          name="impact-site-verification"
+          content="6430b649-d08d-495d-8ef7-5f05702bf594"
+        />
+        <link rel="preload" as="image" href="/bble.png" />
+      </head>
+
+      <body>
+        <div
+          id="splash-screen"
+          style={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#FFFFFF",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            color: "#ffffff",
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            textAlign: "center",
+            padding: "20px",
+            boxSizing: "border-box",
+            zIndex: 99999,
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "2.5rem",
+              marginBottom: "0.5rem",
+              color: "#FF5CB0",
+            }}
+          >
+            ebubbl
+          </h1>
+
+          <p
+            style={{ fontSize: "1.2rem", color: "#0A0C10", maxWidth: "500px" }}
+          >
+            Digital Bubbles 🫧 For Everyone
+          </p>
+          <h2 style={{ color: "#0A0C10" }}>🫧🫧🫧🫧🫧🫧🫧🫧🫧🫧</h2>
+          <nav
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "10px",
+              justifyContent: "center",
+              marginTop: "1.5rem",
+              maxWidth: "600px",
+            }}
+          >
+            {[
+              { label: "Login", href: "/login" },
+              { label: "Register", href: "/register" },
+              { label: "Global", href: "/bubbles/global" },
+              { label: "Gallery", href: "/gallery" },
+              { label: "Livestream", href: "/livestream" },
+              { label: "Inbox", href: "/inbox" },
+              { label: "Setup", href: "/setup" },
+            ].map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#0A0C10",
+                  textDecoration: "none",
+                  padding: "8px 16px",
+                  borderRadius: "20px",
+                  border: "#FFC800",
+                  borderStyle: "solid",
+                  borderWidth: "1px",
+                  backdropFilter: "blur(5px)",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        <div id="root">{children}</div>
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+      // No auto-hide. The app controls this.
+      window.__hideSplash = () => {
+        const splash = document.getElementById("splash-screen");
+        if (!splash) return;
+        splash.style.opacity = "0";
+        setTimeout(() => { splash.style.display = "none"; }, 200);
+      };
+    `,
+          }}
+        />
         <script
           type="module"
           dangerouslySetInnerHTML={{
@@ -232,115 +340,6 @@ window.WebTorrent = WebTorrent;
       } catch (e) {
         console.error("🌪️ CHAMP FAILED:", e);
       }
-    `,
-          }}
-        />
-
-        <meta name="theme-color" content="#20B2AA" />
-        <meta name="msapplication-TileColor" content="#20B2AA" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="format-detection" content="telephone=no" />
-        <link rel="canonical" href={url} />
-        <meta
-          name="impact-site-verification"
-          content="6430b649-d08d-495d-8ef7-5f05702bf594"
-        />
-        <link rel="preload" as="image" href="/bble.png" />
-      </head>
-
-      <body>
-        <div
-          id="splash-screen"
-          style={{
-            position: "fixed",
-            inset: 0,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#FFFFFF",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            color: "#ffffff",
-            fontFamily:
-              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            textAlign: "center",
-            padding: "20px",
-            boxSizing: "border-box",
-            zIndex: 99999,
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "2.5rem",
-              marginBottom: "0.5rem",
-              color: "#FF5CB0",
-            }}
-          >
-            ebubbl
-          </h1>
-
-          <p
-            style={{ fontSize: "1.2rem", color: "#0A0C10", maxWidth: "500px" }}
-          >
-            Digital Bubbles 🫧 For Everyone
-          </p>
-          <h2 style={{ color: "#0A0C10" }}>🫧🫧🫧🫧🫧🫧🫧🫧🫧🫧</h2>
-          <nav
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "10px",
-              justifyContent: "center",
-              marginTop: "1.5rem",
-              maxWidth: "600px",
-            }}
-          >
-            {[
-              { label: "Login", href: "/login" },
-              { label: "Register", href: "/register" },
-              { label: "Global", href: "/bubbles/global" },
-              { label: "Gallery", href: "/gallery" },
-              { label: "Livestream", href: "/livestream" },
-              { label: "Inbox", href: "/inbox" },
-              { label: "Setup", href: "/setup" },
-
-            ].map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                style={{
-                  fontSize: "0.9rem",
-                  color: "#0A0C10",
-                  textDecoration: "none",
-                  padding: "8px 16px",
-                  borderRadius: "20px",
-                  border: "#FFC800",
-                  borderStyle: "solid",
-                  borderWidth: "1px",
-                  backdropFilter: "blur(5px)",
-                  transition: "all 0.2s ease",
-                }}
-              >
-                {link.label}
-              </a>
-            ))}
-          </nav>
-        </div>
-
-        <div id="root">{children}</div>
-
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-      // No auto-hide. The app controls this.
-      window.__hideSplash = () => {
-        const splash = document.getElementById("splash-screen");
-        if (!splash) return;
-        splash.style.opacity = "0";
-        setTimeout(() => { splash.style.display = "none"; }, 200);
-      };
     `,
           }}
         />
