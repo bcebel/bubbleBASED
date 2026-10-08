@@ -138,7 +138,6 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="icon" type="image/png" sizes="32x32" href="/32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/16.png" />
 
-        {/* Unified WebTorrent Initialization */}
 
         <meta name="theme-color" content="#20B2AA" />
         <meta name="msapplication-TileColor" content="#20B2AA" />
