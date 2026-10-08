@@ -185,7 +185,7 @@ export default function Root({ children }: PropsWithChildren) {
 
           {/* Middle: image */}
           <img
-            src="/ebubbl.png"
+            src="/ebubbl.webp"
             alt=""
             style={{
               maxWidth: "80%",
