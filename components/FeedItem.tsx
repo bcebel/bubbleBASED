@@ -1,6 +1,15 @@
 // FeedItem.tsx - Updated
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Modal,
+  ActivityIndicator,
+  FlatList
+} from "react-native";
 import AffiliateCard from "./AffiliateCard";
 import WebTorrentMedia from "./WebTorrentMedia";
 import { useMutation, useQuery, gql } from "@apollo/client";
@@ -23,6 +32,18 @@ const GET_ME_ID = gql`
   }
 `;
 
+
+const GET_MY_NEIGHBORHOODS = gql`
+  query GetMyNeighborhoods {
+    myNeighborhoods {
+      id
+      name
+      type
+    }
+  }
+`;
+
+
 const SHARE_POST = gql`
   mutation SharePost($postId: ID!, $targetNeighborhoodId: ID!) {
     sharePost(postId: $postId, targetNeighborhoodId: $targetNeighborhoodId) {
@@ -35,6 +56,56 @@ const SHARE_POST = gql`
     }
   }
 `;
+
+function SharePicker({ visible, post, onClose, onShare }) {
+  const { data, loading } = useQuery(GET_MY_NEIGHBORHOODS, {
+    skip: !visible,
+    fetchPolicy: "cache-first",
+  });
+
+  const bubbles = (data?.myNeighborhoods || []).filter(
+    (b) => b.id !== post?.neighborhood?.id,
+  );
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.backdrop}>
+        <View style={styles.sheet}>
+          <Text style={styles.title}>Share to...</Text>
+
+          {loading ? (
+            <ActivityIndicator />
+          ) : bubbles.length === 0 ? (
+            <Text style={styles.empty}>No other bubbles to share to.</Text>
+          ) : (
+            <FlatList
+              data={bubbles}
+              keyExtractor={(b) => b.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.bubbleRow}
+                  onPress={() => onShare(item.id)}
+                >
+                  <Text style={styles.bubbleName}>{item.name}</Text>
+                  <Text style={styles.bubbleType}>{item.type}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+
+          <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
 
 const PINATA_GATEWAY =
   process.env.EXPO_PUBLIC_PINATA_GATEWAY || "gateway.pinata.cloud";
@@ -104,7 +175,6 @@ const { data: hoodData } = useQuery(GET_NEIGHBORHOOD_INFO, {
   variables: { id: post.neighborhood?.id },
   skip: !post.neighborhood?.id,
 });
- 
   const [sharePost, { loading: sharing }] = useMutation(SHARE_POST);
   const [showSharePicker, setShowSharePicker] = useState(false);
    const handleShare = async (targetNeighborhoodId) => {
@@ -236,11 +306,16 @@ const { data: hoodData } = useQuery(GET_NEIGHBORHOOD_INFO, {
 
       {affiliate && <AffiliateCard affiliate={affiliate} />}
 
- 
       <CommentSection
         postId={post.id}
         initialCount={commentCount}
         onCommentCountChange={setCommentCount}
+      />
+      <SharePicker
+        visible={showSharePicker}
+        post={post}
+        onClose={() => setShowSharePicker(false)}
+        onShare={handleShare}
       />
     </View>
   );
@@ -322,6 +397,72 @@ const styles = StyleSheet.create({
   actionLabel: {
     color: "#8A829E",
     fontSize: 12,
+    fontWeight: "600",
+  },
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    backgroundColor: "#1E1035",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    borderColor: "rgba(255, 128, 0, 0.3)",
+    padding: 20,
+    paddingBottom: 40,
+    maxHeight: "70%",
+  },
+  title: {
+    color: "#00ffff",
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  empty: {
+    color: "#8A829E",
+    fontSize: 15,
+    textAlign: "center",
+    paddingVertical: 30,
+  },
+  bubbleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#130720",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "rgba(0, 255, 255, 0.2)",
+  },
+  bubbleName: {
+    color: "#F5F2FA",
+    fontSize: 16,
+    fontWeight: "600",
+    flex: 1,
+  },
+  bubbleType: {
+    color: "#FF99FF",
+    fontSize: 12,
+    opacity: 0.8,
+    marginLeft: 10,
+  },
+  cancelBtn: {
+    marginTop: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 55, 95, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 55, 95, 0.4)",
+  },
+  cancelText: {
+    color: "#ff375f",
+    fontSize: 16,
     fontWeight: "600",
   },
 });

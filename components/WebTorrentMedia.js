@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useEventListener } from "expo";
 import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
 import { useVideoPlayer, VideoView, useCaching } from "expo-video";
-import { getMedia } from "../components/mediaCache";
+import { getMedia } from "./mediaCache";
 import { enqueueDownload } from "./downloadQueue";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
