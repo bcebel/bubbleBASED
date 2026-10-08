@@ -3,16 +3,38 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import AffiliateCard from "./AffiliateCard";
 import WebTorrentMedia from "./WebTorrentMedia";
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation, useQuery, gql } from "@apollo/client";
 import { DELETE_POST, GET_COMMENTS } from "../app/graphql/queries";
 import CommentSection from "./CommentSection";
-
+import { canModerate } from "../app/utils/permissions";
+import { GET_NEIGHBORHOOD_INFO } from "../app/graphql/queries";
 const getFileType = (fileName = "") => {
   const ext = fileName.split(".").pop()?.toLowerCase();
   if (["jpg", "jpeg", "png", "gif", "avif", "heic", "heif", "webp", "svg"].includes(ext)) return "image";
   if (["mp4", "mov", "webm", "avi", "mkv"].includes(ext)) return "video";
   return "unknown";
 };
+
+const GET_ME_ID = gql`
+  query GetMeId {
+    me {
+      id
+    }
+  }
+`;
+
+const SHARE_POST = gql`
+  mutation SharePost($postId: ID!, $targetNeighborhoodId: ID!) {
+    sharePost(postId: $postId, targetNeighborhoodId: $targetNeighborhoodId) {
+      id
+      content
+      neighborhood {
+        id
+        name
+      }
+    }
+  }
+`;
 
 const PINATA_GATEWAY =
   process.env.EXPO_PUBLIC_PINATA_GATEWAY || "gateway.pinata.cloud";
@@ -78,21 +100,49 @@ function formatTimeAgo(timestamp) {
 
 export default function FeedItem({ post, onLike, onComment, onDelete }) {
   if (!post) return null;
+const { data: hoodData } = useQuery(GET_NEIGHBORHOOD_INFO, {
+  variables: { id: post.neighborhood?.id },
+  skip: !post.neighborhood?.id,
+});
+ 
+  const [sharePost, { loading: sharing }] = useMutation(SHARE_POST);
+  const [showSharePicker, setShowSharePicker] = useState(false);
+   const handleShare = async (targetNeighborhoodId) => {
+     try {
+       await sharePost({
+         variables: { postId: post.id, targetNeighborhoodId },
+       });
+       setShowSharePicker(false);
+       onDelete?.(); // reuse the same "refetch feed" callback
+     } catch (err) {
+       alert("Share failed: " + err.message);
+     }
+   };
+  const { data: meData } = useQuery(GET_ME_ID);
+  const currentUserId = meData?.me?.id;
+  const isOwner = post.author?.id === currentUserId;
+  const members = hoodData?.neighborhood?.members || [];
+  const myMember = members.find((m) => m.user?.id === currentUserId);
+  const authorMember = members.find((m) => m.user?.id === post.author?.id);
+
+  const isSelf = post.author?.id === currentUserId;
+  const canShare = isSelf; // sharing is author-only per your earlier constraint
+    const canDelete = canModerate(myMember?.role, authorMember?.role, isSelf);
 
   const { author, content, createdAt, media, affiliate } = post;
   const [commentCount, setCommentCount] = useState(0);
-    const { data } = useQuery(GET_COMMENTS, {
-      variables: { postId: post.id },
-      fetchPolicy: "cache-first",
-    });
-  
-   const getMediaKey = (media) => {
-     if (media?.magnetLink) {
-       const match = media.magnetLink.match(/btih:([a-zA-Z0-9]+)/);
-       if (match) return match[1];
-     }
-     return media?.cid || media?.fallbackUrl || media?.fileName || "unknown";
-   };
+  const { data } = useQuery(GET_COMMENTS, {
+    variables: { postId: post.id },
+    fetchPolicy: "cache-first",
+  });
+
+  const getMediaKey = (media) => {
+    if (media?.magnetLink) {
+      const match = media.magnetLink.match(/btih:([a-zA-Z0-9]+)/);
+      if (match) return match[1];
+    }
+    return media?.cid || media?.fallbackUrl || media?.fileName || "unknown";
+  };
 
   // Update count when data arrives
   useEffect(() => {
@@ -129,6 +179,21 @@ export default function FeedItem({ post, onLike, onComment, onDelete }) {
         <View style={styles.headerTextContainer}>
           <Text style={styles.username}>{author?.username || "Anonymous"}</Text>
           <Text style={styles.timestamp}>{formatTimeAgo(createdAt)}</Text>
+          <View style={styles.actionBar}>
+            {canShare && (
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={() => setShowSharePicker(true)}
+              >
+                <Text style={styles.actionIcon}>↗️</Text>
+              </TouchableOpacity>
+            )}
+            {canDelete && (
+              <TouchableOpacity style={styles.actionBtn} onPress={handleDelete}>
+                <Text style={styles.actionIcon}>🗑️</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
 
@@ -171,13 +236,7 @@ export default function FeedItem({ post, onLike, onComment, onDelete }) {
 
       {affiliate && <AffiliateCard affiliate={affiliate} />}
 
-      {/* Action Bar */}
-      <View style={styles.actionBar}>
-        <TouchableOpacity style={styles.actionBtn} onPress={handleDelete}>
-          <Text style={styles.actionIcon}>🗑️</Text>
-          <Text style={styles.actionLabel}>Delete</Text>
-        </TouchableOpacity>
-      </View>
+ 
       <CommentSection
         postId={post.id}
         initialCount={commentCount}

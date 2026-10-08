@@ -598,6 +598,29 @@ export const DELETE_POST = gql`
   }
 `;
 
+export const GET_NEIGHBORHOOD_INFO = gql`
+  query GetNeighborhood($id: ID!) {
+    neighborhood(id: $id) {
+      id
+      name
+      type
+      owner {
+        username
+      }
+      members {
+        user {
+          id
+          username
+          profilePhoto
+        }
+        role
+        joinedAt
+      }
+      createdAt
+      description
+    }
+  }
+`;
 // graphql/queries.js - Update the query
 export const GET_NEIGHBORHOOD_INVITE_LINKS = gql`
   query NeighborhoodInviteLinks($neighborhoodId: ID!) {
