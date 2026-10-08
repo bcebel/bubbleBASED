@@ -298,14 +298,14 @@ window.WebTorrent = WebTorrent;
             }}
           >
             {[
-              { label: "Global", href: "/bubbles/global" },
               { label: "Login", href: "/login" },
+              { label: "Register", href: "/register" },
+              { label: "Global", href: "/bubbles/global" },
               { label: "Gallery", href: "/gallery" },
               { label: "Livestream", href: "/livestream" },
-              { label: "Register", href: "/register" },
               { label: "Inbox", href: "/inbox" },
               { label: "Setup", href: "/setup" },
-              { label: "Sitemap", href: "/sitemap.xml" },
+
             ].map((link) => (
               <a
                 key={link.href}
