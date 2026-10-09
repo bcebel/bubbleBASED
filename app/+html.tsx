@@ -261,15 +261,14 @@ export default function Root({ children }: PropsWithChildren) {
 
       window.enhancedTrackers = [
         "wss://tracker-0ad4cca9fd92.herokuapp.com",
+        "wss://tracker.novage.com.ua",
         "wss://tracker.files.fm:7073/announce",
         "wss://tracker.webtorrent.dev",
+        "wss://tracker.btorrent.xyz",
         "wss://tracker.openwebtorrent.com",
-        "wss://tracker.files.fm:7073",
         "udp://tracker.opentrackr.org:1337/announce",
         "udp://open.tracker.cl:1337/announce",
         "udp://9.rarbg.to:2710/announce",
-        "udp://tracker.coppersurfer.tk:6969/announce",
-        "udp://tracker.leechers-paradise.org:6969/announce",
         "udp://tracker.internetwarriors.net:1337/announce",
         "udp://exodus.desync.com:6969/announce",
         "udp://tracker.moeking.me:6969/announce",
@@ -286,6 +285,11 @@ export default function Root({ children }: PropsWithChildren) {
               rtcConfig: {
                 iceServers: [
                   { urls: "stun:stun.relay.metered.ca:80" },
+                  { urls: "stun:stun.services.mozilla.com:3478" },
+                  { urls: "stun:stun.nextcloud.com:443" },
+
+                  { urls: "stun:stun.cloudflare.com:3478" },
+           
                   { urls: "turn:standard.relay.metered.ca:80", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
                   { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
                   { urls: "turn:standard.relay.metered.ca:443", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },

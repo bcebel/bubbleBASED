@@ -20,7 +20,7 @@ import { useQuery, gql } from "@apollo/client";
 import WebTorrentMedia from "../../../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "../../../components/RandomAd";
-
+const router = useRouter();
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 let CARD_WIDTH = SCREEN_WIDTH - 32;
 let CAROUSEL_HEIGHT = SCREEN_WIDTH * 0.75;
@@ -155,11 +155,17 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused }) => {
   if (item.magnetLink && (isImage || isVideo)) {
     return (
       <View style={styles.magnetContainer}>
-        <WebTorrentMedia
-          media={{ ...item, fileType }}
-          isFocused={isFocused}
-          isAlmostFocused={isAlmostFocused}
-        />
+        <TouchableOpacity
+          onPress={() =>
+            router.push(`/post/${item.postId}?from=/gallery`)
+          }
+        >
+          <WebTorrentMedia
+            media={{ ...item, fileType }}
+            isFocused={isFocused}
+            isAlmostFocused={isAlmostFocused}
+          />
+        </TouchableOpacity>
       </View>
     );
   }
@@ -167,13 +173,17 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused }) => {
   if (isImage) {
     return (
       <View style={styles.fixedMediaWrapper}>
-        <Image
-          source={{ uri: displayUrl }}
-          style={styles.standardImage}
-          contentFit="contain"
-          transition={300}
-          cachePolicy="memory-disk"
-        />
+        <TouchableOpacity
+          onPress={() => router.push(`/post/${item.postId}?from=/gallery`)}
+        >
+          <Image
+            source={{ uri: displayUrl }}
+            style={styles.standardImage}
+            contentFit="contain"
+            transition={300}
+            cachePolicy="memory-disk"
+          />
+        </TouchableOpacity>
       </View>
     );
   }
@@ -181,11 +191,15 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused }) => {
   if (isVideo) {
     return (
       <View style={styles.fixedMediaWrapper}>
-        <WebTorrentMedia
-          media={{ ...item, fileType }}
-          isFocused={isFocused}
-          isAlmostFocused={isAlmostFocused}
-        />
+        <TouchableOpacity
+          onPress={() => router.push(`/post/${item.postId}?from=/gallery`)}
+        >
+          <WebTorrentMedia
+            media={{ ...item, fileType }}
+            isFocused={isFocused}
+            isAlmostFocused={isAlmostFocused}
+          />
+        </TouchableOpacity>
       </View>
     );
   }
@@ -301,19 +315,27 @@ function BubbleCarousel({ posts, ad }) {
                 key={`${item.id}-${index}`}
                 style={{ width: CARD_WIDTH, height: CAROUSEL_HEIGHT }}
               >
-                <View style={styles.textPostContainer}>
-                  <ScrollView
-                    contentContainerStyle={styles.textScrollContent}
-                    showsVerticalScrollIndicator={false}
-                  >
-                    <Text style={styles.textPostContent}>{item.content}</Text>
-                  </ScrollView>
-                  <View style={styles.textPostFooter}>
-                    <Text style={styles.textPostMeta}>
-                      🫧 {item.author?.username || "unknown"}
-                    </Text>
+                <TouchableOpacity
+                  style={{ flex: 1 }}
+                  activeOpacity={0.9}
+                  onPress={() =>
+                    router.push(`/post/${item.postId}?from=/gallery`)
+                  }
+                >
+                  <View style={styles.textPostContainer}>
+                    <ScrollView
+                      contentContainerStyle={styles.textScrollContent}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      <Text style={styles.textPostContent}>{item.content}</Text>
+                    </ScrollView>
+                    <View style={styles.textPostFooter}>
+                      <Text style={styles.textPostMeta}>
+                        🫧 {item.author?.username || "unknown"}
+                      </Text>
+                    </View>
                   </View>
-                </View>
+                </TouchableOpacity>
               </View>
             );
           }
