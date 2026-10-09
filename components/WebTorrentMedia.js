@@ -18,6 +18,9 @@ import {
   getMediaWithFallback,
   getRecord,
 } from "./torrentmanager";
+let globalMuted = true;
+let globalVolume = 0.5;  
+
 
 const CACHE_FOLDER = `${FileSystem.cacheDirectory}webtorrent_media/`;
 
@@ -56,7 +59,7 @@ const getCachedPinataUrl = (cid, fallbackUrl) => {
   return url;
 };
 
-export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
+export default function WebTorrentMedia({ media, isFocused, isAlmostFocused, muted = true }) {
   const [videoSrc, setVideoSrc] = useState(media?.ipfsUrl);
   const [status, setStatus] = useState("p2p_streaming");
   const [progress, setProgress] = useState(0);
@@ -70,8 +73,8 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
   const [isPaused, setIsPaused] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1); // 1 = 100% max volume volume
-  const [isMuted, setIsMuted] = useState(true); // Matches your video element's muted={true} default setting
+  const [volume, setVolume] = useState(globalVolume);
+  const [isMuted, setIsMuted] = useState(muted);
   const [isVolumeHovered, setIsVolumeHovered] = useState(false);
   const progressBarRef = useRef(null);
   const timerRef = useRef(null);
@@ -97,36 +100,57 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
 
   useEffect(() => {
     return () => {
+      // On unmount, pause and mute the video
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.muted = true;
+        videoRef.current.src = "";
+        videoRef.current.load();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isFocused && videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.muted = true;
+    }
+  }, [isFocused]);
+
+  useEffect(() => {
+    return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
 
   const handleVolumeChange = (e) => {
     const newVolume = parseFloat(e.target.value);
+    globalVolume = newVolume;
     setVolume(newVolume);
 
     if (videoRef.current) {
       videoRef.current.volume = newVolume;
-      // Automatically toggle off mute if the user slides volume up
       if (newVolume > 0 && isMuted) {
         videoRef.current.muted = false;
+        globalMuted = false;
         setIsMuted(false);
       } else if (newVolume === 0) {
         videoRef.current.muted = true;
+        globalMuted = true;
         setIsMuted(true);
       }
     }
   };
 
-  // Click handler to toggle speaker muting settings instantly
   const toggleMute = () => {
     if (!videoRef.current) return;
     const nextMutedState = !isMuted;
+    globalMuted = nextMutedState;
     videoRef.current.muted = nextMutedState;
     setIsMuted(nextMutedState);
 
-    // Reset slider view location if unmuting from a zero volume state
     if (!nextMutedState && volume === 0) {
+      globalVolume = 0.5;
       videoRef.current.volume = 0.5;
       setVolume(0.5);
     }
@@ -287,9 +311,9 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
         ref={videoRef}
         src={videoSrc}
         style={styles.video}
-        muted={isMuted}
+        muted={muted || isMuted}
         volume={volume}
-        loop={true}
+        loop={true} 
         playsInline
         autoPlay
         preload="auto"

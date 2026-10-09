@@ -135,7 +135,7 @@ const getFileType = (item) => {
 };
 
 // ─── MEDIA DISPLAY ───────────────────────────────────────
-const MediaDisplay = ({ item, isFocused, isAlmostFocused }) => {
+const MediaDisplay = ({ item, isFocused, isAlmostFocused, muted }) => {
   const fileType = getFileType(item);
   const isImage = fileType === "image";
   const isVideo = fileType === "video";
@@ -163,6 +163,7 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused }) => {
             media={{ ...item, fileType }}
             isFocused={isFocused}
             isAlmostFocused={isAlmostFocused}
+            muted={muted}
           />
         </TouchableOpacity>
       </View>
@@ -209,7 +210,7 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused }) => {
 };
 
 // ─── BUBBLE CAROUSEL ─────────────────────────────────────
-function BubbleCarousel({ posts, ad }) {
+function BubbleCarousel({ posts, ad, muted }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef(null);
 
@@ -362,6 +363,7 @@ function BubbleCarousel({ posts, ad }) {
                   item={item}
                   isFocused={isFocused}
                   isAlmostFocused={isAlmostFocused}
+                  muted={muted}
                 />
                 <View style={styles.mediaFooter}>
                   <Text style={styles.mediaFooterText}>
@@ -659,6 +661,7 @@ export default function GalleryScreen() {
                 <BubbleCarousel
                   posts={posts}
                   ad={adData?.randomAffiliateLink}
+                  muted={true}
                 />
               </View>
             );

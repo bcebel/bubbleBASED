@@ -169,25 +169,25 @@ function formatTimeAgo(timestamp) {
   return `${Math.floor(diffInSeconds / 86400)}d ago`;
 }
 
-export default function FeedItem({ post, onLike, onComment, onDelete }) {
+export default function FeedItem({ post, onLike, onComment, onDelete, muted = true }) {
   if (!post) return null;
-const { data: hoodData } = useQuery(GET_NEIGHBORHOOD_INFO, {
-  variables: { id: post.neighborhood?.id },
-  skip: !post.neighborhood?.id,
-});
+  const { data: hoodData } = useQuery(GET_NEIGHBORHOOD_INFO, {
+    variables: { id: post.neighborhood?.id },
+    skip: !post.neighborhood?.id,
+  });
   const [sharePost, { loading: sharing }] = useMutation(SHARE_POST);
   const [showSharePicker, setShowSharePicker] = useState(false);
-   const handleShare = async (targetNeighborhoodId) => {
-     try {
-       await sharePost({
-         variables: { postId: post.id, targetNeighborhoodId },
-       });
-       setShowSharePicker(false);
-       onDelete?.(); // reuse the same "refetch feed" callback
-     } catch (err) {
-       alert("Share failed: " + err.message);
-     }
-   };
+  const handleShare = async (targetNeighborhoodId) => {
+    try {
+      await sharePost({
+        variables: { postId: post.id, targetNeighborhoodId },
+      });
+      setShowSharePicker(false);
+      onDelete?.(); // reuse the same "refetch feed" callback
+    } catch (err) {
+      alert("Share failed: " + err.message);
+    }
+  };
   const { data: meData } = useQuery(GET_ME_ID);
   const currentUserId = meData?.me?.id;
   const isOwner = post.author?.id === currentUserId;
@@ -197,7 +197,7 @@ const { data: hoodData } = useQuery(GET_NEIGHBORHOOD_INFO, {
 
   const isSelf = post.author?.id === currentUserId;
   const canShare = isSelf; // sharing is author-only per your earlier constraint
-    const canDelete = canModerate(myMember?.role, authorMember?.role, isSelf);
+  const canDelete = canModerate(myMember?.role, authorMember?.role, isSelf);
 
   const { author, content, createdAt, media, affiliate } = post;
   const [commentCount, setCommentCount] = useState(0);
@@ -297,6 +297,7 @@ const { data: hoodData } = useQuery(GET_NEIGHBORHOOD_INFO, {
                   key={getMediaKey(normalizedMedia)}
                   media={normalizedMedia}
                   isFocused={true}
+                  muted={muted}
                 />
               </View>
             );

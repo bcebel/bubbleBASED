@@ -49,15 +49,15 @@ export default function SinglePost() {
     skip: !id || !mounted, // ← don't fetch during static export
   });
 
-  const handleBack = () => {
-    if (from && typeof from === "string" && from.startsWith("/")) {
-      router.replace(from);
-    } else if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace("/");
-    }
-  };
+const handleBack = () => {
+  if (router.canGoBack()) {
+    router.back();
+  } else if (from && typeof from === "string" && from.startsWith("/")) {
+    router.replace(decodeURIComponent(from));
+  } else {
+    router.replace("/");
+  }
+};
 
   // Don't render anything on the server / first paint
   if (!mounted) return null;
@@ -71,7 +71,12 @@ export default function SinglePost() {
       <TouchableOpacity onPress={handleBack}>
         <Text style={styles.back}>← Back</Text>
       </TouchableOpacity>
-      <FeedItem style={styles.height} post={data.post} onDelete={() => router.back()} />
+      <FeedItem
+        style={styles.height}
+        post={data.post}
+        onDelete={() => router.back()}
+        muted={false}
+      />
     </ScrollView>
   );
 }
