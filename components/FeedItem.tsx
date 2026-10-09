@@ -374,6 +374,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#130720",
     borderRadius: 8,
     overflow: "hidden",
+ 
   },
   actionBar: {
     flexDirection: "row",

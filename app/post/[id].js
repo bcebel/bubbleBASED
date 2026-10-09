@@ -71,11 +71,12 @@ export default function SinglePost() {
       <TouchableOpacity onPress={handleBack}>
         <Text style={styles.back}>← Back</Text>
       </TouchableOpacity>
-      <FeedItem post={data.post} onDelete={() => router.back()} />
+      <FeedItem style={styles.height} post={data.post} onDelete={() => router.back()} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   back: { color: "#fff", padding: 12, fontSize: 16 },
+  height: { maxHeight: "50%" },
 });
