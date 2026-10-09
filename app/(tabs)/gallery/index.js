@@ -20,38 +20,35 @@ import { useQuery, gql } from "@apollo/client";
 import WebTorrentMedia from "../../../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "../../../components/RandomAd";
-const router = useRouter();
+
+let soundEnabled = false;
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-let CARD_WIDTH = SCREEN_WIDTH - 32;
 let CAROUSEL_HEIGHT = SCREEN_WIDTH * 0.75;
 let AUTHOR = 0;
-
 if (SCREEN_WIDTH > SCREEN_HEIGHT) {
   CAROUSEL_HEIGHT = SCREEN_HEIGHT * 0.8;
   AUTHOR = 100;
 }
 
 const BUBBLE_TYPE_COLORS = {
-  global: "#ff0081", // pink — matches your accent
-  private: "#00ffff", // cyan
-  public: "#FFCC00", // the ebubbl yellow
-  personal: "#9CA3AF", // gray, since personal is the vault
+  global: "#ff0081",
+  private: "#00ffff",
+  public: "#FFCC00",
+  personal: "#9CA3AF",
 };
-
 const BUBBLE_TYPE_BORDER_COLORS = {
   private: "#008888",
   global: "#880088",
   public: "#FFCC00",
   personal: "rgba(156, 163, 175, 0.4)",
 };
-
 const BUBBLE_TYPE_BACKGROUNDS = {
   private: "rgba(0, 255, 255, 0.06)",
   public: "rgba(255, 0, 129, 0.06)",
   global: "rgba(255, 204, 0, 0.08)",
   personal: "rgba(156, 163, 175, 0.06)",
 };
-// ─── NAV BUTTON (used in the splash) ─────────────────────
+
 function NavButton({ title }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -67,7 +64,6 @@ function NavButton({ title }) {
   );
 }
 
-// ─── QUERIES ─────────────────────────────────────────────
 const MY_NEIGHBORHOODS = gql`
   query MyNeighborhoods {
     myNeighborhoods {
@@ -120,7 +116,6 @@ const GET_RANDOM_AFFILIATE_LINK = gql`
   }
 `;
 
-// ─── HELPERS ─────────────────────────────────────────────
 const getFileType = (item) => {
   if (!item) return "unknown";
   if (item.mediaType) return item.mediaType;
@@ -152,39 +147,16 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused, muted }) => {
     );
   }
 
-  if (item.magnetLink && (isImage || isVideo)) {
-    return (
-      <View style={styles.magnetContainer}>
-        <TouchableOpacity
-          style={{ width: "100%", height: "100%" }}
-          onPress={() => router.push(`/post/${item.postId}?from=/gallery`)}
-        >
-          <WebTorrentMedia
-            media={{ ...item, fileType }}
-            isFocused={isFocused}
-            isAlmostFocused={isAlmostFocused}
-            muted={muted}
-          />
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   if (isImage) {
     return (
       <View style={styles.fixedMediaWrapper}>
-        <TouchableOpacity
-          style={{ width: "100%", height: "100%" }}
-          onPress={() => router.push(`/post/${item.postId}?from=/gallery`)}
-        >
-          <Image
-            source={{ uri: displayUrl }}
-            style={styles.standardImage}
-            contentFit="contain"
-            transition={300}
-            cachePolicy="memory-disk"
-          />
-        </TouchableOpacity>
+        <Image
+          source={{ uri: displayUrl }}
+          style={styles.standardImage}
+          contentFit="contain"
+          transition={300}
+          cachePolicy="memory-disk"
+        />
       </View>
     );
   }
@@ -192,16 +164,12 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused, muted }) => {
   if (isVideo) {
     return (
       <View style={styles.fixedMediaWrapper}>
-        <TouchableOpacity
-          style={{ width: "100%", height: "100%" }}
-          onPress={() => router.push(`/post/${item.postId}?from=/gallery`)}
-        >
-          <WebTorrentMedia
-            media={{ ...item, fileType }}
-            isFocused={isFocused}
-            isAlmostFocused={isAlmostFocused}
-          />
-        </TouchableOpacity>
+        <WebTorrentMedia
+          media={{ ...item, fileType }}
+          isFocused={isFocused}
+          isAlmostFocused={isAlmostFocused}
+          muted={muted}
+        />
       </View>
     );
   }
@@ -210,7 +178,13 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused, muted }) => {
 };
 
 // ─── BUBBLE CAROUSEL ─────────────────────────────────────
-function BubbleCarousel({ posts, ad, muted }) {
+function BubbleCarousel({
+  posts,
+  ad,
+  isBubbleOnScreen,
+  soundOn,
+  neighborhood,
+}) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef(null);
 
@@ -218,7 +192,6 @@ function BubbleCarousel({ posts, ad, muted }) {
     const items = [];
     for (const post of posts) {
       const hasMedia = post.media?.some((m) => m.cid);
-
       if (!hasMedia && post.content?.trim()) {
         items.push({
           id: `text-${post.id}`,
@@ -232,7 +205,6 @@ function BubbleCarousel({ posts, ad, muted }) {
         });
         continue;
       }
-
       for (const m of post.media || []) {
         if (!m.cid) continue;
         items.push({
@@ -251,16 +223,9 @@ function BubbleCarousel({ posts, ad, muted }) {
         });
       }
     }
-
-    // Insert one ad at position 4, only if the bubble has enough content
     if (ad && items.length >= 6) {
-      items.splice(4, 0, {
-        isAd: true,
-        id: `ad-${ad.id}`,
-        ad,
-      });
+      items.splice(4, 0, { isAd: true, id: `ad-${ad.id}`, ad });
     }
-
     return items;
   }, [posts, ad]);
 
@@ -277,14 +242,26 @@ function BubbleCarousel({ posts, ad, muted }) {
     );
   }
 
+  const currentItem = mediaItems[activeIndex];
+
   return (
     <View style={{ height: SCREEN_HEIGHT, width: "100%" }}>
-  
+      <View style={styles.rowHeaderRow}>
+        <Text style={styles.neighborhoodTitle}>🫧 {neighborhood.name}</Text>
+        <Text
+          style={[
+            styles.neighborhoodTypeBadge,
+            { color: BUBBLE_TYPE_COLORS[neighborhood.type] || "#ff0081" },
+          ]}
+        >
+          {neighborhood.type}
+        </Text>
+      </View>
+
       <ScrollView
         ref={scrollRef}
         horizontal
         pagingEnabled
-        snapToInterval={SCREEN_HEIGHT}
         nestedScrollEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
@@ -294,8 +271,9 @@ function BubbleCarousel({ posts, ad, muted }) {
         {mediaItems.map((item, index) => {
           const isFocused = index === activeIndex;
           const isAlmostFocused = Math.abs(index - activeIndex) <= 3;
+          const isAudible =
+            soundOn && isBubbleOnScreen && index === activeIndex;
 
-          // ─── AD CARD ───
           if (item.isAd) {
             return (
               <View
@@ -312,7 +290,6 @@ function BubbleCarousel({ posts, ad, muted }) {
             );
           }
 
-          // ─── TEXT-ONLY CARD ───
           if (item.isTextOnly) {
             return (
               <View
@@ -334,10 +311,6 @@ function BubbleCarousel({ posts, ad, muted }) {
                     <ScrollView
                       contentContainerStyle={styles.textScrollContent}
                       showsVerticalScrollIndicator={false}
-                      nestedScrollEnabled
-                      pagingEnabled
-                      snapToInterval={SCREEN_HEIGHT}
-                      decelerationRate="fast"
                     >
                       <Text style={styles.textPostContent}>{item.content}</Text>
                     </ScrollView>
@@ -352,7 +325,6 @@ function BubbleCarousel({ posts, ad, muted }) {
             );
           }
 
-          // ─── MEDIA CARD ───
           return (
             <View
               key={`${item.id}-${index}`}
@@ -363,8 +335,19 @@ function BubbleCarousel({ posts, ad, muted }) {
                   item={item}
                   isFocused={isFocused}
                   isAlmostFocused={isAlmostFocused}
-                  muted={muted}
+                  muted={!isAudible}
                 />
+                {/* Open badge — sits on top, points at THIS card's post */}
+                {currentItem?.id === item.id && (
+                  <TouchableOpacity
+                    style={styles.openPostBadge}
+                    onPress={() =>
+                      router.push(`/post/${item.postId}?from=/gallery`)
+                    }
+                  >
+                    <Text style={styles.openPostText}>↗︎ Open</Text>
+                  </TouchableOpacity>
+                )}
                 <View style={styles.mediaFooter}>
                   <Text style={styles.mediaFooterText}>
                     🫧 {item.author?.username || "unknown"}
@@ -384,8 +367,21 @@ export default function GalleryScreen() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loadingToken, setLoadingToken] = useState(true);
+  const [activeBubbleIndex, setActiveBubbleIndex] = useState(0);
+  const [soundOn, setSoundOn] = useState(soundEnabled);
 
   const isDesktop = SCREEN_WIDTH >= 768;
+
+  const enableSound = () => {
+    if (soundEnabled) return;
+    soundEnabled = true;
+    setSoundOn(true);
+  };
+
+  const handleOuterScroll = (e) => {
+    const idx = Math.round(e.nativeEvent.contentOffset.y / SCREEN_HEIGHT);
+    if (idx !== activeBubbleIndex) setActiveBubbleIndex(idx);
+  };
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -429,7 +425,7 @@ export default function GalleryScreen() {
     );
   }
 
-  // ─── LOGGED OUT SPLASH ─────────────────────────────────
+  // ─── LOGGED OUT SPLASH ───
   if (!isLoggedIn) {
     return (
       <View style={styles.container}>
@@ -599,8 +595,7 @@ export default function GalleryScreen() {
       </View>
     );
   }
-
-  // ─── LOGGED IN GALLERY ─────────────────────────────────
+  // ─── LOGGED IN GALLERY ───
   const userNeighborhoods = neighborhoodsData?.myNeighborhoods || [];
   const visibleNeighborhoods = userNeighborhoods.filter(
     (n) => (postsByNeighborhood[n.id] || []).length > 0,
@@ -615,6 +610,9 @@ export default function GalleryScreen() {
         pagingEnabled
         snapToInterval={SCREEN_HEIGHT}
         decelerationRate="fast"
+        onScrollBeginDrag={enableSound}
+        onScroll={handleOuterScroll}
+        scrollEventThrottle={16}
       >
         <Text style={styles.mainGroupTitle}>Your Bubble Galleries</Text>
         {visibleNeighborhoods.length === 0 ? (
@@ -624,8 +622,9 @@ export default function GalleryScreen() {
             </Text>
           </View>
         ) : (
-          visibleNeighborhoods.map((neighborhood) => {
+          visibleNeighborhoods.map((neighborhood, bubbleIndex) => {
             const posts = postsByNeighborhood[neighborhood.id] || [];
+            const isBubbleOnScreen = bubbleIndex === activeBubbleIndex;
             return (
               <View
                 key={neighborhood.id}
@@ -641,27 +640,12 @@ export default function GalleryScreen() {
                   },
                 ]}
               >
-                {" "}
-                <View style={styles.rowHeaderRow}>
-                  <Text style={styles.neighborhoodTitle}>
-                    🫧 {neighborhood.name}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.neighborhoodTypeBadge,
-                      {
-                        color:
-                          BUBBLE_TYPE_COLORS[neighborhood.type] || "#ff0081",
-                      },
-                    ]}
-                  >
-                    {neighborhood.type}
-                  </Text>{" "}
-                </View>
                 <BubbleCarousel
                   posts={posts}
                   ad={adData?.randomAffiliateLink}
-                  muted={true}
+                  isBubbleOnScreen={isBubbleOnScreen}
+                  soundOn={soundOn}
+                  neighborhood={neighborhood}
                 />
               </View>
             );
@@ -676,8 +660,26 @@ export default function GalleryScreen() {
 }
 
 // ─── STYLES ──────────────────────────────────────────────
+// (your existing styles, plus the two at the bottom)
 const styles = StyleSheet.create({
-  // Gallery container
+  // keep every style you already had, plus:
+
+  openPostBadge: {
+    position: "absolute",
+    top: 12,
+    right: 32,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    zIndex: 999,
+    elevation: 999,
+  },
+  openPostText: {
+    color: "#00ffff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
   container: { flex: 1, backgroundColor: "rgba(89, 17, 85, 0.1)" },
   center: {
     flex: 1,
@@ -737,6 +739,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
+    position: "relative",
   },
   standardImage: {
     width: "100%",
@@ -745,6 +748,8 @@ const styles = StyleSheet.create({
   noMedia: { flex: 1, justifyContent: "center", alignItems: "center" },
   noMediaText: { color: "#F5F2FA", fontSize: 14 },
   textPostContainer: {
+    zIndex: 999,
+    elevation: 999,
     flex: 1,
     width: "100%",
     height: "100%",
