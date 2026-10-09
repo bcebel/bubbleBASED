@@ -149,12 +149,13 @@ useEffect(() => {
 
   // Load media (cache → torrent → webseed fallback)
   useEffect(() => {
-    if (!isFocused || !media) return;
+    if ((!isFocused && !isAlmostFocused) || !media) return; 
 
     let isMounted = true;
 
     const load = async () => {
       const cached = await getMedia(media.cid);
+        if (!isMounted) return;
       if (cached?.blob) {
         setVideoSrc(URL.createObjectURL(cached.blob));
         setIsReady(true);
@@ -199,9 +200,9 @@ useEffect(() => {
       }
       currentUrlRef.current = null;
     };
-  }, [isFocused, media?.cid, media?.magnetLink, media?.ipfsUrl]);
+  }, [isFocused, isAlmostFocused, media?.cid, media?.magnetLink, media?.ipfsUrl]);
 
-  if (!isFocused) return null;
+if (!isFocused && !isAlmostFocused) return null;
 
   if (!videoSrc || !isReady) {
     return (
@@ -228,7 +229,10 @@ useEffect(() => {
       onMouseLeave={() => !isPaused && setControlsVisible(false)}
     >
       <video
-        ref={videoRef}
+        ref={(el) => {
+          videoRef.current = el;
+          setVideoEl(el);
+        }}
         src={videoSrc}
         style={styles.video}
         muted={muted}
