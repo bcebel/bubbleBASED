@@ -13,15 +13,12 @@ let globalMuted = true;
 let globalVolume = 1.0;
 
 function FocusedVideo({ src }) {
-  const videoSource = {
-    uri: src,
-    useCaching: true,
-  };
+  const videoSource = { uri: src };
+
   const player = useVideoPlayer(videoSource, (p) => {
     p.loop = true;
-    p.muted = globalMuted;
-    p.volume = globalVolume;
-      p.play();   
+    p.muted = true; // ← required for autoplay
+    p.play();
   });
 
   useEventListener(player, "mutedChange", ({ muted }) => {
@@ -32,28 +29,30 @@ function FocusedVideo({ src }) {
     globalVolume = volume;
   });
 
- useEffect(() => {
-   if (!player) return;
-   try {
-     player.muted = true;
-     player.play();
-   } catch (err) {
-     console.log("[video] play failed:", err);
-   }
- }, [player]);
+  useEffect(() => {
+    if (!player) return;
+    try {
+      player.muted = true;
+      player.play();
+    } catch (err) {
+      console.log("[video] play failed:", err);
+    }
+  }, [player]);
 
   return (
     <VideoView
       player={player}
       style={styles.video}
       contentFit="contain"
-      nativeControls={true}
+      nativeControls={false}
       fullscreenOptions={{ enable: false }}
       allowsPictureInPicture={false}
+      allowsFullscreen={false}
     />
   );
 }
 
+  
 export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
   const [videoSrc, setVideoSrc] = useState(null);
   const [isReady, setIsReady] = useState(false);
