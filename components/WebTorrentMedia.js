@@ -48,7 +48,7 @@ function FocusedVideo({ src }) {
       style={styles.video}
       contentFit="contain"
       nativeControls={true}
-      allowsFullscreen={false}
+      fullscreenOptions={{ enable: false }}
       allowsPictureInPicture={false}
     />
   );
