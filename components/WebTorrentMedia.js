@@ -53,7 +53,12 @@ function FocusedVideo({ src }) {
 }
 
   
-export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
+export default function WebTorrentMedia({
+  media,
+  isFocused,
+  isAlmostFocused,
+  controls = false,
+}) {
   const [videoSrc, setVideoSrc] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const [status, setStatus] = useState("idle");
@@ -64,7 +69,6 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
     media?.fileType === "image" ||
     media?.mediaType === "image" ||
     media?.fileName?.match(/\.(jpg|jpeg|png|gif|webp|avif|heic|heif|svg)$/i);
-
 
   useEffect(() => {
     if (!isFocused || !media?.cid) return;
@@ -143,12 +147,12 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
         style={{ width: "100%", height: "100%", objectFit: "contain" }}
         alt=""
       />
-    )
+    );
   }
 
   return (
     <View style={styles.container}>
-      <FocusedVideo src={videoSrc} />
+      <FocusedVideo src={videoSrc} controls={controls} />
     </View>
   );
 }
