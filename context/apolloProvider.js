@@ -182,10 +182,10 @@ function createSSRClient() {
 
 export function ApolloProviderWrapper({ children }) {
   const asyncClient = useApolloClient();
-  const fallbackClient = useMemo(
-    () => (typeof window === "undefined" ? createSSRClient() : null),
-    [],
-  );
+const fallbackClient = useMemo(
+  () => (typeof window === "undefined" ? createSSRClient() : null),
+  [],
+);
 
   const client = asyncClient || fallbackClient;
 

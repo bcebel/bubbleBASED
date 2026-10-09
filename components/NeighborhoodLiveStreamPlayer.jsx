@@ -364,7 +364,7 @@ class StreamController {
     // 3. Fall back to HTTP fetch from Heroku
     try {
       const res = await fetch(
-        `${LIVESTREAM_URL}/api/live-chunk/${this.sessionId}/${index}`,
+        `${BACKEND_URL}/api/live-chunk/${this.sessionId}/${index}`,
         { signal: AbortSignal.timeout(8000) },
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -531,6 +531,29 @@ export default function NeighborhoodLiveStreamPlayer({
       controllerRef.current.tick();
     }
   }, [isJoined, initialChunks, availableInWarehouse]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    const interval = setInterval(async () => {
+      // Try to fetch the next chunk from the server directly
+      // regardless of whether the subscription delivered it
+      const nextIdx = controllerRef.current?.nextIndex;
+      if (nextIdx == null) return;
+
+      try {
+        const res = await fetch(
+          `${BACKEND_URL}/api/live-chunk/${sessionId}/${nextIdx}`,
+        );
+        if (res.ok) {
+          const bytes = await res.arrayBuffer();
+          await warehouse.saveChunk(sessionId, nextIdx, new Uint8Array(bytes));
+          controllerRef.current.forceTick();
+        }
+      } catch (e) {}
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [sessionId]);
 
   const handleTogglePlay = () => {
     if (controllerRef.current?.video) {

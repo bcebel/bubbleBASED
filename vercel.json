@@ -6,6 +6,10 @@
       "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/media/:path*"
     },
     {
+  "source": "/api/live-chunk/:path*",
+  "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/live-chunk/:path*"
+},
+    {
       "source": "/api/webseed/:path*",
       "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/webseed/:path*"
     },
@@ -50,6 +54,10 @@
         }
       ]
     },
+    {
+  "source": "/api/live-chunk/:path*",
+  "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }]
+},
     {
       "source": "/:path*.(png|jpg|jpeg|gif|webp|avif|ico|svg|gif)",
       "headers": [
