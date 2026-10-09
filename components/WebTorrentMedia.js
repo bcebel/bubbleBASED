@@ -5,6 +5,7 @@ import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
 import { useVideoPlayer, VideoView, useCaching } from "expo-video";
 import { getMedia } from "./mediaCache";
 import { enqueueDownload } from "./downloadQueue";
+import { Image } from "expo-image";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const DEBUG = true;
@@ -137,7 +138,13 @@ export default function WebTorrentMedia({ media, isFocused, isAlmostFocused }) {
   }
 
   if (isImage) {
-    return <img src={videoSrc} style={styles.image} alt="" />;
+    return (
+      <img
+        src={videoSrc}
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+        alt=""
+      />
+    )
   }
 
   return (

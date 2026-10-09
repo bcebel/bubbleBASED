@@ -156,9 +156,8 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused }) => {
     return (
       <View style={styles.magnetContainer}>
         <TouchableOpacity
-          onPress={() =>
-            router.push(`/post/${item.postId}?from=/gallery`)
-          }
+          style={{ width: "100%", height: "100%" }}
+          onPress={() => router.push(`/post/${item.postId}?from=/gallery`)}
         >
           <WebTorrentMedia
             media={{ ...item, fileType }}
@@ -174,6 +173,7 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused }) => {
     return (
       <View style={styles.fixedMediaWrapper}>
         <TouchableOpacity
+          style={{ width: "100%", height: "100%" }}
           onPress={() => router.push(`/post/${item.postId}?from=/gallery`)}
         >
           <Image
@@ -192,6 +192,7 @@ const MediaDisplay = ({ item, isFocused, isAlmostFocused }) => {
     return (
       <View style={styles.fixedMediaWrapper}>
         <TouchableOpacity
+          style={{ width: "100%", height: "100%" }}
           onPress={() => router.push(`/post/${item.postId}?from=/gallery`)}
         >
           <WebTorrentMedia
@@ -263,7 +264,7 @@ function BubbleCarousel({ posts, ad }) {
   }, [posts, ad]);
 
   const handleScroll = (e) => {
-    const newIndex = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);
+    const newIndex = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
     if (newIndex !== activeIndex) setActiveIndex(newIndex);
   };
 
@@ -276,16 +277,17 @@ function BubbleCarousel({ posts, ad }) {
   }
 
   return (
-    <View style={{ height: CAROUSEL_HEIGHT }}>
+    <View style={{ height: SCREEN_HEIGHT, width: "100%" }}>
+  
       <ScrollView
         ref={scrollRef}
         horizontal
         pagingEnabled
+        snapToInterval={SCREEN_HEIGHT}
         nestedScrollEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        snapToInterval={CARD_WIDTH}
         decelerationRate="fast"
       >
         {mediaItems.map((item, index) => {
@@ -298,8 +300,9 @@ function BubbleCarousel({ posts, ad }) {
               <View
                 key={`${item.id}-${index}`}
                 style={{
-                  width: CARD_WIDTH,
-                  height: CAROUSEL_HEIGHT,
+                  width: SCREEN_WIDTH,
+                  height: SCREEN_HEIGHT,
+                  overflow: "hidden",
                   padding: 8,
                 }}
               >
@@ -313,7 +316,11 @@ function BubbleCarousel({ posts, ad }) {
             return (
               <View
                 key={`${item.id}-${index}`}
-                style={{ width: CARD_WIDTH, height: CAROUSEL_HEIGHT }}
+                style={{
+                  width: SCREEN_WIDTH,
+                  height: SCREEN_HEIGHT,
+                  overflow: "hidden",
+                }}
               >
                 <TouchableOpacity
                   style={{ flex: 1 }}
@@ -326,6 +333,10 @@ function BubbleCarousel({ posts, ad }) {
                     <ScrollView
                       contentContainerStyle={styles.textScrollContent}
                       showsVerticalScrollIndicator={false}
+                      nestedScrollEnabled
+                      pagingEnabled
+                      snapToInterval={SCREEN_HEIGHT}
+                      decelerationRate="fast"
                     >
                       <Text style={styles.textPostContent}>{item.content}</Text>
                     </ScrollView>
@@ -344,7 +355,7 @@ function BubbleCarousel({ posts, ad }) {
           return (
             <View
               key={`${item.id}-${index}`}
-              style={{ width: CARD_WIDTH, height: CAROUSEL_HEIGHT }}
+              style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
             >
               <View style={{ flex: 1, width: "100%", height: "100%" }}>
                 <MediaDisplay
@@ -432,6 +443,7 @@ export default function GalleryScreen() {
           style={styles.heroBubble}
           resizeMode="cover"
           fetchPriority="high"
+          contentFit="contain"
         />
 
         <View
@@ -468,6 +480,10 @@ export default function GalleryScreen() {
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
+          pagingEnabled
+          snapToInterval={SCREEN_HEIGHT}
+          decelerationRate="fast"
         >
           <View
             style={[styles.heroSection, isDesktop && styles.heroSectionDesktop]}
@@ -594,6 +610,9 @@ export default function GalleryScreen() {
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        pagingEnabled
+        snapToInterval={SCREEN_HEIGHT}
+        decelerationRate="fast"
       >
         <Text style={styles.mainGroupTitle}>Your Bubble Galleries</Text>
         {visibleNeighborhoods.length === 0 ? (
@@ -714,8 +733,12 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
   },
-  standardImage: { width: "100%", height: "100%" },
+  standardImage: {
+    width: "100%",
+    height: "100%",
+  },
   noMedia: { flex: 1, justifyContent: "center", alignItems: "center" },
   noMediaText: { color: "#F5F2FA", fontSize: 14 },
   textPostContainer: {
