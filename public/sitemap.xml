@@ -2,75 +2,65 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ebubbl.com/</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.90</priority>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
+    <priority>1</priority>
   </url>
     <url>
     <loc>https://www.ebubbl.com/</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.90</priority>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
+    <priority>0.50</priority>
   </url>
   <url>
     <loc>https://ebubbl.com/inbox</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.80</priority>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
+    <priority>0.50</priority>
   </url>
   <url>
     <loc>https://ebubbl.com/setup</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.8</priority>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://ebubbl.com/gallery</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.80</priority>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
+    <priority>0.50</priority>
   </url>
 
   <url>
     <loc>https://ebubbl.com/livestream</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.80</priority>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
+    <priority>0.70</priority>
   </url>
 
    <url>
     <loc>https://ebubbl.com/bubbles/global</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.80</priority>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
+    <priority>0.90</priority>
   </url>
 
-   <url>
-    <loc>https://ebubbl.com/neighborhoods/bubbles</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.80</priority>
-  </url>
-  <url>
-    <loc>https://ebubbl.com/neighborhoods/bubbles/create</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.80</priority>
-  </url>
   <url>
     <loc>https://ebubbl.com/login</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://ebubbl.com/register</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.80</priority>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
+    <priority>1.0</priority>
   </url>
   <url>
     <loc>https://ebubbl.com/tos</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.80</priority>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
+    <priority>0.50</priority>
   </url>
   <url>
     <loc>https://ebubbl.com/privacy</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
-    <priority>0.80</priority>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
+    <priority>0.70</priority>
   </url>
     <url>
     <loc>https://ebubbl.com/about</loc>
-    <lastmod>2026-09-19T22:30:06+00:00</lastmod>
+    <lastmod>2026-10-09T22:30:06+00:00</lastmod>
     <priority>0.80</priority>
   </url>
 </urlset>
