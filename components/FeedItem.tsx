@@ -255,12 +255,12 @@ export default function FeedItem({ post, onLike, onComment, onDelete, muted = tr
                 style={styles.actionBtn}
                 onPress={() => setShowSharePicker(true)}
               >
-                <Text style={styles.actionIcon}>↗️</Text>
+                <Text style={styles.actionIcon}>Share ↗️</Text>
               </TouchableOpacity>
             )}
             {canDelete && (
               <TouchableOpacity style={styles.actionBtn} onPress={handleDelete}>
-                <Text style={styles.actionIcon}>🗑️</Text>
+                <Text style={styles.actionIcon}>Delete 🗑️</Text>
               </TouchableOpacity>
             )}
           </View>
