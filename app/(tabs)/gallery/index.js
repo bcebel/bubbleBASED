@@ -20,6 +20,7 @@ import { useQuery, gql } from "@apollo/client";
 import WebTorrentMedia from "../../../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "../../../components/RandomAd";
+const router = useRouter();
 
 let soundEnabled = false;
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
