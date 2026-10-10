@@ -43,7 +43,7 @@ export default function Root({ children }: PropsWithChildren) {
     `,
           }}
         />
-        <meta name="description" content={description} />
+
         <meta
           name="keywords"
           content="social network, privacy, digital neighborhoods, affiliate marketing, community, ebubbl, 🫧, webtorrent, p2p, social media, privacy, context"
