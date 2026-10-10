@@ -7,19 +7,13 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
-import { getMedia, saveMedia } from "../components/mediaCache";
-import idbChunkStore from "@thaunknown/idb-chunk-store";
-import webtorrentService from "../utils/webtorrentService";
-import { Platform } from "react-native";
-import * as FileSystem from "expo-file-system";
+import { getMedia } from "../components/mediaCache";
+import { enqueueDownload } from "./downloadQueue";
 import { getMagnetForCid } from "../utils/magnetCache";
-import { getOrStartTorrent } from "./torrentmanager";
 
-let globalMuted = true;
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+
 let globalVolume = 0.5;
-
-const PINATA_GATEWAY =
-  process.env.EXPO_PUBLIC_PINATA_GATEWAY || "gateway.pinata.cloud";
 
 export default function WebTorrentMedia({
   media,
@@ -28,12 +22,10 @@ export default function WebTorrentMedia({
   muted = true,
 }) {
   const [videoSrc, setVideoSrc] = useState(media?.ipfsUrl);
-  const [status, setStatus] = useState("p2p_streaming");
-  const [progress, setProgress] = useState(0);
   const [isReady, setIsReady] = useState(false);
+  const [status, setStatus] = useState("idle");
   const videoRef = useRef(null);
   const currentUrlRef = useRef(null);
-  const isMountedRef = useRef(true);
   const [isPaused, setIsPaused] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -41,32 +33,31 @@ export default function WebTorrentMedia({
   const [isMuted, setIsMuted] = useState(muted);
   const progressBarRef = useRef(null);
   const timerRef = useRef(null);
-  const [controlsVisible, setControlsVisible] = useState(true);
   const [videoEl, setVideoEl] = useState(null);
 
   const isImage =
-    media.fileType === "image" ||
-    media.type === "image" ||
-    media.fileName?.match(/\.(jpg|jpeg|png|gif|webp|avif|heic|heif|svg)$/i);
+    media?.fileType === "image" ||
+    media?.mediaType === "image" ||
+    media?.fileName?.match(/\.(jpg|jpeg|png|gif|webp|avif|heic|heif|svg)$/i);
 
   const resetActivityTimer = () => {
-    setControlsVisible(true);
     if (timerRef.current) clearTimeout(timerRef.current);
     if (videoRef.current && videoRef.current.paused) return;
-    timerRef.current = setTimeout(() => setControlsVisible(false), 1000);
+    timerRef.current = setTimeout(() => {}, 1000);
   };
 
- 
-useEffect(() => {
-  const v = videoRef.current;
-  if (!v) return;
-  if (isFocused) {
-    v.play().catch(() => {});
-  } else {
-    v.pause();
-  }
-}, [isFocused, videoSrc, videoEl]);
-  // Cleanup on unmount — release the video element fully
+  // Focus drives play/pause. `muted` prop drives sound.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (isFocused) {
+      v.play().catch(() => {});
+    } else {
+      v.pause();
+    }
+  }, [isFocused, videoSrc, videoEl]);
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (videoRef.current) {
@@ -87,11 +78,9 @@ useEffect(() => {
       videoRef.current.volume = newVolume;
       if (newVolume > 0 && isMuted) {
         videoRef.current.muted = false;
-        globalMuted = false;
         setIsMuted(false);
       } else if (newVolume === 0) {
         videoRef.current.muted = true;
-        globalMuted = true;
         setIsMuted(true);
       }
     }
@@ -100,7 +89,6 @@ useEffect(() => {
   const toggleMute = () => {
     if (!videoRef.current) return;
     const nextMutedState = !isMuted;
-    globalMuted = nextMutedState;
     videoRef.current.muted = nextMutedState;
     setIsMuted(nextMutedState);
     if (!nextMutedState && volume === 0) {
@@ -119,7 +107,6 @@ useEffect(() => {
     } else {
       videoRef.current.pause();
       setIsPaused(true);
-      setControlsVisible(true);
     }
   };
 
@@ -147,87 +134,78 @@ useEffect(() => {
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  // Load media (cache → torrent → webseed fallback)
+  // Load media: cache first, else webseed + background download
   useEffect(() => {
-    if ((!isFocused && !isAlmostFocused) || !media) return; 
+    if ((!isFocused && !isAlmostFocused) || !media?.cid) return;
 
-    let isMounted = true;
+    let cancelled = false;
 
     const load = async () => {
-      const cached = await getMedia(media.cid);
-        if (!isMounted) return;
-      if (cached?.blob) {
-        setVideoSrc(URL.createObjectURL(cached.blob));
-        setIsReady(true);
-        return;
-      }
+      setIsReady(false);
 
-      const magnetLink = media.magnetLink || (await getMagnetForCid(media.cid));
-      const record = await getOrStartTorrent(
-        magnetLink,
-        media.cid,
-        media,
-      ).catch(() => null);
-
-      if (!isMounted) return;
-
-      const client = window.globalWebTorrentClient;
-      const hasServer = !!client?._server;
-      const hasMetadata = record?.torrent?.ready;
-      const hasFile = record?.torrent?.files?.[0];
-
-      if (!isImage && hasServer && hasMetadata && hasFile) {
-        const url = record.torrent.files[0].streamURL;
-        if (url) {
+      // 1. Cache hit → play from blob
+      try {
+        const cached = await getMedia(media.cid);
+        if (cancelled) return;
+        if (cached?.blob) {
+          const url = URL.createObjectURL(cached.blob);
+          currentUrlRef.current = url;
           setVideoSrc(url);
           setIsReady(true);
+          setStatus("cached");
           return;
         }
-      }
+      } catch (_) {}
 
-      setVideoSrc(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${media.cid}`,
-      );
+      if (cancelled) return;
+
+      // 2. Miss → use webseed immediately, kick off background P2P/cache
+      setVideoSrc(`${BACKEND_URL}/api/webseed/${media.cid}`);
       setIsReady(true);
+      setStatus("fallback_http");
+
+      const priority = isFocused ? 0 : isAlmostFocused ? 2 : 5;
+      enqueueDownload(media.cid, media, priority).catch(() => {});
     };
 
     load();
 
     return () => {
-      isMounted = false;
+      cancelled = true;
       if (currentUrlRef.current?.startsWith("blob:")) {
         URL.revokeObjectURL(currentUrlRef.current);
       }
       currentUrlRef.current = null;
     };
-  }, [isFocused, isAlmostFocused, media?.cid, media?.magnetLink, media?.ipfsUrl]);
+  }, [isFocused, isAlmostFocused, media?.cid, media?.magnetLink]);
 
-if (!isFocused && !isAlmostFocused) return null;
+  if (!isFocused && !isAlmostFocused) return null;
 
   if (!videoSrc || !isReady) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator color="#0f0f0f" size="large" />
+        <ActivityIndicator color="#00ffff" size="large" />
         <Text style={styles.statusText}>
           {status === "checking_cache" && "📦 Loading from cache..."}
-          {status === "p2p_swarming" && `📡 Swarming (${progress}%)`}
-          {status === "initializing" && "⏳ Initializing..."}
           {status === "fallback_http" && "🌍 Loading video..."}
+          {status === "idle" && "⏳ Initializing..."}
         </Text>
       </View>
     );
   }
 
   if (isImage) {
-    return <img src={videoSrc} style={styles.image} alt="User content" />;
+    return (
+      <img
+        src={videoSrc}
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+        alt=""
+      />
+    );
   }
 
   return (
-    <View
-      style={styles.container}
-      onMouseMove={resetActivityTimer}
-      onMouseLeave={() => !isPaused && setControlsVisible(false)}
-    >
+    <View style={styles.container} onMouseMove={resetActivityTimer}>
       <video
         ref={(el) => {
           videoRef.current = el;
@@ -252,7 +230,7 @@ if (!isFocused && !isAlmostFocused) return null;
         onError={(e) => console.log("❌ Video error:", e)}
       />
 
-      <View style={styles.controlsOverlay} onClick={togglePlay}>
+      <View style={styles.controlsOverlay}>
         <View style={styles.bottomControlBar}>
           <Text style={styles.timeLabel}>{formatTime(currentTime)}</Text>
 
@@ -323,7 +301,6 @@ const styles = StyleSheet.create({
     objectFit: "contain",
     cursor: "pointer",
   },
-  image: { width: "100%", height: "100%", objectFit: "contain" },
   loader: {
     flex: 1,
     justifyContent: "center",
@@ -332,18 +309,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#111",
   },
   statusText: {
-    color: "rgb(255, 255, 255)",
+    color: "#fff",
     fontSize: 14,
     marginTop: 10,
     textAlign: "center",
   },
   controlsOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.15)",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
-    transition: "opacity 0.25s ease-in-out",
   },
   bottomControlBar: {
     position: "absolute",
