@@ -143,7 +143,6 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="format-detection" content="telephone=no" />
-        <link rel="canonical" href={url} />
         <meta
           name="impact-site-verification"
           content="6430b649-d08d-495d-8ef7-5f05702bf594"
@@ -185,7 +184,7 @@ export default function Root({ children }: PropsWithChildren) {
           {/* Middle: image */}
           <img
             src="/ebubbl.webp"
-            alt=""
+            alt="logo"
             style={{
               maxWidth: "80%",
               maxHeight: "50vh",
