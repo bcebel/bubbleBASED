@@ -21,7 +21,6 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="manifest" href="/manifest.json" />
         <link rel="canonical" href="https://ebubbl.com/" />
         <link rel="preload" as="image" href="/bbl.webp" fetchPriority="high" />
-        <script dangerouslySetInnerHTML={{ __html: sw }} />
         <ScrollViewStyleReset />
         <style
           dangerouslySetInnerHTML={{
@@ -319,10 +318,12 @@ export default function Root({ children }: PropsWithChildren) {
               runWebTorrentServer(navigator.serviceWorker.controller);
             } else {
               navigator.serviceWorker
-                .register("/sw.js", { scope: "/" })
+                .register("/sw.min.js", { scope: "/" })
                 .then((registration) => navigator.serviceWorker.ready.then(() => registration))
                 .then((registration) => {
-                  runWebTorrentServer(navigator.serviceWorker.controller || registration.active);
+                  runWebTorrentServer(navigator.serviceWorker
+  .getRegistration()
+  .then((registration) => runWebTorrentServer(registration)););
                   setTimeout(() => {
                     console.log("server:", !!window.globalWebTorrentClient?._server);
                     console.log("SW controller:", navigator.serviceWorker.controller);
@@ -346,14 +347,4 @@ export default function Root({ children }: PropsWithChildren) {
   );
 }
 
-const sw = `
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
-            console.log('Service Worker registered with scope:', registration.scope);
-        }).catch(error => {
-            console.error('Service Worker registration failed:', error);
-        });
-    });
-}
-`;
+
