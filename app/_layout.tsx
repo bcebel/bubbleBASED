@@ -59,7 +59,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <Head>
-        <title>ebubbl 🫧</title>
+        <title>ebubbl 🫧 p2p Bubbles</title>
         <meta
           name="description"
           content="Join ebubbl.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based."
