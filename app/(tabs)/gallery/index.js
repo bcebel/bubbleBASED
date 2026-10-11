@@ -996,6 +996,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#008888",
     borderRadius: 48,
+    
   },
   neighborhoodCardOverlay: { flex: 1, borderRadius: 48, aspectRatio: 1 },
   grid: {

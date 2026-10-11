@@ -24,7 +24,7 @@ export default function HomeScreen() {
         </ThemedText>
         <ThemedText>
           <ThemedText style={{ fontFamily: "Montserrat" }}>
-            Terms of Service Effective Date: 1/24/25 Last Updated: 1/24/25
+            Terms of Service Effective Date: 1/24/25 Last Updated: 10/10/26
             Welcome to ebubbl! By using our app, you agree to these Terms of
             Service ("Terms"). Please read them carefully. 1. Acceptance of
             Terms By downloading, accessing, or using [Your App Name], you agree

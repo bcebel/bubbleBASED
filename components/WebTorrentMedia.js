@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { getMedia } from "../components/mediaCache";
 import { enqueueDownload } from "./downloadQueue";
-import { getMagnetForCid } from "../utils/magnetCache";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -331,6 +330,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundImage: "linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0))",
+    marginBottom: 50,
   },
   seekHitbox: {
     flex: 1,
@@ -359,6 +359,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     marginLeft: -6,
     boxShadow: "0px 2px 6px rgba(0,0,0,0.5)",
+    
   },
   timeLabel: {
     color: "#fff",
