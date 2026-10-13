@@ -121,22 +121,32 @@ export default function PostComposer({
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const asset = result.assets[0];
       const detectedType = asset.type === "video" ? "video" : "image";
+      
+      // ✅ Explicitly extract extension from URI or fileName to catch .mov
+      const uriPath = asset.fileName || asset.uri;
+      const extension = uriPath.split(".").pop()?.toLowerCase() || (detectedType === "video" ? "mov" : "jpg");
+
+      // ✅ Fix MIME type for QuickTime .mov files on iOS
+      let mimeType = asset.mimeType || asset.file?.type;
+      if (!mimeType) {
+        if (detectedType === "video") {
+          mimeType = extension === "mov" ? "video/quicktime" : "video/mp4";
+        } else {
+          mimeType = "image/jpeg";
+        }
+      }
+
       setSelectedMedia({
         uri: asset.uri,
         mediaType: detectedType,
         file: asset.file,
-        fileName:
-          asset.fileName || // Expo's field
-          asset.file?.name || // web's File
-          `${detectedType}-${Date.now()}`, // fallback
+        fileName: asset.fileName || `post_${Date.now()}.${extension}`,
         fileSize: asset.fileSize ?? asset.file?.size,
-        mimeType:
-          asset.mimeType || // Expo's field
-          asset.file?.type || // web's File
-          (detectedType === "video" ? "video/mp4" : "image/jpeg"), // fallback
+        mimeType: mimeType,
       });
     }
   };
+
 
 const handleSubmit = async () => {
   const hasContent = content.trim().length > 0;
@@ -150,11 +160,9 @@ const handleSubmit = async () => {
 
     const currentMediaType = selectedMedia?.mediaType || "image";
       
-const ext = (selectedMedia?.fileName?.split('.').pop() || '').toLowerCase();
-const finalExt = currentMediaType === "video"
-  ? (ext || 'mp4')
-  : (ext || 'jpg');
-const fileName = selectedMedia?.uri ? `post_${Date.now()}.${finalExt}` : null;
+    // ✅ Keep original extension (.mov, .mp4, etc.)
+    const ext = (selectedMedia?.fileName?.split('.').pop() || (currentMediaType === "video" ? "mov" : "jpg")).toLowerCase();
+    const fileName = selectedMedia?.uri ? `post_${Date.now()}.${ext}` : null;
 
     let mediaObject = null;
 
@@ -162,7 +170,7 @@ const fileName = selectedMedia?.uri ? `post_${Date.now()}.${finalExt}` : null;
       const uri = selectedMedia.uri;
 
       if (uri.startsWith("blob:") || uri.startsWith("file:")) {
-        console.log(`📤 Uploading to Pinata: ${fileName}`);
+        console.log(`📤 Uploading to Pinata: ${fileName} (${selectedMedia.mimeType})`);
         const pinataResult = await uploadToIPFS(
           uri,
           fileName,
@@ -175,13 +183,8 @@ const fileName = selectedMedia?.uri ? `post_${Date.now()}.${finalExt}` : null;
         const cid = slice?.cid || pinataResult?.cid || null;
         if (!cid) throw new Error("Upload returned no CID");
 
-        const magnetLink =
-          slice?.magnetLink || pinataResult?.magnetLink || null;
-
+        const magnetLink = slice?.magnetLink || pinataResult?.magnetLink || null;
         const finalMediaUrl = `https://${PINATA_GATEWAY}/ipfs/${cid}`;
-        console.log(
-          `✅ Upload complete: ${cid}, magnet: ${magnetLink ? "yes" : "no"}`,
-        );
 
         mediaObject = {
           url: finalMediaUrl,
@@ -189,7 +192,7 @@ const fileName = selectedMedia?.uri ? `post_${Date.now()}.${finalExt}` : null;
           mediaType: currentMediaType,
           fileName: selectedMedia.fileName,
           fileSize: selectedMedia.fileSize,
-          mimeType: selectedMedia.mimeType,
+          mimeType: selectedMedia.mimeType, // Passes video/quicktime correctly
           magnetURI: magnetLink,
         };
       } else {
@@ -220,7 +223,6 @@ const fileName = selectedMedia?.uri ? `post_${Date.now()}.${finalExt}` : null;
       },
     });
 
-    console.log("✅ Post created");
     setContent("");
     setSelectedMedia(null);
     refetchPosts();
