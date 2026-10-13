@@ -148,10 +148,12 @@ const handleSubmit = async () => {
     const token = await AsyncStorage.getItem("token");
     if (!token) throw new Error("No authentication token found");
 
-    const currentMediaType = selectedMedia?.mediaType || "image";
-    const fileName = selectedMedia?.uri
-      ? `post_${Date.now()}.${currentMediaType === "video" ? "mp4" : "jpg"}`
-      : null;
+    const currentMediaType = selectedMedia?.mediaType || "// preserve original extension
+const ext = (selectedMedia?.fileName?.split('.').pop() || '').toLowerCase();
+const finalExt = currentMediaType === "video"
+  ? (ext || 'mp4')
+  : (ext || 'jpg');
+const fileName = selectedMedia?.uri ? `post_${Date.now()}.${finalExt}` : null;
 
     let mediaObject = null;
 
