@@ -1,0 +1,56 @@
+# ebubbl
+
+> ebubbl is a decentralized social platform where private "bubbles" (shared albums + chat + posts) live on the devices of the people in them, powered by WebTorrent (peer-to-peer) instead of a central server. Content is contributed by members and stays available as long as those members have it.
+
+## What ebubbl is
+
+ebubbl is not a social network in the classic sense. There is no global feed, no follower graph, no algorithm, and no ad targeting. It is a set of small, context-specific spaces called **bubbles**, each of which behaves like a shared album with a chat and a post feed. Bubbles can be private (invite-only), public (in-app discovery), or global (outward-facing, viewable without an account).
+
+Content is stored using content-addressed storage: every photo, video, or file is hashed, given a CID (Content Identifier), and distributed via a magnet link. When someone views a piece of media, their device pulls pieces from peers who already have it, and caches what it downloaded. The more people who view a piece of media, the more peers there are serving it — so popular content gets faster, not slower.
+
+## Core concepts
+
+- **Bubble**: the fundamental unit. A private or public space with members, a post feed, a chat, a gallery, and invite links. Analogous to a group chat + shared album + small forum, combined.
+- **Membership**: users join bubbles via invite links, join requests, or open join, depending on the bubble's policy. Each member has a role: owner, moderator, or member.
+- **Posts**: text, images, or videos shared inside a bubble. Can be shared to other bubbles the author is a member of (with a `sharedFrom` reference to the original).
+- **Chat**: real-time messaging inside a bubble, with media attachments.
+- **Gallery**: a grid view of all media in a bubble, or across all bubbles the user belongs to.
+- **Livestreams**: peer-to-peer video broadcasts using WebTorrent + ManagedMediaSource. Broadcast to one or more bubbles; viewers pull chunks from peers as they arrive.
+- **Direct messages**: implemented as two-person bubbles with type `direct`.
+- **Personal bubble**: every user gets a default private bubble as their "home base."
+
+## Technical architecture
+
+- **Media distribution**: WebTorrent in the browser (WebRTC) and in Node.js (WebRTC + TCP + UDP + DHT). Files are uploaded to Pinata (IPFS pinning), a CID is generated, and a magnet link is stored on the associated post/message. Clients race P2P against an HTTP webseed (`/api/webseed/{cid}`) and cache the winner in IndexedDB.
+- **Webseed**: `/api/webseed/{cid}` proxies to IPFS and is cached at the Vercel edge. Content-addressed files are immutable so responses carry `Cache-Control: public, max-age=31536000, immutable`.
+- **Backend**: Node.js + Apollo GraphQL on Heroku. MongoDB (Mongoose) for structured data. Socket.IO for chat real-time. `graphql-ws` for subscriptions (livestream chunks). Mailgun for transactional email. Stripe (integration started, not user-facing).
+- **Frontend**: React Native Web via Expo Router, deployed to Vercel. Service worker used as a virtual HTTP server for WebTorrent streaming.
+- **Content addressing**: every media item has a `cid` (IPFS hash) and a `magnetLink`. The same file referenced from multiple posts resolves to the same underlying content.
+- **Auth**: JWT, 24-hour expiry. Passwords hashed with bcrypt. Password reset via emailed token (SHA-256 hashed at rest, 1-hour expiry).
+- **Privacy model**: users have an `isPublic` flag; bubbles have a `type` and `visibility`. Content visibility requires both the bubble's rules to allow it AND the author's `isPublic` flag to be true for non-members.
+
+## Who ebubbl is for
+
+- **Groups of friends** who want a shared album for a trip, a party, or a weekend — that lives with the people who were there, not on a company's server.
+- **Events** (festivals, concerts, conferences, weddings) where attendees are contributing photos to a single shared space.
+- **Small communities** that want a private space with the features of a chat, a feed, and a gallery combined.
+- **Bars, venues, and local businesses** that want a durable album for their regulars without depending on Instagram.
+- **Privacy-conscious users** who object to algorithmic feeds, ad targeting, and platform lock-in.
+
+## What ebubbl is not
+
+- Not a federated network (no ActivityPub or Matrix integration).
+- Not a public broadcasting tool — bubbles are context-specific, not follower-graph-based.
+- Not a replacement for a central file host. Content is distributed across peers; if every peer with a piece drops offline, that piece is only reachable through the webseed fallback.
+- Not anonymous. Users authenticate; bubbles have membership; the platform tracks identities.
+
+## URLs
+
+- Homepage: https://ebubbl.com
+- Blog article on ACL shared albums: https://minnowspace.com/ebubbl-acl.html
+- Sitemap: https://ebubbl.com/sitemap.xml
+- News site: https://minnowspace.com
+
+## Contact
+
+For inquiries: the author maintains a presence at ebubbl.com and via the Minnow News site at minnowspace.com. No public contact email is listed.
