@@ -325,12 +325,13 @@ export default function Root({ children }: PropsWithChildren) {
                 .then((registration) => {
                   runWebTorrentServer(navigator.serviceWorker
   .getRegistration()
-  .then((registration) => runWebTorrentServer(registration)););
-                  setTimeout(() => {
-                    console.log("server:", !!window.globalWebTorrentClient?._server);
-                    console.log("SW controller:", navigator.serviceWorker.controller);
-                  }, 3000);
-                })
+.then((registration) => {
+  runWebTorrentServer(registration);
+  setTimeout(() => {
+    console.log("server:", !!window.globalWebTorrentClient?._server);
+    console.log("SW controller:", navigator.serviceWorker.controller);
+  }, 3000);
+})
                 .catch((e) => {
                   console.error("🎬 Service worker compilation fallback error:", e);
                   window.__canStream = false;
