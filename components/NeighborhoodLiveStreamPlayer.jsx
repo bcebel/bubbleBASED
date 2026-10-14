@@ -468,9 +468,8 @@ export default function NeighborhoodLiveStreamPlayer({
           setThumbnail(thumbnailUrl);
           if (onThumbnailLoaded) onThumbnailLoaded(thumbnailUrl);
         };
-        if (containerRef.current)
-          containerRef.current.appendChild(controller.video);
-        controller.video.src = URL.createObjectURL(controller.ms);
+        
+        
         controllerRef.current = controller;
         setIsJoined(true);
 
