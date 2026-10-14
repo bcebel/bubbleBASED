@@ -470,8 +470,13 @@ export default function NeighborhoodLiveStreamPlayer({
         };
         
         
-        controllerRef.current = controller;
-        setIsJoined(true);
+        
+controllerRef.current = controller;
+setIsJoined(true);
+// DELETE THESE TWO LINES:
+if (containerRef.current) containerRef.current.appendChild(controller.video);
+controller.video.src = URL.createObjectURL(controller.ms);
+        
 
         const v = controller.video;
         v.addEventListener("timeupdate", () => setCurrentTime(v.currentTime));
