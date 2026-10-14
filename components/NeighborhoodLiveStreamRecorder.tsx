@@ -327,7 +327,7 @@ if (!supportedTypeRef.current) {
         }
       };
 
-      mediaRecorder.start(4000);
+      mediaRecorder.start(8000);
       setIsStreaming(true);
     } catch (error) {
       console.error("❌ Fatal Stream Error:", error);
