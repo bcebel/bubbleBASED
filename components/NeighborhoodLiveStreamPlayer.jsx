@@ -336,7 +336,19 @@ class StreamController {
         const buf = await this.download(magnet, this.nextIndex);
         if (buf && !this.sb.updating) {
           this.sb.appendBuffer(buf);
-          this.nextIndex++;
+
+this.nextIndex++;
+
+// Evict buffers older than 10 seconds behind current playback position
+const t = this.video.currentTime;
+if (t > 15 && this.sb && !this.sb.updating) {
+  try {
+    // Remove everything from 0 up to (currentTime - 10)
+    this.sb.remove(0, t - 10);
+  } catch (_) {}
+}
+
+          
         } else {
           this.isProcessing = false;
         }
