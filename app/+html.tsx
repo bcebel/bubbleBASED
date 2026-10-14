@@ -20,6 +20,9 @@ export default function Root({ children }: PropsWithChildren) {
         />
         <link rel="manifest" href="/manifest.json" />
         <link rel="canonical" href="https://ebubbl.com/" />
+        <script src="//cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
+
         <link rel="preload" as="image" href="/bbl.webp" fetchPriority="high" />
         <ScrollViewStyleReset />
         <style
