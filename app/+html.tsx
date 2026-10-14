@@ -1,6 +1,5 @@
 import { ScrollViewStyleReset } from "expo-router/html";
 import { type PropsWithChildren } from "react";
-import VerificationText from "../components/verification";
 
 export default function Root({ children }: PropsWithChildren) {
   const title = "ebubbl 🫧";
@@ -20,8 +19,6 @@ export default function Root({ children }: PropsWithChildren) {
         />
         <link rel="manifest" href="/manifest.json" />
         <link rel="canonical" href="https://ebubbl.com/" />
-        <script src="//cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
 
         <link rel="preload" as="image" href="/bbl.webp" fetchPriority="high" />
         <ScrollViewStyleReset />
@@ -34,7 +31,7 @@ export default function Root({ children }: PropsWithChildren) {
         height: 100%;
         width: 100%;
         overscroll-behavior: none;
-          cursor: url('./16.png')8 8, auto;
+        cursor: url('./16.png') 8 8, auto;
       }
       body {
         background-color: #130720;
@@ -54,7 +51,6 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="author" content="ebubbl" />
         <meta name="robots" content="index, follow" />
 
-        {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={url} />
         <meta property="og:title" content="ebubbl" />
@@ -72,7 +68,6 @@ export default function Root({ children }: PropsWithChildren) {
           content="lvnAxw0UhYgjF3kq4GKccyigEEVkHXkKTHntmIXRGvJ9aIHkiVw4Kg=="
         />
 
-        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@ebubbl_" />
         <meta name="twitter:creator" content="@ebubbl_" />
@@ -162,7 +157,7 @@ export default function Root({ children }: PropsWithChildren) {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "space-between", // ← top/bottom anchoring
+            justifyContent: "space-between",
             backgroundColor: "#FFFFFF",
             color: "#0A0C10",
             fontFamily:
@@ -173,7 +168,6 @@ export default function Root({ children }: PropsWithChildren) {
             zIndex: 99999,
           }}
         >
-          {/* Top: heading */}
           <h1
             style={{
               fontSize: "2rem",
@@ -184,7 +178,6 @@ export default function Root({ children }: PropsWithChildren) {
             digital bubbles 🫧 for everyone
           </h1>
 
-          {/* Middle: image */}
           <img
             src="/ebubbl.webp"
             alt="logo"
@@ -196,7 +189,6 @@ export default function Root({ children }: PropsWithChildren) {
             fetchPriority="high"
           />
 
-          {/* Bottom: nav */}
           <nav
             style={{
               display: "flex",
@@ -243,7 +235,6 @@ export default function Root({ children }: PropsWithChildren) {
         <script
           dangerouslySetInnerHTML={{
             __html: `
-      // No auto-hide. The app controls this.
       window.__hideSplash = () => {
         const splash = document.getElementById("splash-screen");
         if (!splash) return;
@@ -253,6 +244,7 @@ export default function Root({ children }: PropsWithChildren) {
     `,
           }}
         />
+
         <script
           type="module"
           dangerouslySetInnerHTML={{
@@ -278,7 +270,7 @@ export default function Root({ children }: PropsWithChildren) {
         "udp://tracker3.itzmx.com:6961/announce"
       ];
 
-      function runWebTorrentServer(targetController) {
+      function runWebTorrentServer(registration) {
         if (window.WebTorrent && !window.globalWebTorrentClient) {
           window.globalWebTorrentClient = new window.WebTorrent({
             tracker: {
@@ -288,9 +280,7 @@ export default function Root({ children }: PropsWithChildren) {
                   { urls: "stun:stun.relay.metered.ca:80" },
                   { urls: "stun:stun.services.mozilla.com:3478" },
                   { urls: "stun:stun.nextcloud.com:443" },
-
                   { urls: "stun:stun.cloudflare.com:3478" },
-           
                   { urls: "turn:standard.relay.metered.ca:80", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
                   { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
                   { urls: "turn:standard.relay.metered.ca:443", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
@@ -298,14 +288,14 @@ export default function Root({ children }: PropsWithChildren) {
                   { urls: "stun:stun.l.google.com:19302" },
                   { urls: "stun:stun1.l.google.com:19302" },
                   { urls: "stun:global.stun.twilio.com:3478" }
-                ],
-              },
+                ]
+              }
             },
-            webSeeds: true,
+            webSeeds: true
           });
 
           window.globalWebTorrentClient.createServer({
-            controller: targetController
+            controller: registration
           });
           window.__canStream = true;
           console.log("🌪️ CHAMP INITIALIZED WITH UNIFIED CONTROL ROUTE");
@@ -317,40 +307,30 @@ export default function Root({ children }: PropsWithChildren) {
           window.addEventListener('load', () => {
             if (navigator.serviceWorker.controller) {
               console.log("🎬 Service worker already controlling page. Re-attaching server channel.");
-              runWebTorrentServer(navigator.serviceWorker.controller);
+              navigator.serviceWorker.getRegistration().then((registration) => {
+                if (registration) runWebTorrentServer(registration);
+              });
             } else {
               navigator.serviceWorker
                 .register("/sw.min.js", { scope: "/" })
-                .then((registration) => navigator.serviceWorker.ready.then(() => 
-                try {
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      if (navigator.serviceWorker.controller) {
-        console.log("🎬 Service worker already controlling page. Re-attaching server channel.");
-        navigator.serviceWorker.getRegistration().then((registration) => {
-          if (registration) runWebTorrentServer(registration);
-        });
-      } else {
-        navigator.serviceWorker
-          .register("/sw.min.js", { scope: "/" })
-          .then(() => navigator.serviceWorker.ready)
-          .then((registration) => {
-            runWebTorrentServer(registration);
-            setTimeout(() => {
-              console.log("server:", !!window.globalWebTorrentClient?._server);
-              console.log("SW controller:", navigator.serviceWorker.controller);
-            }, 3000);
-          })
-          .catch((e) => {
-            console.error("🎬 Service worker compilation fallback error:", e);
-            window.__canStream = false;
+                .then(() => navigator.serviceWorker.ready)
+                .then((registration) => {
+                  runWebTorrentServer(registration);
+                  setTimeout(() => {
+                    console.log("server:", !!window.globalWebTorrentClient?._server);
+                    console.log("SW controller:", navigator.serviceWorker.controller);
+                  }, 3000);
+                })
+                .catch((e) => {
+                  console.error("🎬 Service worker compilation fallback error:", e);
+                  window.__canStream = false;
+                });
+            }
           });
+        }
+      } catch (e) {
+        console.error("🌪️ CHAMP BLOCK CRASHED:", e);
       }
-    });
-  }
-} catch (e) {
-  console.error("🌪️ CHAMP BLOCK CRASHED:", e);
-}
     `,
           }}
         />
@@ -358,5 +338,3 @@ export default function Root({ children }: PropsWithChildren) {
     </html>
   );
 }
-
-
