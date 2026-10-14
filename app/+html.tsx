@@ -321,27 +321,36 @@ export default function Root({ children }: PropsWithChildren) {
             } else {
               navigator.serviceWorker
                 .register("/sw.min.js", { scope: "/" })
-                .then((registration) => navigator.serviceWorker.ready.then(() => registration))
-                .then((registration) => {
-                  runWebTorrentServer(navigator.serviceWorker
-  .getRegistration()
-.then((registration) => {
-  runWebTorrentServer(registration);
-  setTimeout(() => {
-    console.log("server:", !!window.globalWebTorrentClient?._server);
-    console.log("SW controller:", navigator.serviceWorker.controller);
-  }, 3000);
-})
-                .catch((e) => {
-                  console.error("🎬 Service worker compilation fallback error:", e);
-                  window.__canStream = false;
-                });
-            }
+                .then((registration) => navigator.serviceWorker.ready.then(() => 
+                try {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      if (navigator.serviceWorker.controller) {
+        console.log("🎬 Service worker already controlling page. Re-attaching server channel.");
+        navigator.serviceWorker.getRegistration().then((registration) => {
+          if (registration) runWebTorrentServer(registration);
+        });
+      } else {
+        navigator.serviceWorker
+          .register("/sw.min.js", { scope: "/" })
+          .then(() => navigator.serviceWorker.ready)
+          .then((registration) => {
+            runWebTorrentServer(registration);
+            setTimeout(() => {
+              console.log("server:", !!window.globalWebTorrentClient?._server);
+              console.log("SW controller:", navigator.serviceWorker.controller);
+            }, 3000);
+          })
+          .catch((e) => {
+            console.error("🎬 Service worker compilation fallback error:", e);
+            window.__canStream = false;
           });
-        }
-      } catch (e) {
-        console.error("🌪️ CHAMP BLOCK CRASHED:", e);
       }
+    });
+  }
+} catch (e) {
+  console.error("🌪️ CHAMP BLOCK CRASHED:", e);
+}
     `,
           }}
         />
