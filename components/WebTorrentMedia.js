@@ -39,9 +39,10 @@ export default function WebTorrentMedia({
     media?.mediaType === "image" ||
     media?.fileName?.match(/\.(jpg|jpeg|png|gif|webp|avif|heic|heif|svg)$/i);
 
-  const resetActivityTimer = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (videoRef.current && videoRef.current.paused) return;
+ Timer const resetActivityTimer = () => {
+    if (}>
+timerRef     .current) clear <Timeout(timerRef.current);
+    ifvideo (videoRef.current && videoRef.current.paused) return;
     timerRef.current = setTimeout(() => {}, 1000);
   };
 
@@ -140,36 +141,36 @@ export default function WebTorrentMedia({
 
     let cancelled = false;
 
-  const load = async () => {
-  // Almost-focused: prefetch only. Don't touch src.
-  if (!isFocused) {
-    enqueueDownload(media.cid, media, 2).catch(() => {});
-    return;
-  }
+    const load = async () => {
+      // Almost-focused: prefetch only. Don't touch src.
+      if (!isFocused) {
+        enqueueDownload(media.cid, media, 2).catch(() => {});
+        return;
+      }
 
-  // Focused: check cache first (prefetch may have finished by now)
-  setIsReady(false);
+      // Focused: check cache first (prefetch may have finished by now)
+      setIsReady(false);
 
-  try {
-    const cached = await getMedia(media.cid);
-    if (cancelled) return;
-    if (cached?.blob) {
-      const url = URL.createObjectURL(cached.blob);
-      currentUrlRef.current = url;
-      setVideoSrc(url);
+      try {
+        const cached = await getMedia(media.cid);
+        if (cancelled) return;
+        if (cached?.blob) {
+          const url = URL.createObjectURL(cached.blob);
+          currentUrlRef.current = url;
+          setVideoSrc(url);
+          setIsReady(true);
+          setStatus("cached");
+          return;
+        }
+      } catch (_) {}
+
+      if (cancelled) return;
+
+      // Cache miss = prefetch already tried. Just HTTP it.
+      setVideoSrc(`${BACKEND_URL}/api/webseed/${media.cid}`);
       setIsReady(true);
-      setStatus("cached");
-      return;
-    }
-  } catch (_) {}
-
-  if (cancelled) return;
-
-  // Cache miss = prefetch already tried. Just HTTP it.
-  setVideoSrc(`${BACKEND_URL}/api/webseed/${media.cid}`);
-  setIsReady(true);
-  setStatus("fallback_http");
-};
+      setStatus("fallback_http");
+    };
 
     load();
 
@@ -208,8 +209,7 @@ export default function WebTorrentMedia({
   }
 
   return (
-    <View style={styles.container} onMouseMove={resetActivityTimer}>
-      <video
+    <View style={styles.container} onMouseMove={resetActivity
         ref={(el) => {
           videoRef.current = el;
           setVideoEl(el);
@@ -363,226 +363,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     marginLeft: -6,
     boxShadow: "0px 2px 6px rgba(0,0,0,0.5)",
-    
-  },
-  timeLabel: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
-  },
-  volumeControlContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 12,
-    marginRight: 12,
-    height: "100%",
-    zIndex: 5000,
-  },
-  volumeButton: {
-    padding: 4,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 5000,
-  },
-  volumeIconText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-});
-    load();
-
-    return () => {
-      cancelled = true;
-      if (currentUrlRef.current?.startsWith("blob:")) {
-        URL.revokeObjectURL(currentUrlRef.current);
-      }
-      currentUrlRef.current = null;
-    };
-  }, [isFocused, isAlmostFocused, media?.cid, media?.magnetLink]);
-
-  if (!isFocused && !isAlmostFocused) return null;
-
-  if (!videoSrc || !isReady) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator color="#00ffff" size="large" />
-        <Text style={styles.statusText}>
-          {status === "checking_cache" && "📦 Loading from cache..."}
-          {status === "fallback_http" && "🌍 Loading video..."}
-          {status === "idle" && "⏳ Initializing..."}
-        </Text>
-      </View>
-    );
-  }
-
-  if (isImage) {
-    return (
-      <img
-        src={videoSrc}
-        style={{ width: "100%", height: "100%", objectFit: "contain" }}
-        alt=""
-      />
-    );
-  }
-
-  return (
-    <View style={styles.container} onMouseMove={resetActivityTimer}>
-      <video
-        ref={(el) => {
-          videoRef.current = el;
-          setVideoEl(el);
-        }}
-        src={videoSrc}
-        style={styles.video}
-        muted={muted}
-        volume={volume}
-        loop={true}
-        playsInline
-        autoPlay
-        preload="auto"
-        onTimeUpdate={() =>
-          videoRef.current && setCurrentTime(videoRef.current.currentTime)
-        }
-        onLoadedMetadata={() =>
-          videoRef.current && setDuration(videoRef.current.duration)
-        }
-        onLoadedData={() => console.log("🎬 Video loaded and ready")}
-        onClick={togglePlay}
-        onError={(e) => console.log("❌ Video error:", e)}
-      />
-
-      <View style={styles.controlsOverlay}>
-        <View style={styles.bottomControlBar}>
-          <Text style={styles.timeLabel}>{formatTime(currentTime)}</Text>
-
-          <View style={styles.volumeControlContainer}>
-            <TouchableOpacity style={styles.volumeButton} onPress={toggleMute}>
-              <Text style={styles.volumeIconText}>
-                {isMuted || volume === 0 ? "🔇" : volume < 0.5 ? "🔉" : "🔊"}
-              </Text>
-            </TouchableOpacity>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={isMuted ? 0 : volume}
-              onChange={handleVolumeChange}
-              style={{
-                cursor: "pointer",
-                height: "4px",
-                backgroundColor: "#00ffff",
-                accentColor: "#00ffff",
-                outline: "none",
-                border: "none",
-                marginLeft: "6px",
-                width: "60px",
-                opacity: 1,
-                display: "block",
-              }}
-            />
-          </View>
-
-          <TouchableOpacity
-            activeOpacity={1}
-            style={styles.seekHitbox}
-            onPress={handleSeek}
-          >
-            <View ref={progressBarRef} style={styles.progressBarTrack}>
-              <View
-                style={[
-                  styles.progressBarFill,
-                  { width: `${progressPercent}%` },
-                ]}
-              />
-              <View
-                style={[styles.progressKnob, { left: `${progressPercent}%` }]}
-              />
-            </View>
-          </TouchableOpacity>
-
-          <Text style={styles.timeLabel}>{formatTime(duration)}</Text>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-    height: "100%",
-    position: "relative",
-    backgroundColor: "#000",
-    overflow: "hidden",
-  },
-  video: {
-    width: "100%",
-    height: "100%",
-    objectFit: "contain",
-    cursor: "pointer",
-  },
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: 200,
-    backgroundColor: "#111",
-  },
-  statusText: {
-    color: "#fff",
-    fontSize: 14,
-    marginTop: 10,
-    textAlign: "center",
-  },
-  controlsOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 10,
-  },
-  bottomControlBar: {
-    position: "absolute",
-    bottom: "5%",
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundImage: "linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0))",
-    marginBottom: 50,
-  },
-  seekHitbox: {
-    flex: 1,
-    paddingVertical: 10,
-    marginHorizontal: 12,
-    cursor: "pointer",
-  },
-  progressBarTrack: {
-    height: 4,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    borderRadius: 2,
-    width: "100%",
-    position: "relative",
-  },
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: "#00ffff",
-    borderRadius: 2,
-  },
-  progressKnob: {
-    position: "absolute",
-    top: -4,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#fff",
-    marginLeft: -6,
-    boxShadow: "0px 2px 6px rgba(0,0,0,0.5)",
-    
   },
   timeLabel: {
     color: "#fff",
