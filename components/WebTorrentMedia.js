@@ -39,14 +39,12 @@ export default function WebTorrentMedia({
     media?.mediaType === "image" ||
     media?.fileName?.match(/\.(jpg|jpeg|png|gif|webp|avif|heic|heif|svg)$/i);
 
- const resetActivityTimer = () => {
-    if (}>
-timerRef     .current) clear <Timeout(timerRef.current);
-    ifvideo (videoRef.current && videoRef.current.paused) return;
+  const resetActivityTimer = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (videoRef.current && videoRef.current.paused) return;
     timerRef.current = setTimeout(() => {}, 1000);
   };
 
-  // Focus drives play/pause. `muted` prop drives sound.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -57,7 +55,6 @@ timerRef     .current) clear <Timeout(timerRef.current);
     }
   }, [isFocused, videoSrc, videoEl]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (videoRef.current) {
@@ -134,68 +131,58 @@ timerRef     .current) clear <Timeout(timerRef.current);
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  // Load media: almost-focused items prefetch only. Focused items check
-  // cache first, then fall back to HTTP. Never two fetches for the same file.
   useEffect(() => {
     if ((!isFocused && !isAlmostFocused) || !media?.cid) return;
 
     let cancelled = false;
 
     const load = async () => {
-  // Almost-focused: prefetch only. Don't touch src.
-  if (!isFocused) {
-    enqueueDownload(media.cid, media, 2).catch(() => {});
-    return;
-  }
+      if (!isFocused) {
+        enqueueDownload(media.cid, media, 2).catch(() => {});
+        return;
+      }
 
-  // Focused: check cache first (prefetch may have finished)
-  setIsReady(false);
+      setIsReady(false);
 
-  try {
-    const cached = await getMedia(media.cid);
-    if (cancelled) return;
-    if (cached?.blob) {
-      const url = URL.createObjectURL(cached.blob);
-      currentUrlRef.current = url;
-      setVideoSrc(url);
+      try {
+        const cached = await getMedia(media.cid);
+        if (cancelled) return;
+        if (cached?.blob) {
+          const url = URL.createObjectURL(cached.blob);
+          currentUrlRef.current = url;
+          setVideoSrc(url);
+          setIsReady(true);
+          setStatus("cached");
+          return;
+        }
+      } catch (_) {}
+
+      if (cancelled) return;
+
+      const p2pPromise = enqueueDownload(media.cid, media, 0)
+        .then(() => getMedia(media.cid))
+        .catch(() => null);
+
+      const timeoutPromise = new Promise((resolve) =>
+        setTimeout(() => resolve(null), 2000),
+      );
+
+      const result = await Promise.race([p2pPromise, timeoutPromise]);
+      if (cancelled) return;
+
+      if (result?.blob) {
+        const url = URL.createObjectURL(result.blob);
+        currentUrlRef.current = url;
+        setVideoSrc(url);
+        setIsReady(true);
+        setStatus("p2p");
+        return;
+      }
+
+      setVideoSrc(`${BACKEND_URL}/api/webseed/${media.cid}`);
       setIsReady(true);
-      setStatus("cached");
-      return;
-    }
-  } catch (_) {}
-
-  if (cancelled) return;
-
-  // Not cached. Race P2P (via the queue) against a 2-second timer.
-  // If P2P delivers in time, play from the swarm. Otherwise HTTP.
-  const p2pPromise = enqueueDownload(media.cid, media, 0)
-    .then(() => getMedia(media.cid))
-    .catch(() => null);
-
-  const timeoutPromise = new Promise((resolve) =>
-    setTimeout(() => resolve(null), 2000),
-  );
-
-  const result = await Promise.race([p2pPromise, timeoutPromise]);
-  if (cancelled) return;
-
-  if (result?.blob) {
-    // P2P won
-    const url = URL.createObjectURL(result.blob);
-    currentUrlRef.current = url;
-    setVideoSrc(url);
-    setIsReady(true);
-    setStatus("p2p");
-    return;
-  }
-
-  // P2P slow or no peers. HTTP now.
-  setVideoSrc(`${BACKEND_URL}/api/webseed/${media.cid}`);
-  setIsReady(true);
-  setStatus("fallback_http");
-  // Note: P2P is still running in the background. When it finishes,
-  // the next view will hit the cache.
-};
+      setStatus("fallback_http");
+    };
 
     load();
 
@@ -234,7 +221,8 @@ timerRef     .current) clear <Timeout(timerRef.current);
   }
 
   return (
-    <View style={styles.container} onMouseMove={resetActivity
+    <View style={styles.container} onMouseMove={resetActivityTimer}>
+      <video
         ref={(el) => {
           videoRef.current = el;
           setVideoEl(el);
