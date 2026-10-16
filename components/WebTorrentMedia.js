@@ -133,16 +133,23 @@ export default function WebTorrentMedia({
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  // Load media: cache first, else webseed + background download
+  // Load media: almost-focused items prefetch only. Focused items check
+  // cache first, then fall back to HTTP. Never two fetches for the same file.
   useEffect(() => {
     if ((!isFocused && !isAlmostFocused) || !media?.cid) return;
 
     let cancelled = false;
 
     const load = async () => {
+      // Almost-focused: silently prefetch, do NOT touch src
+      if (!isFocused) {
+        enqueueDownload(media.cid, media, 2).catch(() => {});
+        return;
+      }
+
+      // Focused: check cache (prefetch may have finished)
       setIsReady(false);
 
-      // 1. Cache hit → play from blob
       try {
         const cached = await getMedia(media.cid);
         if (cancelled) return;
@@ -158,13 +165,13 @@ export default function WebTorrentMedia({
 
       if (cancelled) return;
 
-      // 2. Miss → use webseed immediately, kick off background P2P/cache
+      // Not cached: HTTP for the user right now
       setVideoSrc(`${BACKEND_URL}/api/webseed/${media.cid}`);
       setIsReady(true);
       setStatus("fallback_http");
 
-      const priority = isFocused ? 0 : isAlmostFocused ? 2 : 5;
-      enqueueDownload(media.cid, media, priority).catch(() => {});
+      // And kick off the download for next time
+      enqueueDownload(media.cid, media, 0).catch(() => {});
     };
 
     load();
