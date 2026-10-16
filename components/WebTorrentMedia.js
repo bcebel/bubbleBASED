@@ -164,7 +164,7 @@ export default function WebTorrentMedia({
         .catch(() => null);
 
       const timeoutPromise = new Promise((resolve) =>
-        setTimeout(() => resolve(null), 2000),
+        setTimeout(() => resolve(null), 500),
       );
 
       const result = await Promise.race([p2pPromise, timeoutPromise]);
