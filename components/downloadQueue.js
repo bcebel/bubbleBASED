@@ -2,7 +2,6 @@
 import idbChunkStore from "@thaunknown/idb-chunk-store";
 import { saveMedia, getMedia } from "../components/mediaCache";
 import { webtorrentService } from "../utils/webtorrentService";
-import parseTorrent from "parse-torrent";
 import { getMagnetForCid } from "../utils/magnetCache";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
@@ -53,6 +52,7 @@ function sortQueue() {
 }
 
 // ─── public: drop jobs the user scrolled past ─────────────
+/*
 export function cancelBelowPriority(maxPriority) {
   for (let i = queue.length - 1; i >= 0; i--) {
     if (queue[i].priority > maxPriority) {
@@ -60,7 +60,9 @@ export function cancelBelowPriority(maxPriority) {
       queue.splice(i, 1);
     }
   }
+
 }
+  */
 
 export function cancelOutsideSet(keepCids) {
   const keep = new Set(keepCids);
@@ -182,7 +184,10 @@ function raceSources(cid, magnetLink, media) {
       try {
         const c = getClient();
         const cleanMagnet = magnetLink.replace(/&ws=[^&]*/g, "");
-        const infoHash = parseTorrent(cleanMagnet).infoHash;
+      
+        const match = cleanMagnet.match(/xt=urn:btih:([a-fA-F0-9]{40})/i);
+        const infoHash = match ? match[1].toLowerCase() : null;
+        if (!infoHash) throw new Error("Invalid magnet link");
 
         torrent = c.torrents?.find((t) => t.infoHash === infoHash);
         if (!torrent) {
