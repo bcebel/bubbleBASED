@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   ScrollView,
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
-import NeighborhoodLiveStreamRecorder from "../../../components/NeighborhoodLiveStreamRecorder";
+const NeighborhoodLiveStreamRecorder = lazy(
+  () => import("../../../components/NeighborhoodLiveStreamRecorder"),
+);
 import { useRouter, Link, useLocalSearchParams } from "expo-router";
 
 
@@ -42,11 +44,19 @@ useEffect(() => {
 }, [preselect]);
   if (isRecording) {
     return (
-      <NeighborhoodLiveStreamRecorder
-        neighborhoodId={selectedHood}
-        username={meData?.me?.username}
-        onStreamEnd={() => setIsRecording(false)}
-      />
+      <Suspense
+        fallback={
+          <View style={styles.loading}>
+            <ActivityIndicator size="large" color="#fff" />
+          </View>
+        }
+      >
+        <NeighborhoodLiveStreamRecorder
+          neighborhoodId={selectedHood}
+          username={meData?.me?.username}
+          onStreamEnd={() => setIsRecording(false)}
+        />
+      </Suspense>
     );
   }
 

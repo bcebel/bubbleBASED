@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { warehouse } from "../components/StreamWearhouse.js";
-import webtorrentService from "../utils/webtorrentService.js";
+import webtorrentService from "../utils/webtorrentService.web.js";
 const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
 class StreamController {
@@ -33,16 +33,16 @@ class StreamController {
     this.MS = window.ManagedMediaSource || window.MediaSource;
     this.ms = new this.MS();
 
-  this.sb = null;
+    this.sb = null;
 
-  this.isManaged = !!window.ManagedMediaSource;
-  this.canAppend = !this.isManaged;
+    this.isManaged = !!window.ManagedMediaSource;
+    this.canAppend = !this.isManaged;
 
-  this.ms.addEventListener("startstreaming", () => {
-    this.canAppend = true;
-    this.addLog("✅ ManagedMediaSource started streaming");
-    this.tick();
-  });
+    this.ms.addEventListener("startstreaming", () => {
+      this.canAppend = true;
+      this.addLog("✅ ManagedMediaSource started streaming");
+      this.tick();
+    });
 
     this.ms.addEventListener("endstreaming", () => {
       this.canAppend = false;
@@ -337,18 +337,16 @@ class StreamController {
         if (buf && !this.sb.updating) {
           this.sb.appendBuffer(buf);
 
-this.nextIndex++;
+          this.nextIndex++;
 
-// Evict buffers older than 10 seconds behind current playback position
-const t = this.video.currentTime;
-if (t > 15 && this.sb && !this.sb.updating) {
-  try {
-    // Remove everything from 0 up to (currentTime - 10)
-    this.sb.remove(0, t - 10);
-  } catch (_) {}
-}
-
-          
+          // Evict buffers older than 10 seconds behind current playback position
+          const t = this.video.currentTime;
+          if (t > 15 && this.sb && !this.sb.updating) {
+            try {
+              // Remove everything from 0 up to (currentTime - 10)
+              this.sb.remove(0, t - 10);
+            } catch (_) {}
+          }
         } else {
           this.isProcessing = false;
         }
@@ -403,7 +401,7 @@ if (t > 15 && this.sb && !this.sb.updating) {
             const buf = await torrent.files[0].arrayBuffer();
             // Destroy the torrent NOW — we have the bytes
             try {
-             await client.remove(torrent.infoHash);
+              await client.remove(torrent.infoHash);
             } catch (_) {}
             resolve(new Uint8Array(buf));
           } catch (err) {
@@ -480,15 +478,13 @@ export default function NeighborhoodLiveStreamPlayer({
           setThumbnail(thumbnailUrl);
           if (onThumbnailLoaded) onThumbnailLoaded(thumbnailUrl);
         };
-        
-        
-        
-controllerRef.current = controller;
-setIsJoined(true);
-// DELETE THESE TWO LINES:
-if (containerRef.current) containerRef.current.appendChild(controller.video);
-controller.video.src = URL.createObjectURL(controller.ms);
-        
+
+        controllerRef.current = controller;
+        setIsJoined(true);
+        // DELETE THESE TWO LINES:
+        if (containerRef.current)
+          containerRef.current.appendChild(controller.video);
+        controller.video.src = URL.createObjectURL(controller.ms);
 
         const v = controller.video;
         v.addEventListener("timeupdate", () => setCurrentTime(v.currentTime));

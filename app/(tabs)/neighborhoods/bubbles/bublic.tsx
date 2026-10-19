@@ -26,7 +26,7 @@ import {
   JOIN_NEIGHBORHOOD,
   LEAVE_NEIGHBORHOOD,
 } from "../../../graphql/queries";
-import WebTorrentMedia from "@/components/TorrentOnlyMedia";
+import WebTorrentMedia from "@/components/WebTorrentMedia";
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;

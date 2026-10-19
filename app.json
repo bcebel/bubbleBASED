@@ -13,6 +13,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.ebubbl",
       "infoPlist": {
+
           "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         },
@@ -37,7 +38,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/48.png",
       "build": {
         "publicFolder": "public"

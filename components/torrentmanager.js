@@ -1,7 +1,6 @@
-
 import idbChunkStore from "@thaunknown/idb-chunk-store";
 import { saveMedia, getMedia } from "../components/mediaCache";
-import { webtorrentService } from "../utils/webtorrentService";
+import { webtorrentService } from "../utils/webtorrentService.web";
 import parseTorrent from "parse-torrent";
 import { getMagnetForCid } from "../utils/magnetCache";
 
@@ -63,7 +62,6 @@ async function drain() {
   processing = true;
   sortQueue();
   active = queue.shift();
-
 
   try {
     await runJob(active);
@@ -138,7 +136,6 @@ function raceSources(cid, magnetLink, media) {
         finish({ blob, source: "http" });
       } catch (err) {
         if (!settled && err.name !== "AbortError") {
-       
         }
       }
     })();
@@ -174,17 +171,10 @@ function raceSources(cid, magnetLink, media) {
         torrentHandle = { torrent };
 
         // ─── DIAGNOSTIC LISTENERS ─────────────────────────
-        const onWire = (wire) => {
-        
-        };
-        const onNoPeers = (announceType) => {
-        };
-        const onWarning = (err) => {
-      
-        };
-        const onError = (err) => {
-     
-        };
+        const onWire = (wire) => {};
+        const onNoPeers = (announceType) => {};
+        const onWarning = (err) => {};
+        const onError = (err) => {};
 
         torrent.on("wire", onWire);
         torrent.on("noPeers", onNoPeers);
@@ -212,7 +202,6 @@ function raceSources(cid, magnetLink, media) {
             clearInterval(statsInterval);
             return;
           }
-       
         }, 2000);
         cleanups.push(() => clearInterval(statsInterval));
 
@@ -227,7 +216,6 @@ function raceSources(cid, magnetLink, media) {
         }
 
         torrent.once("done", async () => {
-        
           try {
             const file = torrent.files[0];
             if (!file) return;
@@ -240,7 +228,6 @@ function raceSources(cid, magnetLink, media) {
 
         const stallTimeout = setTimeout(() => {
           if (!settled) {
-          
             try {
               torrent.destroy({ destroyStore: false });
             } catch (_) {}

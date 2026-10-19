@@ -1,7 +1,7 @@
 // downloadQueue.js
 import idbChunkStore from "@thaunknown/idb-chunk-store";
 import { saveMedia, getMedia } from "../components/mediaCache";
-import { webtorrentService } from "../utils/webtorrentService";
+import { webtorrentService } from "../utils/webtorrentService.web";
 import { getMagnetForCid } from "../utils/magnetCache";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
@@ -9,7 +9,6 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const queue = []; // [{ cid, media, priority, resolve, reject }]
 let active = null; // the job currently running
 let processing = false;
-
 
 // ─── client singleton ─────────────────────────────────────
 function getClient() {
@@ -22,7 +21,6 @@ function getClient() {
   }
   return c;
 }
-
 
 // ─── public: enqueue a download ───────────────────────────
 // priority: lower = sooner. focused=0, +1=1, +2=2, etc.
@@ -43,7 +41,7 @@ export function enqueueDownload(cid, media, priority = 10) {
   });
   queue.push({ cid, media, priority, resolve, reject, promise });
   sortQueue();
-    drain();
+  drain();
   return promise;
 }
 
@@ -82,7 +80,6 @@ async function drain() {
   processing = true;
   sortQueue();
   active = queue.shift();
- 
 
   try {
     await runJob(active);
@@ -125,7 +122,7 @@ function raceSources(cid, magnetLink, media) {
     const finish = (result) => {
       if (settled) return;
       settled = true;
-  
+
       cleanup();
       resolve(result);
     };
@@ -135,9 +132,9 @@ function raceSources(cid, magnetLink, media) {
     const cleanups = [];
     const cleanup = () => {
       if (torrentHandle) {
-   //     try {
-   //       torrentHandle.torrent.destroy({ destroyStore: false });
-   //     } catch (_) {}
+        //     try {
+        //       torrentHandle.torrent.destroy({ destroyStore: false });
+        //     } catch (_) {}
       }
       cleanups.forEach((fn) => fn());
     };
@@ -184,7 +181,7 @@ function raceSources(cid, magnetLink, media) {
       try {
         const c = getClient();
         const cleanMagnet = magnetLink.replace(/&ws=[^&]*/g, "");
-      
+
         const match = cleanMagnet.match(/xt=urn:btih:([a-fA-F0-9]{40})/i);
         const infoHash = match ? match[1].toLowerCase() : null;
         if (!infoHash) throw new Error("Invalid magnet link");
@@ -204,16 +201,15 @@ function raceSources(cid, magnetLink, media) {
           throw new Error("got a non-torrent: " + typeof torrent);
         }
 
-          torrentHandle = { torrent };
-          
-          const statsInterval = setInterval(() => {
-            if (settled) {
-              clearInterval(statsInterval);
-              return;
-            }
-         
-          }, 2000);
-          cleanups.push(() => clearInterval(statsInterval));
+        torrentHandle = { torrent };
+
+        const statsInterval = setInterval(() => {
+          if (settled) {
+            clearInterval(statsInterval);
+            return;
+          }
+        }, 2000);
+        cleanups.push(() => clearInterval(statsInterval));
 
         if (torrent.done) {
           const file = torrent.files[0];
@@ -224,16 +220,14 @@ function raceSources(cid, magnetLink, media) {
           return;
         }
 
-torrent.once("done", async () => {
- 
-  try {
-    const file = torrent.files[0];
-    if (!file) return;
-    const blob = await file.blob();
-    if (blob.size > 0) finish({ blob, source: "p2p" });
-  } catch (err) {
-  }
-});
+        torrent.once("done", async () => {
+          try {
+            const file = torrent.files[0];
+            if (!file) return;
+            const blob = await file.blob();
+            if (blob.size > 0) finish({ blob, source: "p2p" });
+          } catch (err) {}
+        });
 
         // ─── HEAD START WINDOW ─────────────────────────────
         // Give P2P 5 seconds to prove it has peers.
@@ -246,7 +240,7 @@ torrent.once("done", async () => {
           if (settled) return;
           if (torrent.numPeers > 0 && torrent.downloadSpeed > 0) {
             peersSeen = true;
-      
+
             clearInterval(peerCheck);
             // P2P is alive — give it a bit more time before starting HTTP
             // OR start HTTP now and let them race
@@ -259,7 +253,6 @@ torrent.once("done", async () => {
           if (settled) return;
           clearInterval(peerCheck);
           if (!peersSeen) {
-     
           }
           startHTTP();
         }, HEAD_START_MS);

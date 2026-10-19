@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "expo-router"; // 👈 Use Expo Router's 
 import { useMutation, gql } from "@apollo/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { warehouse } from "./StreamWearhouse.js";
-import webtorrentService from "../utils/webtorrentService.js";
+import webtorrentService from "../utils/webtorrentService.web.js";
 
 const SEND_MESSAGE = gql`
   mutation SendNeighborhoodMessage(
@@ -64,7 +64,7 @@ export default function NeighborhoodLiveStreamRecorder({
   unifiedUpload,
   onStreamEnd,
 }) {
-   const router = useRouter();
+  const router = useRouter();
   const pathname = usePathname(); // Returns current active route (e.g., "/selector" or "/chat")
   const [isStreaming, setIsStreaming] = useState(false);
   const [chunkCount, setChunkCount] = useState(0);
@@ -92,29 +92,29 @@ export default function NeighborhoodLiveStreamRecorder({
     }
   };
 
-const checkRecorderSupport = () => {
-  if (typeof MediaRecorder === "undefined") return null;
+  const checkRecorderSupport = () => {
+    if (typeof MediaRecorder === "undefined") return null;
 
-  // Chrome prefers webm; Safari prefers mp4
-  const candidates = [
-    'video/mp4;codecs="mp4a.40.2, avc1.42E01E"', // Safari
-    "video/mp4", // Safari fallback
-    "video/webm;codecs=vp8,opus", // Chrome
-    "video/webm;codecs=vp9,opus", // Chrome
-    "video/webm", // Chrome fallback
-  ];
+    // Chrome prefers webm; Safari prefers mp4
+    const candidates = [
+      'video/mp4;codecs="mp4a.40.2, avc1.42E01E"', // Safari
+      "video/mp4", // Safari fallback
+      "video/webm;codecs=vp8,opus", // Chrome
+      "video/webm;codecs=vp9,opus", // Chrome
+      "video/webm", // Chrome fallback
+    ];
 
-  for (const type of candidates) {
-    if (MediaRecorder.isTypeSupported(type)) return type;
-  }
-  return null;
-};
+    for (const type of candidates) {
+      if (MediaRecorder.isTypeSupported(type)) return type;
+    }
+    return null;
+  };
 
   supportedTypeRef.current = checkRecorderSupport();
-  
-if (!supportedTypeRef.current) {
-  alert("This browser doesn't support video recording.");
-}
+
+  if (!supportedTypeRef.current) {
+    alert("This browser doesn't support video recording.");
+  }
 
   const currentThumbnailRef = useRef(null);
   const [sendMessage] = useMutation(SEND_MESSAGE);
@@ -123,7 +123,7 @@ if (!supportedTypeRef.current) {
 
   // 1. INITIALIZE PREVIEW CAMERA ON MOUNT
 
-/*
+  /*
   const handleStitchAndShip = async () => {
     try {
       const sessionId = sessionIdRef.current;
@@ -342,56 +342,56 @@ if (!supportedTypeRef.current) {
     if (onStreamEnd) onStreamEnd();
   };
   const RECORDER_ROUTE = "/livestream/selector";
-  
-useEffect(() => {
-  let activeStream: MediaStream | null = null;
-  const isTargetTab = pathname === RECORDER_ROUTE;
 
-  const setupPreview = async () => {
-    try {
-      if (
-        isTargetTab &&
-        typeof navigator !== "undefined" &&
-        navigator.mediaDevices
-      ) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 640 }, height: { ideal: 360 } },
-          audio: true,
-        });
+  useEffect(() => {
+    let activeStream: MediaStream | null = null;
+    const isTargetTab = pathname === RECORDER_ROUTE;
 
-        activeStream = stream;
-        streamRef.current = stream;
+    const setupPreview = async () => {
+      try {
+        if (
+          isTargetTab &&
+          typeof navigator !== "undefined" &&
+          navigator.mediaDevices
+        ) {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 640 }, height: { ideal: 360 } },
+            audio: true,
+          });
 
-        if (videoPreviewRef.current) {
-          videoPreviewRef.current.srcObject = stream;
-          videoPreviewRef.current.play().catch(() => {});
+          activeStream = stream;
+          streamRef.current = stream;
+
+          if (videoPreviewRef.current) {
+            videoPreviewRef.current.srcObject = stream;
+            videoPreviewRef.current.play().catch(() => {});
+          }
         }
+      } catch (err) {
+        console.warn("Could not start camera preview:", err);
       }
-    } catch (err) {
-      console.warn("Could not start camera preview:", err);
-    }
-  };
+    };
 
-  if (isTargetTab) {
-    setupPreview();
-  } else {
-    // 🛑 User switched tabs — turn off hardware tracks
-    if (isStreaming) {
-      stopStream();
+    if (isTargetTab) {
+      setupPreview();
     } else {
-      stopCameraTracks();
+      // 🛑 User switched tabs — turn off hardware tracks
+      if (isStreaming) {
+        stopStream();
+      } else {
+        stopCameraTracks();
+      }
     }
-  }
 
-  return () => {
-    if (activeStream) {
-      (activeStream as MediaStream)
-        .getTracks()
-        .forEach((track) => track.stop());
-    }
-    stopCameraTracks();
-  };
-}, [pathname]);
+    return () => {
+      if (activeStream) {
+        (activeStream as MediaStream)
+          .getTracks()
+          .forEach((track) => track.stop());
+      }
+      stopCameraTracks();
+    };
+  }, [pathname]);
 
   return (
     <View style={styles.fullScreenContainer}>
@@ -420,15 +420,13 @@ useEffect(() => {
             style={[styles.button, styles.startBtn]}
           >
             <Text style={styles.buttonText}>🔴 CLICK to START LIVE STREAM</Text>
-    <TouchableOpacity
-        style={styles.goLiveButton}
-        onPress={() => router.replace("/livestream/")}
-      >
-        <Text style={styles.goLiveButtonText}>🫧 Watch Livestreams</Text>
-      </TouchableOpacity>
-
+            <TouchableOpacity
+              style={styles.goLiveButton}
+              onPress={() => router.replace("/livestream/")}
+            >
+              <Text style={styles.goLiveButtonText}>🫧 Watch Livestreams</Text>
+            </TouchableOpacity>
           </TouchableOpacity>
-          
         ) : (
           <View style={styles.controlsRow}>
             <TouchableOpacity
@@ -437,8 +435,6 @@ useEffect(() => {
             >
               <Text style={styles.buttonText}>⏹️ STOP</Text>
             </TouchableOpacity>
-
-
           </View>
         )}
 

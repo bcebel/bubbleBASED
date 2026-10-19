@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import {
   View,
   Text,
@@ -21,7 +21,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Head from "expo-router/head";
 import WebTorrentMedia from "@/components/WebTorrentMedia";
 
-import NeighborhoodLiveStreamPlayer from "../../../components/NeighborhoodLiveStreamPlayer";
+const NeighborhoodLiveStreamPlayer = lazy(
+  () => import("../../../components/NeighborhoodLiveStreamPlayer"),
+);
+
 import { warehouse } from "../../../components/StreamWearhouse.js";
 import { useRouter } from "expo-router";
 
@@ -230,12 +233,19 @@ function StreamItem({
           </TouchableOpacity>
         )}
       </View>
-
-      <NeighborhoodLiveStreamPlayer
-        sessionId={sessionId}
-        availableInWarehouse={availableInWarehouse}
-        rotation={shouldRotate ? rotation : 0}
-      />
+      <Suspense
+        fallback={
+          <View style={styles.loading}>
+            <ActivityIndicator size="large" color="#fff" />
+          </View>
+        }
+      >
+        <NeighborhoodLiveStreamPlayer
+          sessionId={sessionId}
+          availableInWarehouse={availableInWarehouse}
+          rotation={shouldRotate ? rotation : 0}
+        />
+      </Suspense>
     </View>
   );
 }
@@ -616,6 +626,12 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(255, 255, 255, 0.1)",
     backgroundColor: "rgba(10, 12, 16, 0.75)",
     zIndex: 10,
+  },
+  loading: {
+    flex: 1,
+    backgroundColor: "#130720",
+    justifyContent: "center",
+    alignItems: "center",
   },
   navDesktop: {
     flexDirection: "row",

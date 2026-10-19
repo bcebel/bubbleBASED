@@ -17,7 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { CREATE_POST } from "../graphql/queries";
 import { uploadToIPFS } from "../utils/uploadHelper";
-import webtorrentService from "../../utils/webtorrentService";
+import webtorrentService from "../../utils/webtorrentService.web";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
@@ -121,10 +121,12 @@ export default function PostComposer({
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const asset = result.assets[0];
       const detectedType = asset.type === "video" ? "video" : "image";
-      
+
       // ✅ Explicitly extract extension from URI or fileName to catch .mov
       const uriPath = asset.fileName || asset.uri;
-      const extension = uriPath.split(".").pop()?.toLowerCase() || (detectedType === "video" ? "mov" : "jpg");
+      const extension =
+        uriPath.split(".").pop()?.toLowerCase() ||
+        (detectedType === "video" ? "mov" : "jpg");
 
       // ✅ Fix MIME type for QuickTime .mov files on iOS
       let mimeType = asset.mimeType || asset.file?.type;
@@ -147,92 +149,97 @@ export default function PostComposer({
     }
   };
 
+  const handleSubmit = async () => {
+    const hasContent = content.trim().length > 0;
+    const hasMedia = !!selectedMedia?.uri;
 
-const handleSubmit = async () => {
-  const hasContent = content.trim().length > 0;
-  const hasMedia = !!selectedMedia?.uri;
+    if (!hasContent && !hasMedia) return;
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
 
-  if (!hasContent && !hasMedia) return;
-  setLoading(true);
-  try {
-    const token = await AsyncStorage.getItem("token");
-    if (!token) throw new Error("No authentication token found");
+      const currentMediaType = selectedMedia?.mediaType || "image";
 
-    const currentMediaType = selectedMedia?.mediaType || "image";
-      
-    // ✅ Keep original extension (.mov, .mp4, etc.)
-    const ext = (selectedMedia?.fileName?.split('.').pop() || (currentMediaType === "video" ? "mov" : "jpg")).toLowerCase();
-    const fileName = selectedMedia?.uri ? `post_${Date.now()}.${ext}` : null;
+      // ✅ Keep original extension (.mov, .mp4, etc.)
+      const ext = (
+        selectedMedia?.fileName?.split(".").pop() ||
+        (currentMediaType === "video" ? "mov" : "jpg")
+      ).toLowerCase();
+      const fileName = selectedMedia?.uri ? `post_${Date.now()}.${ext}` : null;
 
-    let mediaObject = null;
+      let mediaObject = null;
 
-    if (selectedMedia?.uri) {
-      const uri = selectedMedia.uri;
+      if (selectedMedia?.uri) {
+        const uri = selectedMedia.uri;
 
-      if (uri.startsWith("blob:") || uri.startsWith("file:")) {
-        console.log(`📤 Uploading to Pinata: ${fileName} (${selectedMedia.mimeType})`);
-        const pinataResult = await uploadToIPFS(
-          uri,
-          fileName,
-          currentMediaType,
-          neighborhoodId,
-          selectedMedia?.file,
-        );
+        if (uri.startsWith("blob:") || uri.startsWith("file:")) {
+          console.log(
+            `📤 Uploading to Pinata: ${fileName} (${selectedMedia.mimeType})`,
+          );
+          const pinataResult = await uploadToIPFS(
+            uri,
+            fileName,
+            currentMediaType,
+            neighborhoodId,
+            selectedMedia?.file,
+          );
 
-        const slice = pinataResult?.slices?.[0];
-        const cid = slice?.cid || pinataResult?.cid || null;
-        if (!cid) throw new Error("Upload returned no CID");
+          const slice = pinataResult?.slices?.[0];
+          const cid = slice?.cid || pinataResult?.cid || null;
+          if (!cid) throw new Error("Upload returned no CID");
 
-        const magnetLink = slice?.magnetLink || pinataResult?.magnetLink || null;
-        const finalMediaUrl = `https://${PINATA_GATEWAY}/ipfs/${cid}`;
+          const magnetLink =
+            slice?.magnetLink || pinataResult?.magnetLink || null;
+          const finalMediaUrl = `https://${PINATA_GATEWAY}/ipfs/${cid}`;
 
-        mediaObject = {
-          url: finalMediaUrl,
-          cid,
-          mediaType: currentMediaType,
-          fileName: selectedMedia.fileName,
-          fileSize: selectedMedia.fileSize,
-          mimeType: selectedMedia.mimeType, // Passes video/quicktime correctly
-          magnetURI: magnetLink,
-        };
-      } else {
-        mediaObject = {
-          url: uri,
-          cid: null,
-          mediaType: currentMediaType,
-          fileName: selectedMedia.fileName,
-          fileSize: selectedMedia.fileSize,
-          mimeType: selectedMedia.mimeType,
-          magnetURI: null,
-        };
+          mediaObject = {
+            url: finalMediaUrl,
+            cid,
+            mediaType: currentMediaType,
+            fileName: selectedMedia.fileName,
+            fileSize: selectedMedia.fileSize,
+            mimeType: selectedMedia.mimeType, // Passes video/quicktime correctly
+            magnetURI: magnetLink,
+          };
+        } else {
+          mediaObject = {
+            url: uri,
+            cid: null,
+            mediaType: currentMediaType,
+            fileName: selectedMedia.fileName,
+            fileSize: selectedMedia.fileSize,
+            mimeType: selectedMedia.mimeType,
+            magnetURI: null,
+          };
+        }
       }
-    }
 
-    await createPostMutation({
-      variables: {
-        input: {
-          content,
-          feedType: "neighborhood",
-          neighborhoodId: currentNeighborhoodId,
-          groupId: currentGroupId || null,
-          media: mediaObject ? [mediaObject] : [],
+      await createPostMutation({
+        variables: {
+          input: {
+            content,
+            feedType: "neighborhood",
+            neighborhoodId: currentNeighborhoodId,
+            groupId: currentGroupId || null,
+            media: mediaObject ? [mediaObject] : [],
+          },
         },
-      },
-      context: {
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    });
+        context: {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      });
 
-    setContent("");
-    setSelectedMedia(null);
-    refetchPosts();
-    onPostCreated?.();
-  } catch (error) {
-    console.error("❌ Failed to create post:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+      setContent("");
+      setSelectedMedia(null);
+      refetchPosts();
+      onPostCreated?.();
+    } catch (error) {
+      console.error("❌ Failed to create post:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -408,7 +415,6 @@ const styles = StyleSheet.create({
   feed: {
     paddingHorizontal: 16,
     paddingBottom: 80,
-
   },
   postCard: {
     backgroundColor: "#1A0B2E",
@@ -436,7 +442,6 @@ const styles = StyleSheet.create({
     color: "#F5F2FA",
     fontSize: 15,
     marginBottom: 8,
-
   },
   postMedia: {
     marginTop: 8,

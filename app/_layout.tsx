@@ -130,6 +130,10 @@ export default function RootLayout() {
           allowsFullscreenVideo={true}
           sharedCookiesEnabled={true}
           thirdPartyCookiesEnabled={true}
+          originWhitelist={["*"]}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          mixedContentMode="always"
         />
       </SafeAreaView>
     );
