@@ -52,21 +52,48 @@ class WebTorrentService {
   }
 
   async ensureClient() {
-    let attempts = 0;
-    while (
-      typeof window !== "undefined" &&
-      !window.globalWebTorrentClient &&
-      attempts < 20
-    ) {
-      await new Promise((r) => setTimeout(r, 500));
-      attempts++;
+    // 1. Check for the global injected by +html.tsx (Web/WebView)
+    if (typeof window !== "undefined" && window.globalWebTorrentClient) {
+      return window.globalWebTorrentClient;
     }
 
-    if (typeof window === "undefined" || !window.globalWebTorrentClient) {
-      throw new Error("WebTorrent Champ failed to enter the building.");
+    // 2. If we are in native (Expo Go) and no global exists, create one
+    if (typeof window !== "undefined" && !window.globalWebTorrentClient) {
+      // Wait a few seconds just in case the global is still loading
+      let attempts = 0;
+      while (!window.globalWebTorrentClient && attempts < 5) {
+        await new Promise((r) => setTimeout(r, 500));
+        attempts++;
+      }
+
+      // If it STILL doesn't exist after waiting, fall back to creating it here
+  if (!window.globalWebTorrentClient) {
+    // If we are on the server (Vercel), throw immediately.
+    if (typeof window === "undefined") {
+      throw new Error("Cannot initialize WebTorrent on the server.");
     }
 
-    return window.globalWebTorrentClient;
+    console.log("🌪️ Native Fallback: Creating WebTorrent client in JS");
+    try {
+      // 💡 THE FIX: Use a variable so Webpack/Vercel can't see the import string
+      const moduleName = "webtorrent";
+      const WebTorrentModule = await import(moduleName);
+      const WebTorrent = WebTorrentModule.default;
+
+      window.globalWebTorrentClient = new WebTorrent({
+        tracker: { announce: this.trackers },
+        webSeeds: true,
+      });
+
+      return window.globalWebTorrentClient;
+    } catch (err) {
+      console.error("❌ Failed to create native WebTorrent client:", err);
+      throw new Error("WebTorrent could not be initialized.");
+    }
+  }
+    }
+
+    throw new Error("WebTorrent Champ failed to enter the building.");
   }
 
   // ---------------------------------------------------------------------------
@@ -200,7 +227,6 @@ class WebTorrentService {
               timestamp: Date.now(),
             });
             if (dataSize > this.MAX_SEED_DATA_BYTES) {
-  
             }
           }
 
@@ -210,7 +236,8 @@ class WebTorrentService {
             infoHash: torrent.infoHash,
             name: torrent.name,
             size: torrent.length,
-          };w
+          };
+          w;
 
           this.cacheMagnetResult(torrent.magnetURI, result);
           resolve(result);
@@ -331,8 +358,6 @@ class WebTorrentService {
 
       try {
         client.add(magnetLink, torrentOptions, (torrent) => {
- 
-
           // Reset stall timer on any progress
           torrent.on("download", armProgressTimeout);
 
@@ -349,23 +374,23 @@ class WebTorrentService {
               );
             }
 
-       file
-         .blob()
-         .then((blob) => {
-           const url = URL.createObjectURL(blob);
-           const result = {
-             torrent,
-             url,
-             name: torrent.name,
-             size: torrent.length,
-             infoHash: torrent.infoHash,
-             magnetLink: torrent.magnetURI,
-             ready: true,
-           };
-           this.cacheMagnetResult(magnetLink, result);
-           finish(resolve, result);
-         })
-         .catch((err) => finish(reject, err));
+            file
+              .blob()
+              .then((blob) => {
+                const url = URL.createObjectURL(blob);
+                const result = {
+                  torrent,
+                  url,
+                  name: torrent.name,
+                  size: torrent.length,
+                  infoHash: torrent.infoHash,
+                  magnetLink: torrent.magnetURI,
+                  ready: true,
+                };
+                this.cacheMagnetResult(magnetLink, result);
+                finish(resolve, result);
+              })
+              .catch((err) => finish(reject, err));
           };
 
           if (torrent.ready) {
@@ -406,7 +431,6 @@ class WebTorrentService {
           : 0;
 
     if (dataSize > this.MAX_SEED_DATA_BYTES) {
-
       return;
     }
 
