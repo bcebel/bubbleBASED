@@ -149,7 +149,10 @@ export default function NeighborhoodLiveStreamRecorder({
       });
 
       // 7. Cleanup the local file
-      await FileSystem.deleteAsync(video.uri, { idempotent: true });
+ const file = new FileSystem.File(video.uri);
+ if (file.exists) {
+   file.delete();
+ }
 
       setChunkCount((prev) => prev + 1);
       chunkIndexRef.current += 1;

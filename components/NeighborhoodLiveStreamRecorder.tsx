@@ -327,7 +327,7 @@ export default function NeighborhoodLiveStreamRecorder({
         }
       };
 
-      mediaRecorder.start(4000);
+      mediaRecorder.start(6000);
       setIsStreaming(true);
     } catch (error) {
       console.error("❌ Fatal Stream Error:", error);

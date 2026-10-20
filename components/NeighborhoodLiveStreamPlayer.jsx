@@ -28,7 +28,7 @@ class StreamController {
     this.chunkQueue = new Map();
     this.setupMagnet = null;
     this.detectedMimeType = 'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
-    this.CHUNK_DURATION = 4;
+    this.CHUNK_DURATION = 6;
 
     this.MS = window.ManagedMediaSource || window.MediaSource;
     this.ms = new this.MS();
