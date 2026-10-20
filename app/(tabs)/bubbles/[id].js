@@ -18,7 +18,7 @@ import {
   UPDATE_BUBBLE_PHOTO,
   LEAVE_NEIGHBORHOOD,
   JOIN_NEIGHBORHOOD,
-} from "../../graphql/queries";
+} from "../../../components/graphql/queries";
 import { ImageBackground } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";

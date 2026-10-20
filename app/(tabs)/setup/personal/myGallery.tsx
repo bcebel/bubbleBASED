@@ -15,23 +15,23 @@ import { gql, useQuery } from "@apollo/client";
 import WebTorrentMedia from "../../../../components/WebTorrentMedia";
 import { Image } from "expo-image";
 import AdMessage from "../../../../components/AdMessage";
-import { enqueueDownload, cancelOutsideSet } from "../../../../components/downloadQueue";
+import {
+  enqueueDownload,
+  cancelOutsideSet,
+} from "../../../../components/downloadQueue";
 import { useRouter } from "expo-router";
-
 
 import {
   GET_MY_NEIGHBORHOODS_POSTS,
   GET_NEIGHBORHOOD_POSTS,
   GET_MY_POSTS,
-} from "../../../graphql/queries";
+} from "../../../../components/graphql/queries";
 
 const router = useRouter();
 
 const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = width;
 const MEDIA_SIZE = width - 40;
-
-
 
 const GET_RANDOM_AFFILIATE_LINK = gql`
   query GetRandomAffiliateLink {
@@ -91,12 +91,12 @@ const MediaDisplay = ({
   const isVideo = fileType === "video";
   const isGif = item.fileName?.toLowerCase().endsWith(".gif");
 
- const getDisplayUrl = () => {
-   if (item.cid) {
-     return `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${item.cid}`;
-   }
-   return null;
- };
+  const getDisplayUrl = () => {
+    if (item.cid) {
+      return `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${item.cid}`;
+    }
+    return null;
+  };
 
   const displayUrl = getDisplayUrl();
 
@@ -135,24 +135,23 @@ const MediaDisplay = ({
     );
   }
 
-   if (isVideo && item.cid) {
-     return (
-       <View style={styles.magnetContainer}>
-         <WebTorrentMedia
-           media={{
-             ...item,
-             imageUrl: isImage ? displayUrl : null,
-             videoUrl: isVideo ? displayUrl : null,
-             fileType: fileType,
-             isGif: isGif,
-           }}
-           isFocused={isFocused}
-           isAlmostFocused={isAlmostFocused}
-         />
-       </View>
-     );
-   }
-
+  if (isVideo && item.cid) {
+    return (
+      <View style={styles.magnetContainer}>
+        <WebTorrentMedia
+          media={{
+            ...item,
+            imageUrl: isImage ? displayUrl : null,
+            videoUrl: isVideo ? displayUrl : null,
+            fileType: fileType,
+            isGif: isGif,
+          }}
+          isFocused={isFocused}
+          isAlmostFocused={isAlmostFocused}
+        />
+      </View>
+    );
+  }
 
   if (isGif) {
     return (
@@ -203,7 +202,6 @@ const MediaDisplay = ({
     );
   }
 
-
   return (
     <TouchableOpacity
       onPress={() => Linking.openURL(displayUrl)}
@@ -221,9 +219,6 @@ const MediaDisplay = ({
     </TouchableOpacity>
   );
 };
-
-
-
 
 export default function AllNeighborhoodsGallery({
   neighborhoodId,
@@ -290,7 +285,7 @@ export default function AllNeighborhoodsGallery({
 
   
   */
-  
+
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems.length === 0) return;
 
@@ -308,43 +303,45 @@ export default function AllNeighborhoodsGallery({
     minimumViewTime: 100,
   }).current;
 
+  useEffect(() => {
+    if (!mediaItems.length) return;
+    const here = activeIndex;
+    if (here < 0 || here >= mediaItems.length) return;
 
-useEffect(() => {
-  if (!mediaItems.length) return;
-  const here = activeIndex;
-  if (here < 0 || here >= mediaItems.length) return;
+    const jobs = [];
 
-  const jobs = [];
+    // forward: +10 down to +5, priorities 0..5
+    for (let offset = 10; offset >= 5; offset--) {
+      const item = mediaItems[here + offset];
+      if (!item?.cid) continue;
+      jobs.push({ cid: item.cid, media: item, priority: 10 - offset });
+    }
 
-  // forward: +10 down to +5, priorities 0..5
-  for (let offset = 10; offset >= 5; offset--) {
-    const item = mediaItems[here + offset];
-    if (!item?.cid) continue;
-    jobs.push({ cid: item.cid, media: item, priority: 10 - offset });
-  }
+    // backward: -1 to -5, priorities 21..25
+    for (let offset = -1; offset >= -5; offset--) {
+      const item = mediaItems[here + offset];
+      if (!item?.cid) continue;
+      jobs.push({
+        cid: item.cid,
+        media: item,
+        priority: 20 + Math.abs(offset),
+      });
+    }
 
-  // backward: -1 to -5, priorities 21..25
-  for (let offset = -1; offset >= -5; offset--) {
-    const item = mediaItems[here + offset];
-    if (!item?.cid) continue;
-    jobs.push({ cid: item.cid, media: item, priority: 20 + Math.abs(offset) });
-  }
+    // the exact set of cids the queue should contain after this effect runs
+    const keepCids = jobs.map((j) => j.cid);
 
-  // the exact set of cids the queue should contain after this effect runs
-  const keepCids = jobs.map((j) => j.cid);
+    // stagger the enqueues so the backend doesn't get a stampede
+    jobs.forEach((job, i) => {
+      setTimeout(() => {
+        enqueueDownload(job.cid, job.media, job.priority);
+      }, i * 100);
+    });
 
-  // stagger the enqueues so the backend doesn't get a stampede
-  jobs.forEach((job, i) => {
-    setTimeout(() => {
-      enqueueDownload(job.cid, job.media, job.priority);
-    }, i * 100);
-  });
+    // cancel anything that isn't in the current window
+    cancelOutsideSet(keepCids);
+  }, [activeIndex, mediaItems]);
 
-  // cancel anything that isn't in the current window
-  cancelOutsideSet(keepCids);
-}, [activeIndex, mediaItems]);
-
-  
   const handleRefresh = async () => {
     setRefreshing(true);
     await refetch();
@@ -400,7 +397,6 @@ useEffect(() => {
   const WINDOW = 1;
   const startIndex = Math.max(0, activeIndex - WINDOW);
   const endIndex = Math.min(mediaItems.length - 1, activeIndex + WINDOW);
-
 
   return (
     <View style={styles.container}>

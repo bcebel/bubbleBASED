@@ -8,18 +8,31 @@ import {
   Image,
   Modal,
   ActivityIndicator,
-  FlatList
+  FlatList,
 } from "react-native";
 import AffiliateCard from "./AffiliateCard";
 import WebTorrentMedia from "./WebTorrentMedia";
 import { useMutation, useQuery, gql } from "@apollo/client";
-import { DELETE_POST, GET_COMMENTS } from "../app/graphql/queries";
+import { DELETE_POST, GET_COMMENTS } from "../components/graphql/queries";
 import CommentSection from "./CommentSection";
-import { canModerate } from "../app/utils/permissions";
-import { GET_NEIGHBORHOOD_INFO } from "../app/graphql/queries";
+import { canModerate } from "../utils/permissions";
+import { GET_NEIGHBORHOOD_INFO } from "../components/graphql/queries";
 const getFileType = (fileName = "") => {
   const ext = fileName.split(".").pop()?.toLowerCase();
-  if (["jpg", "jpeg", "png", "gif", "avif", "heic", "heif", "webp", "svg"].includes(ext)) return "image";
+  if (
+    [
+      "jpg",
+      "jpeg",
+      "png",
+      "gif",
+      "avif",
+      "heic",
+      "heif",
+      "webp",
+      "svg",
+    ].includes(ext)
+  )
+    return "image";
   if (["mp4", "mov", "webm", "avi", "mkv"].includes(ext)) return "video";
   return "unknown";
 };
@@ -32,7 +45,6 @@ const GET_ME_ID = gql`
   }
 `;
 
-
 const GET_MY_NEIGHBORHOODS = gql`
   query GetMyNeighborhoods {
     myNeighborhoods {
@@ -42,7 +54,6 @@ const GET_MY_NEIGHBORHOODS = gql`
     }
   }
 `;
-
 
 const SHARE_POST = gql`
   mutation SharePost($postId: ID!, $targetNeighborhoodId: ID!) {
@@ -169,7 +180,13 @@ function formatTimeAgo(timestamp) {
   return `${Math.floor(diffInSeconds / 86400)}d ago`;
 }
 
-export default function FeedItem({ post, onLike, onComment, onDelete, muted = true }) {
+export default function FeedItem({
+  post,
+  onLike,
+  onComment,
+  onDelete,
+  muted = true,
+}) {
   if (!post) return null;
   const { data: hoodData } = useQuery(GET_NEIGHBORHOOD_INFO, {
     variables: { id: post.neighborhood?.id },
@@ -375,7 +392,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#130720",
     borderRadius: 8,
     overflow: "hidden",
- 
   },
   actionBar: {
     flexDirection: "row",

@@ -17,21 +17,15 @@ import AdMessage from "./AdMessage";
 
 import { enqueueDownload, cancelOutsideSet } from "./downloadQueue";
 
-
 import {
   GET_MY_NEIGHBORHOODS_POSTS,
   GET_NEIGHBORHOOD_POSTS,
   GET_MY_POSTS,
-} from "../app/graphql/queries";
-
-
+} from "../components/graphql/queries";
 
 const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = width;
 const MEDIA_SIZE = width - 40;
-
-
-
 
 const GET_NEIGHBORHOOD_GALLERY = gql`
   query GetNeighborhoodGallery {
@@ -179,12 +173,12 @@ const MediaDisplay = ({
   const isVideo = fileType === "video";
   const isGif = item.fileName?.toLowerCase().endsWith(".gif");
 
- const getDisplayUrl = () => {
-   if (item.cid) {
-     return `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${item.cid}`;
-   }
-   return null;
- };
+  const getDisplayUrl = () => {
+    if (item.cid) {
+      return `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/webseed/${item.cid}`;
+    }
+    return null;
+  };
 
   const displayUrl = getDisplayUrl();
 
@@ -196,35 +190,35 @@ const MediaDisplay = ({
     );
   }
 
-if (item.magnetLink && (isImage || isVideo)) {
-  return (
-    <View style={styles.magnetContainer}>
-      <WebTorrentMedia
-        media={{ ...item, fileType }}
-        isFocused={isFocused}
-        isAlmostFocused={isAlmostFocused}
-      />
-    </View>
-  );
-}
-   if (isVideo && item.cid) {
-     return (
-       <View style={styles.magnetContainer}>
-         <WebTorrentMedia
-           media={{
-             ...item,
-             imageUrl: isImage ? displayUrl : null,
-             videoUrl: isVideo ? displayUrl : null,
-             fileType: fileType,
-             isGif: isGif,
-           }}
-           isFocused={isFocused}
-           isAlmostFocused={isAlmostFocused}
-         />
-       </View>
-     );
-   }
-  
+  if (item.magnetLink && (isImage || isVideo)) {
+    return (
+      <View style={styles.magnetContainer}>
+        <WebTorrentMedia
+          media={{ ...item, fileType }}
+          isFocused={isFocused}
+          isAlmostFocused={isAlmostFocused}
+        />
+      </View>
+    );
+  }
+  if (isVideo && item.cid) {
+    return (
+      <View style={styles.magnetContainer}>
+        <WebTorrentMedia
+          media={{
+            ...item,
+            imageUrl: isImage ? displayUrl : null,
+            videoUrl: isVideo ? displayUrl : null,
+            fileType: fileType,
+            isGif: isGif,
+          }}
+          isFocused={isFocused}
+          isAlmostFocused={isAlmostFocused}
+        />
+      </View>
+    );
+  }
+
   if (isGif) {
     return (
       <TouchableOpacity
@@ -306,9 +300,6 @@ if (item.magnetLink && (isImage || isVideo)) {
   );
 };
 
-
-
-
 export default function AllNeighborhoodsGallery({
   neighborhoodId,
 }: {
@@ -332,48 +323,48 @@ export default function AllNeighborhoodsGallery({
   const [mediaAspect, setMediaAspect] = useState(1);
   const scrollRef = useRef(null);
 
-const mediaItems = React.useMemo(() => {
-  const posts = data?.myNeighborhoodsPosts || [];
+  const mediaItems = React.useMemo(() => {
+    const posts = data?.myNeighborhoodsPosts || [];
 
-const items = posts
-  .filter((post) => post.content || post.media?.length > 0)
-  .map((post) => {
-    const firstMedia = post.media?.[0] || null;
+    const items = posts
+      .filter((post) => post.content || post.media?.length > 0)
+      .map((post) => {
+        const firstMedia = post.media?.[0] || null;
 
-    return {
-      id: post.id,
-      content: post.content,
-      createdAt: post.createdAt,
-      author: post.author,
-      neighborhood: post.neighborhood,
-      cid: firstMedia?.cid || null,
-      url: firstMedia?.url,
-      magnetLink: firstMedia?.magnetURI,
-      fileType: firstMedia?.mediaType,
-      fileName: firstMedia?.fileName,
-      fileSize: firstMedia?.fileSize,
-      mimeType: firstMedia?.mimeType,
-      thumbnailUrl: firstMedia?.thumbnailUrl,
-      media: post.media || [],
-      isTextOnly: !firstMedia,
-    };
-  });
-
-  // inject ads
-  const withAds = [];
-  items.forEach((item, index) => {
-    withAds.push(item);
-    if ((index + 1) % 8 === 0 && adData?.randomAffiliateLink) {
-      withAds.push({
-        isAd: true,
-        id: `ad-${index}`,
-        ...adData.randomAffiliateLink,
+        return {
+          id: post.id,
+          content: post.content,
+          createdAt: post.createdAt,
+          author: post.author,
+          neighborhood: post.neighborhood,
+          cid: firstMedia?.cid || null,
+          url: firstMedia?.url,
+          magnetLink: firstMedia?.magnetURI,
+          fileType: firstMedia?.mediaType,
+          fileName: firstMedia?.fileName,
+          fileSize: firstMedia?.fileSize,
+          mimeType: firstMedia?.mimeType,
+          thumbnailUrl: firstMedia?.thumbnailUrl,
+          media: post.media || [],
+          isTextOnly: !firstMedia,
+        };
       });
-    }
-  });
 
-  return withAds;
-}, [data, adData]);
+    // inject ads
+    const withAds = [];
+    items.forEach((item, index) => {
+      withAds.push(item);
+      if ((index + 1) % 8 === 0 && adData?.randomAffiliateLink) {
+        withAds.push({
+          isAd: true,
+          id: `ad-${index}`,
+          ...adData.randomAffiliateLink,
+        });
+      }
+    });
+
+    return withAds;
+  }, [data, adData]);
 
   // MUST BE HERE: Before any `if (loading)` or `if (error)` returns!
   /*
@@ -385,40 +376,44 @@ const items = posts
   }, [activeIndex, mediaItems]);
   */
 
-useEffect(() => {
-  if (!mediaItems.length) return;
-  const here = activeIndex;
-  if (here < 0 || here >= mediaItems.length) return;
+  useEffect(() => {
+    if (!mediaItems.length) return;
+    const here = activeIndex;
+    if (here < 0 || here >= mediaItems.length) return;
 
-  const jobs = [];
+    const jobs = [];
 
-  // forward: +10 down to +5, priorities 0..5
-  for (let offset = 10; offset >= 5; offset--) {
-    const item = mediaItems[here + offset];
-    if (!item?.cid) continue;
-    jobs.push({ cid: item.cid, media: item, priority: 10 - offset });
-  }
+    // forward: +10 down to +5, priorities 0..5
+    for (let offset = 10; offset >= 5; offset--) {
+      const item = mediaItems[here + offset];
+      if (!item?.cid) continue;
+      jobs.push({ cid: item.cid, media: item, priority: 10 - offset });
+    }
 
-  // backward: -1 to -5, priorities 21..25
-  for (let offset = -1; offset >= -5; offset--) {
-    const item = mediaItems[here + offset];
-    if (!item?.cid) continue;
-    jobs.push({ cid: item.cid, media: item, priority: 20 + Math.abs(offset) });
-  }
+    // backward: -1 to -5, priorities 21..25
+    for (let offset = -1; offset >= -5; offset--) {
+      const item = mediaItems[here + offset];
+      if (!item?.cid) continue;
+      jobs.push({
+        cid: item.cid,
+        media: item,
+        priority: 20 + Math.abs(offset),
+      });
+    }
 
-  // the exact set of cids the queue should contain after this effect runs
-  const keepCids = jobs.map((j) => j.cid);
+    // the exact set of cids the queue should contain after this effect runs
+    const keepCids = jobs.map((j) => j.cid);
 
-  // stagger the enqueues so the backend doesn't get a stampede
-  jobs.forEach((job, i) => {
-    setTimeout(() => {
-      enqueueDownload(job.cid, job.media, job.priority);
-    }, i * 100);
-  });
+    // stagger the enqueues so the backend doesn't get a stampede
+    jobs.forEach((job, i) => {
+      setTimeout(() => {
+        enqueueDownload(job.cid, job.media, job.priority);
+      }, i * 100);
+    });
 
-  // cancel anything that isn't in the current window
-  cancelOutsideSet(keepCids);
-}, [activeIndex, mediaItems]);
+    // cancel anything that isn't in the current window
+    cancelOutsideSet(keepCids);
+  }, [activeIndex, mediaItems]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -426,11 +421,11 @@ useEffect(() => {
     setRefreshing(false);
   };
 
-const handleScroll = (e: any) => {
-  const newIndex = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);
-  if (newIndex !== activeIndex) setActiveIndex(newIndex);
-};
-  
+  const handleScroll = (e: any) => {
+    const newIndex = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);
+    if (newIndex !== activeIndex) setActiveIndex(newIndex);
+  };
+
   if (loading)
     return (
       <View style={styles.center}>

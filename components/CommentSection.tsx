@@ -11,8 +11,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
-import { GET_COMMENTS, ADD_COMMENT } from "../app/graphql/queries";
-import { formatTimeAgo } from "../app/utils/helpers";
+import { GET_COMMENTS, ADD_COMMENT } from "../components/graphql/queries";
+import { formatTimeAgo } from "../utils/helpers";
 
 const PINATA_GATEWAY =
   process.env.EXPO_PUBLIC_PINATA_GATEWAY || "gateway.pinata.cloud";
@@ -77,7 +77,8 @@ export default function CommentSection({
       {/* Toggle Comments */}
       <TouchableOpacity
         onPress={() => setIsExpanded(!isExpanded)}
-        style={styles.commentToggle}x
+        style={styles.commentToggle}
+        x
       >
         <Text style={styles.commentToggleText}>
           <Text>💬 {commentCount} Comments</Text>{" "}

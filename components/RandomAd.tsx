@@ -3,7 +3,7 @@ import React from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { useQuery } from "@apollo/client";
 import AdMessage from "./AdMessage";
-import { GET_RANDOM_AFFILIATE_LINK } from "../app/graphql/queries";
+import { GET_RANDOM_AFFILIATE_LINK } from "../components/graphql/queries";
 
 export default function RandomAd() {
   // ✅ Always call the hook FIRST, no matter what

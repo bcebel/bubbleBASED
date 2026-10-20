@@ -1,4 +1,5 @@
 // app/neighborhoods/staticParams.js
+
 export async function getNeighborhoodIds() {
   // Option 1: Hardcode some IDs for testing
   // return ['photography', 'music', 'art', 'tech'];
@@ -18,3 +19,5 @@ export async function generateStaticParams() {
   const neighborhoodIds = await getNeighborhoodIds();
   return neighborhoodIds.map((id) => ({ id }));
 }
+
+

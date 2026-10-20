@@ -30,7 +30,7 @@ import {
   MY_PERSONAL_BUBBLES,
   JOIN_NEIGHBORHOOD,
   LEAVE_NEIGHBORHOOD,
-} from "../../graphql/queries";
+} from "../../../components/graphql/queries";
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 

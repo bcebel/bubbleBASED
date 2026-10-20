@@ -23,7 +23,7 @@ import {
   CREATE_INVITE_LINK,
   UPDATE_INVITE_LINK,
   DELETE_INVITE_LINK,
-} from "../../../graphql/queries";
+} from "../../../../components/graphql/queries";
 
 export default function InviteLinksScreen() {
   const router = useRouter();

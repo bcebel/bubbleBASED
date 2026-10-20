@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { themes } from "./theme";
+import { themes } from "../components/theme";
 
 export default function ThemeDisplay() {
   const [currentScheme, setCurrentScheme] = useState<

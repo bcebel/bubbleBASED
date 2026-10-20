@@ -25,7 +25,7 @@ import {
   GET_GLOBAL_BUBBLES,
   JOIN_NEIGHBORHOOD,
   LEAVE_NEIGHBORHOOD,
-} from "../../../graphql/queries";
+} from "../../../../components/graphql/queries";
 import WebTorrentMedia from "@/components/WebTorrentMedia";
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;

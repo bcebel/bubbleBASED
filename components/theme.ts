@@ -336,7 +336,7 @@ export const themes = {
 // Simple direct access - no hooks until we figure out the issue
 export const useTheme = (
   scheme: keyof typeof themes = "earth",
-  mode: "light" | "dark" = "light"
+  mode: "light" | "dark" = "light",
 ) => {
   return themes[scheme][mode];
 };
@@ -344,7 +344,7 @@ export const useTheme = (
 // Alternative if you want dark mode:
 export const useThemeWithMode = (
   scheme: keyof typeof themes = "earth",
-  mode: "light" | "dark" = "light"
+  mode: "light" | "dark" = "light",
 ) => {
   return themes[scheme][mode];
 };

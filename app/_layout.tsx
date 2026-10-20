@@ -9,13 +9,13 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
+
 
 import {
   Platform,
   View,
-  SafeAreaView,
   StyleSheet,
   } from "react-native";
 import Head from "expo-router/head";

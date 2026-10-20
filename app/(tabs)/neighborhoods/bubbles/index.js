@@ -23,9 +23,9 @@ import {
   MY_NEIGHBORHOODS,
   JOIN_NEIGHBORHOOD,
   LEAVE_NEIGHBORHOOD,
-} from "../../../graphql/queries";
+} from "../../../../components/graphql/queries";
 import WebTorrentMedia from "@/components/WebTorrentMedia";
-import { getNeighborhoodDisplayName } from "../../../utils/neighborhoodDisplay";
+import { getNeighborhoodDisplayName } from "../../../../utils/neighborhoodDisplay";
 
 // Import your sibling tab components (Adjust relative paths if needed)
 import BublicScreen from "./bublic";

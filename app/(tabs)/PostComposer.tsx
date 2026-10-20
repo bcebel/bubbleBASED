@@ -15,8 +15,8 @@ import * as ImagePicker from "expo-image-picker";
 import { useMutation, useQuery, gql } from "@apollo/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { CREATE_POST } from "../graphql/queries";
-import { uploadToIPFS } from "../utils/uploadHelper";
+import { CREATE_POST } from "../../components/graphql/queries";
+import { uploadToIPFS } from "../../utils/uploadHelper";
 import webtorrentService from "../../utils/webtorrentService";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
