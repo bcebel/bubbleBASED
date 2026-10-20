@@ -1,6 +1,6 @@
 import idbChunkStore from "@thaunknown/idb-chunk-store";
 import { saveMedia, getMedia } from "../components/mediaCache";
-import { webtorrentService } from "../utils/webtorrentService.web";
+import webtorrentService  from "../utils/webtorrentService";
 import parseTorrent from "parse-torrent";
 import { getMagnetForCid } from "../utils/magnetCache";
 

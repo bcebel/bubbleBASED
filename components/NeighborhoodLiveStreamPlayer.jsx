@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { warehouse } from "../components/StreamWearhouse.js";
-import webtorrentService from "../utils/webtorrentService.web.js";
+import webtorrentService from "../utils/webtorrentService";
 const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
 class StreamController {

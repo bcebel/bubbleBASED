@@ -1,7 +1,7 @@
 // downloadQueue.js
 import idbChunkStore from "@thaunknown/idb-chunk-store";
 import { saveMedia, getMedia } from "../components/mediaCache";
-import { webtorrentService } from "../utils/webtorrentService.web";
+import  webtorrentService  from "../utils/webtorrentService";
 import { getMagnetForCid } from "../utils/magnetCache";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;

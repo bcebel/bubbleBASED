@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "expo-router"; // 👈 Use Expo Router's 
 import { useMutation, gql } from "@apollo/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { warehouse } from "./StreamWearhouse.js";
-import webtorrentService from "../utils/webtorrentService.web.js";
+import webtorrentService from "../utils/webtorrentService";
 
 const SEND_MESSAGE = gql`
   mutation SendNeighborhoodMessage(

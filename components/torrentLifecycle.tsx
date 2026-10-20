@@ -10,7 +10,7 @@
 // state via getRecord(cid) rather than calling getOrStartTorrent directly.
 
 import idbChunkStore from "@thaunknown/idb-chunk-store";
-import { webtorrentService } from "../utils/webtorrentService.web";
+import  webtorrentService  from "../utils/webtorrentService";
 import parseTorrent from "parse-torrent";
 
 let client = null;

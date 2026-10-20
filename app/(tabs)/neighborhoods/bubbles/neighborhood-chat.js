@@ -40,7 +40,7 @@ import AdMessage from "../../../../components/AdMessage";
 import ChatMediaRenderer from "../../../../components/ChatMediaRenderer";
 import WebTorrentMedia from "@/components/WebTorrentMedia";
 import NeighborhoodLiveStreamRecorder from "@/components/NeighborhoodLiveStreamRecorder";
-import webtorrentService from "../../../../utils/webtorrentService.web";
+import webtorrentService from "../../../../utils/webtorrentService";
 //import heic2any from "heic2any";
 import convert from "heic-convert/browser";
 const myTracker = "wss://tracker-0ad4cca9fd92.herokuapp.com";
