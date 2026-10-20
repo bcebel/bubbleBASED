@@ -202,6 +202,7 @@ export default function Root({ children }: PropsWithChildren) {
             {[
               { label: "Login", href: "/login" },
               { label: "Register", href: "/register" },
+              { label: "Bubbles", href: "/neighborhoods/bubbles" },
               { label: "Global", href: "/bubbles/global" },
               { label: "Gallery", href: "/gallery" },
               { label: "Livestream", href: "/livestream" },
