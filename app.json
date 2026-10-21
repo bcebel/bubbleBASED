@@ -4,12 +4,10 @@
     "slug": "gigunit",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/1024.png",
+    "icon": "./assets/images/1024.jpg",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
-      "webviewDebuggingEnabled": true,
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.ebubbl",
       "infoPlist": {
