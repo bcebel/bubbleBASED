@@ -192,6 +192,7 @@ const currentUserId = meData?.me?.id;
                 "Make and join bubbles for whatever topic you would like! Private and public bubbles..."
               </Text>
               <View style={styles.actionsRow}>
+                
                 <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
                   <TouchableOpacity
                     style={styles.primaryButton}

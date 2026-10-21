@@ -13,11 +13,7 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 
 
-import {
-  Platform,
-  View,
-  StyleSheet,
-  } from "react-native";
+import { Platform, View, StyleSheet, PermissionsAndroid, } from "react-native";
 import Head from "expo-router/head";
 
 // Correct import pattern for Vercel on Expo Web
@@ -36,6 +32,55 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     Montserrat: require("../assets/fonts/Montserrat-Medium.ttf"),
   });
+
+const handlePermissionRequest = async (event) => {
+  const { request } = event.nativeEvent;
+
+  if (Platform.OS === "android") {
+    try {
+      // 1. Check if permissions are already granted natively
+      const hasCameraPermission = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+      );
+      const hasAudioPermission = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+      );
+
+      let grantedCamera = hasCameraPermission;
+      let grantedAudio = hasAudioPermission;
+
+      // 2. If not already granted, request them via the Android OS dialog
+      if (!hasCameraPermission || !hasAudioPermission) {
+        const result = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+        ]);
+
+        grantedCamera =
+          result["android.permission.CAMERA"] ===
+          PermissionsAndroid.RESULTS.GRANTED;
+        grantedAudio =
+          result["android.permission.RECORD_AUDIO"] ===
+          PermissionsAndroid.RESULTS.GRANTED;
+      }
+
+      // 3. Forward the decision back to the WebView's inner request object
+      if (grantedCamera || grantedAudio) {
+        // Grant the resources requested by the web page (e.g., VIDEO_CAPTURE, AUDIO_CAPTURE)
+        request.grant(request.resources);
+      } else {
+        request.deny();
+      }
+    } catch (err) {
+      console.warn("WebView permission error:", err);
+      request.deny();
+    }
+  } else {
+    // iOS handles web permissions automatically via Info.plist,
+    // but if an event fires, grant it.
+    request.grant(request.resources);
+  }
+};
 
   useEffect(() => {
     console.log("[splash] pathname:", pathname);
@@ -134,6 +179,7 @@ export default function RootLayout() {
           javaScriptEnabled={true}
           domStorageEnabled={true}
           mixedContentMode="always"
+          onPermissionRequest={handlePermissionRequest}
         />
       </SafeAreaView>
     );

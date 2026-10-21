@@ -176,6 +176,7 @@ export default function Root({ children }: PropsWithChildren) {
             }}
           >
             digital bubbles 🫧 for everyone
+            <a href="/cameratest">cameratest</a>
           </h1>
 
           <img
