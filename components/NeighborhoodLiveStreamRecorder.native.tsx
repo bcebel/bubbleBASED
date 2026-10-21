@@ -1,5 +1,5 @@
 // components/NeighborhoodLiveStreamRecorder.native.tsx
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   TouchableOpacity,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import {
   CameraView,
@@ -15,10 +16,12 @@ import {
 } from "expo-camera";
 import * as FileSystem from "expo-file-system";
 import { useMutation, gql } from "@apollo/client";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import webtorrentService from "../utils/webtorrentService";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
+
+const IS_IOS = Platform.OS === "ios";
+const IS_ANDROID = Platform.OS === "android";
 
 const CREATE_STREAM = gql`
   mutation CreateStream($title: String!, $neighborhoodId: ID!) {
@@ -52,6 +55,54 @@ const SEND_CHUNK = gql`
   }
 `;
 
+/**
+ * Reads a local video file into a Blob.
+ *
+ * - iOS: original behavior — fetch(file://) → blob. This is the exact path
+ *   that is validated working in production. Do not change.
+ * - Android: fetch(file://) is unreliable (returns empty blob or throws) so
+ *   we read base64 via expo-file-system and build the Blob from a Uint8Array.
+ */
+async function readVideoAsBlob(uri) {
+  if (IS_IOS) {
+    // === iOS: preserve the known-good path ===
+    const response = await fetch(uri);
+    return await response.blob();
+  }
+
+  // === Android: base64 -> Uint8Array -> Blob ===
+  const base64 = await FileSystem.readAsStringAsync(uri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+  const binary = globalThis.atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: "video/mp4" });
+}
+
+/**
+ * Deletes the temp recording file.
+ *
+ * - iOS: original behavior — FileSystem.File API if present, else no-op.
+ * - Android: FileSystem.deleteAsync (File API may not exist on older SDKs).
+ */
+async function deleteTempFile(uri) {
+  if (IS_IOS) {
+    try {
+      const file = new FileSystem.File(uri);
+      if (file.exists) file.delete();
+    } catch {
+      // preserve original silent behavior
+    }
+    return;
+  }
+  try {
+    await FileSystem.deleteAsync(uri, { idempotent: true });
+  } catch {}
+}
+
 export default function NeighborhoodLiveStreamRecorder({
   neighborhoodId,
   username,
@@ -68,6 +119,11 @@ export default function NeighborhoodLiveStreamRecorder({
   const isRecordingRef = useRef(false);
   const sessionIdRef = useRef("");
   const chunkIndexRef = useRef(0);
+
+  // Android-only guard: prevents overlapping recordAsync calls
+  // (CameraX throws "Already recording" if called before the previous
+  // recording fully releases the encoder). Not used on iOS.
+  const isBusyRef = useRef(false);
 
   const [createStream] = useMutation(CREATE_STREAM);
   const [sendChunk] = useMutation(SEND_CHUNK);
@@ -115,28 +171,66 @@ export default function NeighborhoodLiveStreamRecorder({
     }
   };
 
+  /**
+   * Recursive recording loop.
+   *
+   * iOS   — original behavior unchanged (no busy guard, immediate recursion).
+   * Android — busy guard + small inter-chunk delay + recordAsync options.
+   */
   const recordLoop = async () => {
     if (!isRecordingRef.current || !cameraRef.current) return;
+
+    // Android-only re-entrancy guard
+    if (IS_ANDROID && isBusyRef.current) return;
+    if (IS_ANDROID) isBusyRef.current = true;
 
     try {
       setIsProcessing(true);
 
-      // 3. Record a 4-second chunk (matching your web version)
-      const video = await cameraRef.current.recordAsync({ maxDuration: 4 });
+      // 3. Record a 4-second chunk.
+      //    iOS uses the original call unchanged.
+      //    Android adds codec/quality/mute so the encoder is predictable.
+      let video;
+      if (IS_IOS) {
+        video = await cameraRef.current.recordAsync({ maxDuration: 4 });
+      } else {
+        if (__DEV__) console.log("[rec][android] recordAsync start");
+        video = await cameraRef.current.recordAsync({
+          maxDuration: 4,
+          quality: "480p",
+          codec: "avc1",
+          mute: false,
+        });
+        if (__DEV__) console.log("[rec][android] recordAsync done", video?.uri);
+      }
+
       if (!video || !video.uri) throw new Error("No video recorded");
 
       const currentIndex = chunkIndexRef.current;
 
-      // 4. Read the file into a Blob so WebTorrent can seed it
-      const response = await fetch(video.uri);
-      const blob = await response.blob();
+      // 4. Read the file into a Blob.
+      //    iOS: fetch(file://) as before.
+      //    Android: base64 -> Uint8Array -> Blob.
+      let blob;
+      if (IS_IOS) {
+        const response = await fetch(video.uri);
+        blob = await response.blob();
+      } else {
+        if (__DEV__) console.log("[rec][android] reading file");
+        blob = await readVideoAsBlob(video.uri);
+        if (__DEV__) console.log("[rec][android] blob size", blob.size);
+      }
 
       // 5. Seed the chunk via WebTorrent
+      if (__DEV__ && IS_ANDROID) console.log("[rec][android] seeding");
       const seedResult = await webtorrentService.seed(blob, {
         name: `chunk_${sessionIdRef.current}_${currentIndex}.mp4`,
       });
+      if (__DEV__ && IS_ANDROID)
+        console.log("[rec][android] seeded", seedResult?.magnetLink);
 
       // 6. Tell the database about the new chunk
+      if (__DEV__ && IS_ANDROID) console.log("[rec][android] sendChunk");
       await sendChunk({
         variables: {
           content: currentIndex === 0 ? "STREAM_HEADER" : "",
@@ -147,26 +241,37 @@ export default function NeighborhoodLiveStreamRecorder({
           chunkIndex: currentIndex === 0 ? -1 : currentIndex,
         },
       });
+      if (__DEV__ && IS_ANDROID) console.log("[rec][android] chunk sent");
 
       // 7. Cleanup the local file
- const file = new FileSystem.File(video.uri);
- if (file.exists) {
-   file.delete();
- }
+      //    iOS: original FileSystem.File path.
+      //    Android: FileSystem.deleteAsync.
+      await deleteTempFile(video.uri);
 
       setChunkCount((prev) => prev + 1);
       chunkIndexRef.current += 1;
       setIsProcessing(false);
 
+      // Release the Android busy guard before scheduling the next chunk
+      if (IS_ANDROID) isBusyRef.current = false;
+
       // 8. Loop back and record the next 4 seconds
       if (isRecordingRef.current) {
-        recordLoop();
+        if (IS_IOS) {
+          // === iOS: original behavior — immediate recursion ===
+          recordLoop();
+        } else {
+          // === Android: give CameraX time to release the encoder ===
+          setTimeout(recordLoop, 150);
+        }
       }
     } catch (error) {
       console.error("Error in recording loop:", error);
       setIsProcessing(false);
+      if (IS_ANDROID) isBusyRef.current = false;
+
       if (isRecordingRef.current) {
-        // If it fails, wait 1 second and try again
+        // Preserve original retry behavior on both platforms
         setTimeout(recordLoop, 1000);
       }
     }
