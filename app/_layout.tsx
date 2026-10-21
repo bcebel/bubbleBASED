@@ -65,7 +65,7 @@ const handlePermissionRequest = async (event) => {
       }
 
       // 3. Forward the decision back to the WebView's inner request object
-      if (grantedCamera || grantedAudio) {
+      if (grantedCamera && grantedAudio) {
         // Grant the resources requested by the web page (e.g., VIDEO_CAPTURE, AUDIO_CAPTURE)
         request.grant(request.resources);
       } else {
