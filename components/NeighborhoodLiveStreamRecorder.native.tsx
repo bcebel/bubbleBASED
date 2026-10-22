@@ -109,23 +109,45 @@ async function deleteTempFile(uri) {
 
 const uploadToBackend = async (chunkData, index, sessionId, retry = 0) => {
   try {
-    const formData = new FormData();
-    // Now it's a real Blob on Android and iOS
-    formData.append("chunk", chunkData, `chunk-${index}.mp4`);
-
-    formData.append("sessionId", sessionId);
-    formData.append("chunkIndex", index.toString());
-    formData.append("rotation", "0");
-
     const token = await AsyncStorage.getItem("token");
-    const res = await fetch(`${BACKEND_URL}/api/live-chunk`, {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: formData,
-    });
+    let res;
+
+    if (IS_IOS) {
+      // === iOS: Send standard FormData to the original endpoint ===
+      const formData = new FormData();
+      formData.append("chunk", chunkData, `chunk-${index}.mp4`);
+      formData.append("sessionId", sessionId);
+      formData.append("chunkIndex", index.toString());
+      formData.append("rotation", "0");
+
+      res = await fetch(`${BACKEND_URL}/api/live-chunk`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+    } else {
+      // === Android: Send JSON base64 to the new native endpoint ===
+      res = await fetch(`${BACKEND_URL}/api/live-chunk-native`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          sessionId,
+          chunkIndex: index,
+          rotation: 0,
+          base64: chunkData.base64Data, // This is set by readVideoAsBlob on Android
+        }),
+      });
+    }
 
     if (!res.ok) {
-      console.warn(`[uploadToBackend] ${index} failed: ${res.status}`);
+      const errorText = await res.text();
+      console.warn(
+        `[uploadToBackend] ${index} failed: ${res.status}`,
+        errorText,
+      );
       return null;
     }
     return await res.json();

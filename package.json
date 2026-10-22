@@ -11,7 +11,8 @@
     "lint": "expo lint",
     "knip": "knip",
     "web": "expo start --web",
-    "build:web": "expo export --platform web"
+    "build:web": "expo export --platform web",
+    "start:web": "expo serve dist"
   },
   "jest": {
     "preset": "jest-expo"
