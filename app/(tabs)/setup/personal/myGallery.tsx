@@ -27,7 +27,7 @@ import {
   GET_MY_POSTS,
 } from "../../../../components/graphql/queries";
 
-const router = useRouter();
+
 
 const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = width;
@@ -86,6 +86,8 @@ const MediaDisplay = ({
   isAlmostFocused,
   onMediaAspectChange,
 }) => {
+
+  const router = useRouter();
   const fileType = getFileType(item);
   const isImage = fileType === "image";
   const isVideo = fileType === "video";
