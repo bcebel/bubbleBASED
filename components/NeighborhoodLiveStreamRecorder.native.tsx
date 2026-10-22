@@ -248,31 +248,32 @@ export default function NeighborhoodLiveStreamRecorder({
       // 4. Read the file into a real Blob (expo-blob makes this work on Android too)
       const blob = await readVideoAsBlob(video.uri);
 
-      // 5. Seed the chunk locally (WebTorrent)
-      const seedResult = await webtorrentService.seed(blob, {
-        name: `livestream-${sessionIdRef.current}-${dbChunkIndex}`,
-      });
+      // 5b. Skip local WebTorrent seeding on Android to avoid 'document' crash
+      let seedResult = null;
+      if (IS_IOS) {
+        seedResult = await webtorrentService.seed(blob, {
+          name: `livestream-${sessionIdRef.current}-${dbChunkIndex}`,
+        });
+      }
 
-      // 5b. Upload to backend so the server seeds it too
+      // 5c. Upload to backend (This generates the Magnet Link!)
       const backendResult = await uploadToBackend(
         blob,
         dbChunkIndex,
         sessionIdRef.current,
       );
 
-      // 6. Decide which magnet link to use
-      // Prefer the backend's link (it has the reliable trackers and stays online).
-      // Fallback to the local seed link if the upload failed.
+      // 6. Get the Magnet Link from Heroku
       const magnetLink = backendResult?.magnetUri || seedResult?.magnetLink;
 
       if (!magnetLink) {
         console.error(
-          `[rec] No magnet link available for chunk ${dbChunkIndex}. Aborting this chunk.`,
+          `[rec] No magnet link available for chunk ${dbChunkIndex}.`,
         );
         setIsProcessing(false);
         if (IS_ANDROID) isBusyRef.current = false;
         if (isRecordingRef.current) setTimeout(recordLoop, 1000);
-        return; // Stop processing this chunk
+        return;
       }
 
       // 7. Tell the database about the new chunk

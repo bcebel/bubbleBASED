@@ -7,10 +7,11 @@
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "expo lint",
-    "knip": "knip"
+    "knip": "knip",
+    "web": "expo start --web",
+    "build:web": "expo export --platform web"
   },
   "jest": {
     "preset": "jest-expo"
