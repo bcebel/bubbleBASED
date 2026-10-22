@@ -112,11 +112,10 @@ async function secureVideoFile(uri) {
   }
 
   const safeUri = safeDir + `chunk-${Date.now()}.mp4`;
-
-  // Ensure the source URI has the file:// prefix
   const sourceUri = uri.startsWith("file://") ? uri : `file://${uri}`;
 
-  await FileSystem.copyAsync({ from: sourceUri, to: safeUri });
+  // Use moveAsync instead of copyAsync — it's atomic and doesn't have ENOENT issues
+  await FileSystem.moveAsync({ from: sourceUri, to: safeUri });
   return safeUri;
 }
 
@@ -254,113 +253,124 @@ export default function NeighborhoodLiveStreamRecorder({
    * iOS   — original behavior unchanged (no busy guard, immediate recursion).
    * Android — busy guard + small inter-chunk delay + recordAsync options.
    */
-  const recordLoop = async () => {
-    if (!isRecordingRef.current || !cameraRef.current) return;
+const recordLoop = async () => {
+  if (!isRecordingRef.current || !cameraRef.current) return;
 
-    if (IS_ANDROID && isBusyRef.current) return;
-    if (IS_ANDROID) isBusyRef.current = true;
+  if (IS_ANDROID && isBusyRef.current) return;
+  if (IS_ANDROID) isBusyRef.current = true;
 
+  try {
+    setIsProcessing(true);
+
+    let video: any;
+    if (IS_IOS) {
+      video = await cameraRef.current.recordAsync({ maxDuration: 4 });
+    } else {
+      video = await cameraRef.current.recordAsync({
+        maxDuration: 4,
+        quality: "360p",
+        codec: "avc1",
+        mute: false,
+      });
+    }
+
+    if (!video || !video.uri) throw new Error("No video recorded");
+
+    // 🚨 1. Define the index variables FIRST (before any logs or copy attempts)
+    const currentIndex = chunkIndexRef.current;
+    const dbChunkIndex = currentIndex === 0 ? -1 : currentIndex - 1;
+
+    // 🚨 2. Copy immediately (no logs or awaits before this)
+    let safeUri;
     try {
-      setIsProcessing(true);
+      safeUri = await secureVideoFile(video.uri);
+    } catch (copyError) {
+      console.warn(
+        `[rec] Copy failed for chunk ${dbChunkIndex}, trying original:`,
+        copyError.message,
+      );
+      // Fallback: try reading the original uri directly before it's gone
+      safeUri = video.uri;
+    }
 
-      let video: any; // 👈 Added : any to fix the TypeScript 'never' error
-      if (IS_IOS) {
-        video = await cameraRef.current.recordAsync({ maxDuration: 4 });
-      } else {
-        video = await cameraRef.current.recordAsync({
-          maxDuration: 4,
-          quality: "480p",
-          codec: "avc1",
-          mute: false,
-        });
-      }
+    // 3. Now read from the safe copy
+    let chunkData;
+    try {
+      chunkData = await readVideoAsBlob(safeUri);
+      console.log(
+        `[rec] Chunk ${dbChunkIndex} size:`,
+        chunkData.base64Data?.length || 0,
+        "base64 chars",
+      );
+    } catch (readError) {
+      console.error(
+        `[rec] Failed to read file for chunk ${dbChunkIndex}:`,
+        readError.message,
+      );
+      // Cleanup the safe file if it exists
+      if (safeUri !== video.uri) await deleteTempFile(safeUri);
+      throw readError;
+    }
 
-      if (!video || !video.uri) throw new Error("No video recorded");
-
-      // 🚨 1. Copy immediately (no logs or awaits before this)
-      let safeUri;
-      try {
-        safeUri = await secureVideoFile(video.uri);
-      } catch (copyError) {
-        console.warn(
-          "[rec] Immediate copy failed, trying fallback:",
-          copyError.message,
-        );
-        // Fallback: try reading the original uri directly before it's gone
-        safeUri = video.uri;
-      }
-
-      // 2. Now read from the safe copy
-      const chunkData = await readVideoAsBlob(safeUri);
-    console.log(
-      `[rec] Chunk ${dbChunkIndex} size:`,
-      chunkData.base64Data?.length || 0,
-      "base64 chars",
+    // 4. Upload to backend
+    const backendResult = await uploadToBackend(
+      chunkData,
+      dbChunkIndex,
+      sessionIdRef.current,
     );
-      
-            const currentIndex = chunkIndexRef.current;
-            const dbChunkIndex = currentIndex === 0 ? -1 : currentIndex - 1;
 
-            // 3. Upload to backend
-            const backendResult = await uploadToBackend(
-              chunkData,
-              dbChunkIndex,
-              sessionIdRef.current,
-            );
+    const magnetLink = backendResult?.magnetUri;
 
-            const magnetLink = backendResult?.magnetUri;
-
-            if (!magnetLink) {
-              console.error(
-                `[rec] No magnet link available for chunk ${dbChunkIndex}.`,
-              );
-              // Cleanup the safe file even on failure
-              await deleteTempFile(safeUri);
-              setIsProcessing(false);
-              if (IS_ANDROID) isBusyRef.current = false;
-              if (isRecordingRef.current) setTimeout(recordLoop, 1000);
-              return;
-            }
-
-            // 4. Tell database
-            await sendChunk({
-              variables: {
-                content: currentIndex === 0 ? "STREAM_HEADER" : "",
-                neighborhoodId,
-                magnetLink,
-                fileType: currentIndex === 0 ? "video_header" : "video_chunk",
-                sessionId: sessionIdRef.current,
-                chunkIndex: dbChunkIndex,
-              },
-            });
-
-            // 5. Delete the safe file now that we're done with it
-            await deleteTempFile(safeUri);
-
-      setChunkCount((prev) => prev + 1);
-      chunkIndexRef.current += 1;
-      setIsProcessing(false);
-
-      if (IS_ANDROID) isBusyRef.current = false;
-
-      // 5. Loop back
-      if (isRecordingRef.current) {
-        if (IS_IOS) {
-          recordLoop();
-        } else {
-          setTimeout(recordLoop, 150);
-        }
-      }
-    } catch (error) {
-      console.error("Error in recording loop:", error);
+    if (!magnetLink) {
+      console.error(
+        `[rec] No magnet link available for chunk ${dbChunkIndex}.`,
+      );
+      await deleteTempFile(safeUri);
       setIsProcessing(false);
       if (IS_ANDROID) isBusyRef.current = false;
+      if (isRecordingRef.current) setTimeout(recordLoop, 1000);
+      return;
+    }
 
-      if (isRecordingRef.current) {
-        setTimeout(recordLoop, 1000);
+    // 5. Tell database
+    await sendChunk({
+      variables: {
+        content: currentIndex === 0 ? "STREAM_HEADER" : "",
+        neighborhoodId,
+        magnetLink,
+        fileType: currentIndex === 0 ? "video_header" : "video_chunk",
+        sessionId: sessionIdRef.current,
+        chunkIndex: dbChunkIndex,
+      },
+    });
+
+    // 6. Delete the safe file now that we're done with it
+    await deleteTempFile(safeUri);
+
+    setChunkCount((prev) => prev + 1);
+    chunkIndexRef.current += 1;
+    setIsProcessing(false);
+
+    if (IS_ANDROID) isBusyRef.current = false;
+
+    // 7. Loop back
+    if (isRecordingRef.current) {
+      if (IS_IOS) {
+        recordLoop();
+      } else {
+        setTimeout(recordLoop, 150);
       }
     }
-  };
+  } catch (error) {
+    console.error("Error in recording loop:", error);
+    setIsProcessing(false);
+    if (IS_ANDROID) isBusyRef.current = false;
+
+    if (isRecordingRef.current) {
+      setTimeout(recordLoop, 1000);
+    }
+  }
+};
 
   const stopStream = async () => {
     isRecordingRef.current = false;
