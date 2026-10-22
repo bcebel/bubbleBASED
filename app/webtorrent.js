@@ -1,3 +1,5 @@
+/*
+
 import React, { useEffect, useRef } from "react";
 import { Platform, View, StyleSheet, Text } from "react-native";
 
@@ -200,3 +202,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
+
+*/
