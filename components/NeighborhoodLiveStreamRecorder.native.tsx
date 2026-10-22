@@ -114,9 +114,21 @@ async function secureVideoFile(uri) {
   const safeUri = safeDir + `chunk-${Date.now()}.mp4`;
   const sourceUri = uri.startsWith("file://") ? uri : `file://${uri}`;
 
-  // Use moveAsync instead of copyAsync — it's atomic and doesn't have ENOENT issues
-  await FileSystem.moveAsync({ from: sourceUri, to: safeUri });
-  return safeUri;
+  try {
+    // Try move first (fastest)
+    await FileSystem.moveAsync({ from: sourceUri, to: safeUri });
+    return safeUri;
+  } catch (moveError) {
+    console.warn("[rec] Move failed, trying copy:", moveError.message);
+    try {
+      // Fallback: copy instead of move
+      await FileSystem.copyAsync({ from: sourceUri, to: safeUri });
+      return safeUri;
+    } catch (copyError) {
+      console.error("[rec] Both move and copy failed:", copyError.message);
+      throw copyError;
+    }
+  }
 }
 
 const uploadToBackend = async (chunkData, index, sessionId, retry = 0) => {

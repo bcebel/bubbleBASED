@@ -334,30 +334,22 @@ class StreamController {
         : this.chunkQueue.get(this.nextIndex);
       try {
         const buf = await this.download(magnet, this.nextIndex);
-     if (buf) {
-       await warehouse.saveChunk(this.sessionId, this.nextIndex, buf);
+        if (buf && !this.sb.updating) {
+          this.sb.appendBuffer(buf);
 
-       try {
-         if (!this.sb.updating) {
-           // 🚨 THE MAGIC FIX: Tell the player to shift the timestamps
-           // We base it on how many chunks we've played * 4 seconds (your chunk duration)
-           if (this.nextIndex > 0) {
-             this.sb.timestampOffset = this.nextIndex * 4;
-           }
-           this.sb.appendBuffer(buf);
-         }
-         this.nextIndex++;
-       } catch (appendError) {
-         console.error(
-           `❌ [Stream] appendBuffer failed for chunk ${this.nextIndex}:`,
-           appendError.message,
-         );
-         // Even if append fails, we save to warehouse and move on
-         this.nextIndex++;
-       }
-     } else {
-       this.isProcessing = false;
-     }
+          this.nextIndex++;
+
+          // Evict buffers older than 10 seconds behind current playback position
+          const t = this.video.currentTime;
+          if (t > 15 && this.sb && !this.sb.updating) {
+            try {
+              // Remove everything from 0 up to (currentTime - 10)
+              this.sb.remove(0, t - 10);
+            } catch (_) {}
+          }
+        } else {
+          this.isProcessing = false;
+        }
       } catch (e) {
         this.isProcessing = false;
       }
