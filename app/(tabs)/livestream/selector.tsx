@@ -52,11 +52,20 @@ export default function SelectorScreen() {
 
     // If we are running inside the React Native WebView app...
     if (typeof window !== "undefined" && window.ReactNativeWebView) {
+            const token =
+              localStorage.getItem("token") ||
+              document.cookie.replace(
+                /(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/,
+                "$1",
+              );
+
+      
       window.ReactNativeWebView.postMessage(
         JSON.stringify({
           type: "OPEN_NATIVE_RECORDER",
           neighborhoodId: selectedHood,
           username: meData?.me?.username || "user",
+          token: token, // 👈 Send the token!
         }),
       );
     } else {

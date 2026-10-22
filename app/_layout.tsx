@@ -13,6 +13,8 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import { Platform, View, StyleSheet, PermissionsAndroid } from "react-native";
 import Head from "expo-router/head";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 // Correct import pattern for Vercel on Expo Web
 import { inject } from "@vercel/analytics";
@@ -89,6 +91,7 @@ export default function RootLayout() {
         setNativeRecorderParams({
           neighborhoodId: data.neighborhoodId,
           username: data.username,
+          token: data.token, // 👈 Save it
         });
       }
     } catch (e) {
@@ -172,20 +175,30 @@ export default function RootLayout() {
 
   // 2. NATIVE RECORDER VERSION (Android/iOS)
   // If the web requested the camera, we render the native component instead of the WebView!
-  if (nativeRecorderParams) {
-    return (
-      <SafeAreaProvider>
-        <NeighborhoodLiveStreamRecorder
-          neighborhoodId={nativeRecorderParams.neighborhoodId}
-          username={nativeRecorderParams.username}
-          onStreamEnd={() => {
-            setNativeRecorderParams(null); // Go back to WebView when done
-            webViewRef.current?.reload(); // Refresh web UI to show new stream
-          }}
-        />
-      </SafeAreaProvider>
-    );
-  }
+    // 2. NATIVE RECORDER VERSION (Android/iOS)
+    // If the web requested the camera, we render the native component instead of the WebView!
+ if (nativeRecorderParams) {
+   // Save the token to AsyncStorage so the Native Apollo Client can find it
+   if (nativeRecorderParams.token) {
+     AsyncStorage.setItem("token", nativeRecorderParams.token);
+   }
+
+   return (
+     <SafeAreaProvider>
+       <ApolloProviderWrapper>
+         <NeighborhoodLiveStreamRecorder
+           neighborhoodId={nativeRecorderParams.neighborhoodId}
+           username={nativeRecorderParams.username}
+           onStreamEnd={() => {
+             setNativeRecorderParams(null);
+             webViewRef.current?.reload();
+           }}
+         />
+       </ApolloProviderWrapper>
+     </SafeAreaProvider>
+   );
+ }
+  
 
   // 3. WEBVIEW VERSION (Default App Mode)
   return (
