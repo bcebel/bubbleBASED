@@ -335,6 +335,8 @@ export default function NeighborhoodLiveStreamRecorder({
         style={styles.camera}
         mode="video"
         facing="back"
+        onCameraReady={() => console.log("[camera] ready")}
+        onMountError={(e) => console.log("[camera] mount error:", e.message)}
       />
 
       <View style={styles.overlay}>
@@ -374,7 +376,15 @@ export default function NeighborhoodLiveStreamRecorder({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000", justifyContent: "center" },
-  camera: { flex: 1 },
+  camera: {
+    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
   text: { color: "#fff", textAlign: "center", marginBottom: 20 },
   overlay: {
     position: "absolute",
@@ -382,6 +392,7 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     alignItems: "center",
+    zIndex: 10,
   },
   button: {
     padding: 15,
