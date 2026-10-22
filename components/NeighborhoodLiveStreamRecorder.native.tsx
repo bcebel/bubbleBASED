@@ -105,16 +105,18 @@ async function deleteTempFile(uri) {
 
 
 async function secureVideoFile(uri) {
-  // Create a stable directory for our chunks
   const safeDir = FileSystem.cacheDirectory + "live-chunks/";
   const dirInfo = await FileSystem.getInfoAsync(safeDir);
   if (!dirInfo.exists) {
     await FileSystem.makeDirectoryAsync(safeDir, { intermediates: true });
   }
 
-  // Copy the file to our safe directory immediately
   const safeUri = safeDir + `chunk-${Date.now()}.mp4`;
-  await FileSystem.copyAsync({ from: uri, to: safeUri });
+
+  // Ensure the source URI has the file:// prefix
+  const sourceUri = uri.startsWith("file://") ? uri : `file://${uri}`;
+
+  await FileSystem.copyAsync({ from: sourceUri, to: safeUri });
   return safeUri;
 }
 
@@ -273,13 +275,23 @@ export default function NeighborhoodLiveStreamRecorder({
         });
       }
 
-            if (!video || !video.uri) throw new Error("No video recorded");
+      if (!video || !video.uri) throw new Error("No video recorded");
 
-            // 🚨 1. Immediately copy the file to a safe location before Android deletes it
-            const safeUri = await secureVideoFile(video.uri);
+      // 🚨 1. Copy immediately (no logs or awaits before this)
+      let safeUri;
+      try {
+        safeUri = await secureVideoFile(video.uri);
+      } catch (copyError) {
+        console.warn(
+          "[rec] Immediate copy failed, trying fallback:",
+          copyError.message,
+        );
+        // Fallback: try reading the original uri directly before it's gone
+        safeUri = video.uri;
+      }
 
-            // 🚨 2. Now read from the safe copy
-    const chunkData = await readVideoAsBlob(safeUri);
+      // 2. Now read from the safe copy
+      const chunkData = await readVideoAsBlob(safeUri);
     console.log(
       `[rec] Chunk ${dbChunkIndex} size:`,
       chunkData.base64Data?.length || 0,

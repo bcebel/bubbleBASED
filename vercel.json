@@ -1,13 +1,6 @@
 {
-  "framework": null,
-  "buildCommand": "npm run build:web",
-  "outputDirectory": "dist",
   "cleanUrls": true,
   "rewrites": [
-    {
-      "source": "/_expo/static/(.*)",
-      "destination": "/client/_expo/static/$1"
-    },
     {
       "source": "/api/media/:path*",
       "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/media/:path*"
@@ -22,7 +15,7 @@
     },
     {
       "source": "/((?!_expo|assets|.*\\..*$).*)",
-      "destination": "/server/index.js"
+      "destination": "/"
     }
   ],
   "headers": [
@@ -66,7 +59,7 @@
       "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }]
     },
     {
-      "source": "/:path*.(png|jpg|jpeg|gif|webp|avif|ico|svg)",
+      "source": "/:path*.(png|jpg|jpeg|gif|webp|avif|ico|svg|gif)",
       "headers": [
         {
           "key": "Cache-Control",
