@@ -7,7 +7,7 @@ import { useFonts } from "expo-font";
 import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { StatusBar } from "expo-status-bar";
-import { useEffect, useState, useRef } from "react"; // 👈 Added useState, useRef
+import { useEffect, useState, useRef, lazy, Suspense } from "react"; // 👈 Added useState, useRef
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
@@ -22,7 +22,9 @@ import { injectSpeedInsights } from "@vercel/speed-insights";
 import { ApolloProviderWrapper } from "../context/apolloProvider";
 
 // 👈 Import your Native Recorder!
-import NeighborhoodLiveStreamRecorder from "../components/NeighborhoodLiveStreamRecorder";
+const NativeRecorder = lazy(
+  () => import("../components/NeighborhoodLiveStreamRecorder.native"),
+);
 
 SplashScreen.preventAutoHideAsync();
 
@@ -186,14 +188,18 @@ export default function RootLayout() {
    return (
      <SafeAreaProvider>
        <ApolloProviderWrapper>
-         <NeighborhoodLiveStreamRecorder
-           neighborhoodId={nativeRecorderParams.neighborhoodId}
-           username={nativeRecorderParams.username}
-           onStreamEnd={() => {
-             setNativeRecorderParams(null);
-             webViewRef.current?.reload();
-           }}
-         />
+         <Suspense
+           fallback={<View style={{ flex: 1, backgroundColor: "#000" }} />}
+         >
+           <NativeRecorder
+             neighborhoodId={nativeRecorderParams.neighborhoodId}
+             username={nativeRecorderParams.username}
+             onStreamEnd={() => {
+               setNativeRecorderParams(null);
+               webViewRef.current?.reload();
+             }}
+           />
+         </Suspense>
        </ApolloProviderWrapper>
      </SafeAreaProvider>
    );

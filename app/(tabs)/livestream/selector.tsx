@@ -6,11 +6,17 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
-const NeighborhoodLiveStreamRecorder = lazy(
-  () => import("../../../components/NeighborhoodLiveStreamRecorder"),
-);
+const NeighborhoodLiveStreamRecorder = lazy(() => {
+  if (Platform.OS === "web") {
+    // On the web, we just render the web version
+    return import("../../../components/NeighborhoodLiveStreamRecorder");
+  }
+  // On native, we force the .native.tsx file (which uses expo-blob)
+  return import("../../../components/NeighborhoodLiveStreamRecorder.native");
+});
 import { useRouter, Link, useLocalSearchParams } from "expo-router";
 
 const GET_ME = gql`
