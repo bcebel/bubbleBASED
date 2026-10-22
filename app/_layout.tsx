@@ -102,9 +102,9 @@ export default function RootLayout() {
   };
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (pathname && pathname !== "/") {
-      window.__hideSplash?.();
+    if (typeof window !== "undefined" && window.__hideSplash) {
+      // Hide the splash screen on ALL routes, including "/"
+      setTimeout(() => window.__hideSplash(), 500);
     }
   }, [pathname]);
 
