@@ -13,7 +13,7 @@ import {
 import { useQuery, useMutation } from "@apollo/client";
 import { GET_COMMENTS, ADD_COMMENT } from "../components/graphql/queries";
 import { formatTimeAgo } from "../utils/helpers";
-
+// commit
 const PINATA_GATEWAY =
   process.env.EXPO_PUBLIC_PINATA_GATEWAY || "gateway.pinata.cloud";
 
