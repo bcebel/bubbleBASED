@@ -71,19 +71,15 @@ async function readVideoAsBlob(uri) {
     return await response.blob();
   }
 
-  // Android: Read as base64, then convert to a polyfilled Blob
   const base64 = await FileSystem.readAsStringAsync(uri, {
     encoding: FileSystem.EncodingType.Base64,
   });
 
-  const binary = globalThis.atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-
-  // This now works because expo-blob polyfills it!
-  return new Blob([bytes], { type: "video/mp4" });
+  // Return an object with base64Data, NOT a Blob
+  return {
+    base64Data: base64,
+    type: "video/mp4",
+  };
 }
 
 /**
@@ -107,13 +103,28 @@ async function deleteTempFile(uri) {
   } catch {}
 }
 
+
+async function secureVideoFile(uri) {
+  // Create a stable directory for our chunks
+  const safeDir = FileSystem.cacheDirectory + "live-chunks/";
+  const dirInfo = await FileSystem.getInfoAsync(safeDir);
+  if (!dirInfo.exists) {
+    await FileSystem.makeDirectoryAsync(safeDir, { intermediates: true });
+  }
+
+  // Copy the file to our safe directory immediately
+  const safeUri = safeDir + `chunk-${Date.now()}.mp4`;
+  await FileSystem.copyAsync({ from: uri, to: safeUri });
+  return safeUri;
+}
+
 const uploadToBackend = async (chunkData, index, sessionId, retry = 0) => {
   try {
     const token = await AsyncStorage.getItem("token");
     let res;
 
     if (IS_IOS) {
-      // === iOS: Send standard FormData to the original endpoint ===
+      // iOS: FormData to the normal route
       const formData = new FormData();
       formData.append("chunk", chunkData, `chunk-${index}.mp4`);
       formData.append("sessionId", sessionId);
@@ -126,7 +137,14 @@ const uploadToBackend = async (chunkData, index, sessionId, retry = 0) => {
         body: formData,
       });
     } else {
-      // === Android: Send JSON base64 to the new native endpoint ===
+      // Android: JSON to the native route
+      const base64String = chunkData.base64Data;
+
+      if (!base64String) {
+        console.error("❌ [uploadToBackend] No base64 data available!");
+        return null;
+      }
+
       res = await fetch(`${BACKEND_URL}/api/live-chunk-native`, {
         method: "POST",
         headers: {
@@ -137,7 +155,7 @@ const uploadToBackend = async (chunkData, index, sessionId, retry = 0) => {
           sessionId,
           chunkIndex: index,
           rotation: 0,
-          base64: chunkData.base64Data, // This is set by readVideoAsBlob on Android
+          base64: base64String,
         }),
       });
     }
@@ -150,11 +168,12 @@ const uploadToBackend = async (chunkData, index, sessionId, retry = 0) => {
       );
       return null;
     }
+
     return await res.json();
   } catch (e) {
     if (retry < 2)
       return uploadToBackend(chunkData, index, sessionId, retry + 1);
-    console.error(`[uploadToBackend] ${index} error`, e);
+    console.error(`[uploadToBackend] ${index} network error`, e);
     return null;
   }
 };
@@ -236,101 +255,87 @@ export default function NeighborhoodLiveStreamRecorder({
   const recordLoop = async () => {
     if (!isRecordingRef.current || !cameraRef.current) return;
 
-    // Android-only re-entrancy guard
     if (IS_ANDROID && isBusyRef.current) return;
     if (IS_ANDROID) isBusyRef.current = true;
 
     try {
       setIsProcessing(true);
 
-      // 3. Record a 4-second chunk.
-      //    iOS uses the original call unchanged.
-      //    Android adds codec/quality/mute so the encoder is predictable.
-      let video;
+      let video: any; // 👈 Added : any to fix the TypeScript 'never' error
       if (IS_IOS) {
         video = await cameraRef.current.recordAsync({ maxDuration: 4 });
       } else {
-        if (__DEV__) console.log("[rec][android] recordAsync start");
         video = await cameraRef.current.recordAsync({
           maxDuration: 4,
           quality: "480p",
           codec: "avc1",
           mute: false,
         });
-        if (__DEV__) console.log("[rec][android] recordAsync done", video?.uri);
       }
 
-      if (!video || !video.uri) throw new Error("No video recorded");
+            if (!video || !video.uri) throw new Error("No video recorded");
 
-      const currentIndex = chunkIndexRef.current;
+            // 🚨 1. Immediately copy the file to a safe location before Android deletes it
+            const safeUri = await secureVideoFile(video.uri);
 
-      // 👈 Define dbChunkIndex (header is -1, first real chunk is 0)
-      const dbChunkIndex = currentIndex === 0 ? -1 : currentIndex - 1;
+            // 🚨 2. Now read from the safe copy
+    const chunkData = await readVideoAsBlob(safeUri);
+    console.log(
+      `[rec] Chunk ${dbChunkIndex} size:`,
+      chunkData.base64Data?.length || 0,
+      "base64 chars",
+    );
+      
+            const currentIndex = chunkIndexRef.current;
+            const dbChunkIndex = currentIndex === 0 ? -1 : currentIndex - 1;
 
-      // 4. Read the file into a real Blob (expo-blob makes this work on Android too)
-      const blob = await readVideoAsBlob(video.uri);
+            // 3. Upload to backend
+            const backendResult = await uploadToBackend(
+              chunkData,
+              dbChunkIndex,
+              sessionIdRef.current,
+            );
 
-      // 5b. Skip local WebTorrent seeding on Android to avoid 'document' crash
-      let seedResult = null;
-      if (IS_IOS) {
-        seedResult = await webtorrentService.seed(blob, {
-          name: `livestream-${sessionIdRef.current}-${dbChunkIndex}`,
-        });
-      }
+            const magnetLink = backendResult?.magnetUri;
 
-      // 5c. Upload to backend (This generates the Magnet Link!)
-      const backendResult = await uploadToBackend(
-        blob,
-        dbChunkIndex,
-        sessionIdRef.current,
-      );
+            if (!magnetLink) {
+              console.error(
+                `[rec] No magnet link available for chunk ${dbChunkIndex}.`,
+              );
+              // Cleanup the safe file even on failure
+              await deleteTempFile(safeUri);
+              setIsProcessing(false);
+              if (IS_ANDROID) isBusyRef.current = false;
+              if (isRecordingRef.current) setTimeout(recordLoop, 1000);
+              return;
+            }
 
-      // 6. Get the Magnet Link from Heroku
-      const magnetLink = backendResult?.magnetUri || seedResult?.magnetLink;
+            // 4. Tell database
+            await sendChunk({
+              variables: {
+                content: currentIndex === 0 ? "STREAM_HEADER" : "",
+                neighborhoodId,
+                magnetLink,
+                fileType: currentIndex === 0 ? "video_header" : "video_chunk",
+                sessionId: sessionIdRef.current,
+                chunkIndex: dbChunkIndex,
+              },
+            });
 
-      if (!magnetLink) {
-        console.error(
-          `[rec] No magnet link available for chunk ${dbChunkIndex}.`,
-        );
-        setIsProcessing(false);
-        if (IS_ANDROID) isBusyRef.current = false;
-        if (isRecordingRef.current) setTimeout(recordLoop, 1000);
-        return;
-      }
-
-      // 7. Tell the database about the new chunk
-      await sendChunk({
-        variables: {
-          content: currentIndex === 0 ? "STREAM_HEADER" : "",
-          neighborhoodId,
-          magnetLink,
-          fileType: currentIndex === 0 ? "video_header" : "video_chunk",
-          sessionId: sessionIdRef.current,
-          chunkIndex: dbChunkIndex,
-        },
-      });
-
-      if (__DEV__ && IS_ANDROID) console.log("[rec][android] chunk sent");
-
-      // 7. Cleanup the local file
-      //    iOS: original FileSystem.File path.
-      //    Android: FileSystem.deleteAsync.
-      await deleteTempFile(video.uri);
+            // 5. Delete the safe file now that we're done with it
+            await deleteTempFile(safeUri);
 
       setChunkCount((prev) => prev + 1);
       chunkIndexRef.current += 1;
       setIsProcessing(false);
 
-      // Release the Android busy guard before scheduling the next chunk
       if (IS_ANDROID) isBusyRef.current = false;
 
-      // 8. Loop back and record the next 4 seconds
+      // 5. Loop back
       if (isRecordingRef.current) {
         if (IS_IOS) {
-          // === iOS: original behavior — immediate recursion ===
           recordLoop();
         } else {
-          // === Android: give CameraX time to release the encoder ===
           setTimeout(recordLoop, 150);
         }
       }
@@ -340,7 +345,6 @@ export default function NeighborhoodLiveStreamRecorder({
       if (IS_ANDROID) isBusyRef.current = false;
 
       if (isRecordingRef.current) {
-        // Preserve original retry behavior on both platforms
         setTimeout(recordLoop, 1000);
       }
     }
