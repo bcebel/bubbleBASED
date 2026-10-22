@@ -14,10 +14,11 @@ import {
   useCameraPermissions,
   useMicrophonePermissions,
 } from "expo-camera";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import { useMutation, gql } from "@apollo/client";
 import webtorrentService from "../utils/webtorrentService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Blob } from "expo-blob";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
@@ -66,20 +67,22 @@ const SEND_CHUNK = gql`
  */
 async function readVideoAsBlob(uri) {
   if (IS_IOS) {
-    // === iOS: preserve the known-good path ===
     const response = await fetch(uri);
     return await response.blob();
   }
 
-  // === Android: base64 -> Uint8Array -> Blob ===
+  // Android: Read as base64, then convert to a polyfilled Blob
   const base64 = await FileSystem.readAsStringAsync(uri, {
     encoding: FileSystem.EncodingType.Base64,
   });
+
   const binary = globalThis.atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
   }
+
+  // This now works because expo-blob polyfills it!
   return new Blob([bytes], { type: "video/mp4" });
 }
 
@@ -104,10 +107,12 @@ async function deleteTempFile(uri) {
   } catch {}
 }
 
-const uploadToBackend = async (chunkBytes, index, sessionId, retry = 0) => {
+const uploadToBackend = async (chunkData, index, sessionId, retry = 0) => {
   try {
     const formData = new FormData();
-    formData.append("chunk", new Blob([chunkBytes], { type: "video/mp4" }));
+    // Now it's a real Blob on Android and iOS
+    formData.append("chunk", chunkData, `chunk-${index}.mp4`);
+
     formData.append("sessionId", sessionId);
     formData.append("chunkIndex", index.toString());
     formData.append("rotation", "0");
@@ -123,9 +128,10 @@ const uploadToBackend = async (chunkBytes, index, sessionId, retry = 0) => {
       console.warn(`[uploadToBackend] ${index} failed: ${res.status}`);
       return null;
     }
-    return await res.json(); // { success, magnetUri, chunkId }
+    return await res.json();
   } catch (e) {
-    if (retry < 2) return uploadToBackend(chunkBytes, index, retry + 1);
+    if (retry < 2)
+      return uploadToBackend(chunkData, index, sessionId, retry + 1);
     console.error(`[uploadToBackend] ${index} error`, e);
     return null;
   }
@@ -236,40 +242,40 @@ export default function NeighborhoodLiveStreamRecorder({
 
       const currentIndex = chunkIndexRef.current;
 
-      // 4. Read the file into a Blob.
-      //    iOS: fetch(file://) as before.
-      //    Android: base64 -> Uint8Array -> Blob.
-      let blob;
-      if (IS_IOS) {
-        const response = await fetch(video.uri);
-        blob = await response.blob();
-      } else {
-        if (__DEV__) console.log("[rec][android] reading file");
-        blob = await readVideoAsBlob(video.uri);
-        if (__DEV__) console.log("[rec][android] blob size", blob.size);
-      }
+      // 👈 Define dbChunkIndex (header is -1, first real chunk is 0)
+      const dbChunkIndex = currentIndex === 0 ? -1 : currentIndex - 1;
 
-      // 5. Seed the chunk via WebTorrent
-      if (__DEV__ && IS_ANDROID) console.log("[rec][android] seeding");
+      // 4. Read the file into a real Blob (expo-blob makes this work on Android too)
+      const blob = await readVideoAsBlob(video.uri);
+
+      // 5. Seed the chunk locally (WebTorrent)
       const seedResult = await webtorrentService.seed(blob, {
-        name: `livestream-${sessionIdRef.current}-${currentIndex === 0 ? "-1" : currentIndex}`,
+        name: `livestream-${sessionIdRef.current}-${dbChunkIndex}`,
       });
-      if (__DEV__ && IS_ANDROID)
-        console.log("[rec][android] seeded", seedResult?.magnetLink);
 
       // 5b. Upload to backend so the server seeds it too
       const backendResult = await uploadToBackend(
         blob,
-        currentIndex,
+        dbChunkIndex,
         sessionIdRef.current,
       );
 
-      // Prefer backend's magnet link (it has the reliable trackers)
-      // Fall back to local seed if the upload failed
-      const magnetLink = backendResult?.magnetUri || seedResult.magnetLink;
+      // 6. Decide which magnet link to use
+      // Prefer the backend's link (it has the reliable trackers and stays online).
+      // Fallback to the local seed link if the upload failed.
+      const magnetLink = backendResult?.magnetUri || seedResult?.magnetLink;
 
-      // 6. Tell the database about the new chunk
-      if (__DEV__ && IS_ANDROID) console.log("[rec][android] sendChunk");
+      if (!magnetLink) {
+        console.error(
+          `[rec] No magnet link available for chunk ${dbChunkIndex}. Aborting this chunk.`,
+        );
+        setIsProcessing(false);
+        if (IS_ANDROID) isBusyRef.current = false;
+        if (isRecordingRef.current) setTimeout(recordLoop, 1000);
+        return; // Stop processing this chunk
+      }
+
+      // 7. Tell the database about the new chunk
       await sendChunk({
         variables: {
           content: currentIndex === 0 ? "STREAM_HEADER" : "",
@@ -277,7 +283,7 @@ export default function NeighborhoodLiveStreamRecorder({
           magnetLink,
           fileType: currentIndex === 0 ? "video_header" : "video_chunk",
           sessionId: sessionIdRef.current,
-          chunkIndex: currentIndex === 0 ? -1 : currentIndex,
+          chunkIndex: dbChunkIndex,
         },
       });
 
