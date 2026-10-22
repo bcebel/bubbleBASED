@@ -13,7 +13,6 @@ const NeighborhoodLiveStreamRecorder = lazy(
 );
 import { useRouter, Link, useLocalSearchParams } from "expo-router";
 
-
 const GET_ME = gql`
   query GetMe {
     me {
@@ -34,14 +33,38 @@ const GET_MY_NEIGHBORHOODS = gql`
 
 export default function SelectorScreen() {
   const router = useRouter();
-    const { neighborhoodId: preselect } = useLocalSearchParams();
+  const { neighborhoodId: preselect } = useLocalSearchParams();
   const [isRecording, setIsRecording] = useState(false);
   const [selectedHood, setSelectedHood] = useState(preselect || null);
   const { data: meData } = useQuery(GET_ME);
   const { data: hoodsData, loading: lHoods } = useQuery(GET_MY_NEIGHBORHOODS);
-useEffect(() => {
-  if (preselect) setSelectedHood(preselect);
-}, [preselect]);
+
+  useEffect(() => {
+    if (preselect) setSelectedHood(preselect);
+  }, [preselect]);
+
+  // 🚀 THE BRIDGE: Intercept the button press
+  const handleGetReady = () => {
+    if (!selectedHood) {
+      alert("Pick a bubble");
+      return;
+    }
+
+    // If we are running inside the React Native WebView app...
+    if (typeof window !== "undefined" && window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(
+        JSON.stringify({
+          type: "OPEN_NATIVE_RECORDER",
+          neighborhoodId: selectedHood,
+          username: meData?.me?.username || "user",
+        }),
+      );
+    } else {
+      // Normal web behavior (or iOS)
+      setIsRecording(true);
+    }
+  };
+
   if (isRecording) {
     return (
       <Suspense
@@ -100,9 +123,7 @@ useEffect(() => {
 
         <TouchableOpacity
           style={styles.goLive}
-          onPress={() =>
-            selectedHood ? setIsRecording(true) : alert("Pick a bubble")
-          }
+          onPress={handleGetReady} // 👈 Hooked up here
         >
           <Text style={styles.btnText}>Get Ready</Text>
         </TouchableOpacity>
@@ -190,5 +211,5 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   btnText: { color: "white", fontWeight: "bold", fontSize: 18 },
-  scrolly: {paddingBottom: 50},
+  scrolly: { paddingBottom: 50 },
 });
