@@ -57,23 +57,36 @@ class WebTorrentService {
       return window.globalWebTorrentClient;
     }
 
-    // 2. Server check
     if (typeof window === "undefined") {
       throw new Error("Cannot initialize WebTorrent on the server.");
     }
 
-    // 3. Native / Expo Go Fallback (Using Script Injection)
+    // 2. If WebTorrent isn't loaded, fetch the file as text and create a module from it
     if (!window.WebTorrent) {
-      await new Promise((resolve) => {
-        const script = document.createElement("script");
-        script.src = "https://ebubbl.com/webtorrent.min.js";
-        script.onload = resolve;
-        document.head.appendChild(script);
-      });
+      console.log("🌪️ Dynamically loading WebTorrent...");
+      try {
+        // Fetch the file from the public folder (works on Vercel AND localhost)
+        const response = await fetch("/webtorrent.min.js");
+        const text = await response.text();
+
+        // Create a blob and a URL for it
+        const blob = new Blob([text], { type: "application/javascript" });
+        const url = URL.createObjectURL(blob);
+
+        // Import it dynamically as a module
+        const module = await import(/* webpackIgnore: true */ url);
+
+        // The ESM build uses `export default`. We need to put it on window.
+        window.WebTorrent = module.default;
+        console.log("✅ WebTorrent loaded successfully from local file");
+      } catch (e) {
+        console.error("❌ Failed to load WebTorrent locally:", e);
+        throw new Error("WebTorrent could not be loaded.");
+      }
     }
 
+    // 3. Create the global client
     if (!window.globalWebTorrentClient && window.WebTorrent) {
-      console.log("🌪️ Native Fallback: Creating WebTorrent client via CDN");
       window.globalWebTorrentClient = new window.WebTorrent({
         tracker: { announce: this.trackers },
         webSeeds: true,
@@ -86,7 +99,6 @@ class WebTorrentService {
 
     throw new Error("WebTorrent Champ failed to enter the building.");
   }
-
   // ---------------------------------------------------------------------------
   // Cache keys
   // ---------------------------------------------------------------------------
