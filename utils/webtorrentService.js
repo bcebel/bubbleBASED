@@ -77,10 +77,11 @@ class WebTorrentService {
         try {
           await new Promise((resolve, reject) => {
             const script = document.createElement("script");
+            script.type = "module";
             script.src = src;
             script.onload = () => {
               loaded = true;
-              resolve();
+              resolve(); 
             };
             script.onerror = () => reject(new Error(`Failed to load ${src}`));
             document.head.appendChild(script);
