@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charSet="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="canonical" href="https://ebubbl.com/" />
+
+    <link rel="preload" as="image" href="/bbl.webp" fetchPriority="high" />
+
+    <style>
+        html,
+        body,
+        #root {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overscroll-behavior: none;
+            cursor: url('./16.png') 8 8, auto;
+        }
+
+        body {
+            background-color: #130720;
+        }
+
+        #root {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+
+    <meta name="keywords"
+        content="social network, privacy, digital neighborhoods, affiliate marketing, community, ebubbl, 🫧, webtorrent, p2p, social media, privacy, context" />
+    <meta name="author" content="ebubbl" />
+    <meta name="robots" content="index, follow" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ebubbl.com/" />
+    <meta property="og:title" content="ebubbl" />
+    <meta property="og:description"
+        content="Join ebubbl.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based." />
+    <meta property="og:image" content="https://ebubbl.com/bble.png" />
+    <meta property="og:image:secure_url" content="https://ebubbl.com/bbl-og.jpg" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:site_name" content="ebubbl" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="root.txt" content="lvnAxw0UhYgjF3kq4GKccyigEEVkHXkKTHntmIXRGvJ9aIHkiVw4Kg==" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@ebubbl_" />
+    <meta name="twitter:creator" content="@ebubbl_" />
+    <meta name="twitter:title" content="ebubbl" />
+    <meta name="twitter:description"
+        content="Join ebubbl.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based." />
+    <meta name="twitter:image" content="https://ebubbl.com/bbl-og.jpg" />
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://minnowspacebackend-e6635e46c3d0.herokuapp.com" />
+    <link rel="icon" href="/48.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/180.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/16.png" />
+
+    <meta name="theme-color" content="#20B2AA" />
+    <meta name="msapplication-TileColor" content="#20B2AA" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="impact-site-verification" content="6430b649-d08d-495d-8ef7-5f05702bf594" />
+    <link rel="preload" as="image" href="/bble.png" />
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="module">
+        import WebTorrent from '/webtorrent.min.js';
+        window.WebTorrent = WebTorrent;
+
+        window.enhancedTrackers = [
+            "wss://tracker-0ad4cca9fd92.herokuapp.com",
+            "wss://tracker.novage.com.ua",
+            "wss://tracker.files.fm:7073/announce",
+            "wss://tracker.webtorrent.dev",
+            "wss://tracker.btorrent.xyz",
+            "wss://tracker.openwebtorrent.com",
+            "udp://tracker.opentrackr.org:1337/announce",
+            "udp://open.tracker.cl:1337/announce",
+            "udp://9.rarbg.to:2710/announce",
+            "udp://tracker.internetwarriors.net:1337/announce",
+            "udp://exodus.desync.com:6969/announce",
+            "udp://tracker.moeking.me:6969/announce",
+            "udp://opentor.org:2710/announce",
+            "udp://tracker.cyberia.is:6969/announce",
+            "udp://tracker3.itzmx.com:6961/announce"
+        ];
+
+        function runWebTorrentServer(registration) {
+            if (window.WebTorrent && !window.globalWebTorrentClient) {
+                window.globalWebTorrentClient = new window.WebTorrent({
+                    tracker: {
+                        announce: window.enhancedTrackers,
+                        rtcConfig: {
+                            iceServers: [
+                                { urls: "stun:stun.relay.metered.ca:80" },
+                                { urls: "stun:stun.services.mozilla.com:3478" },
+                                { urls: "stun:stun.nextcloud.com:443" },
+                                { urls: "stun:stun.cloudflare.com:3478" },
+                                { urls: "turn:standard.relay.metered.ca:80", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                                { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                                { urls: "turn:standard.relay.metered.ca:443", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                                { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                                { urls: "stun:stun.l.google.com:19302" },
+                                { urls: "stun:stun1.l.google.com:19302" },
+                                { urls: "stun:global.stun.twilio.com:3478" }
+                            ]
+                        }
+                    },
+                    webSeeds: true
+                });
+
+                window.globalWebTorrentClient.createServer({ controller: registration });
+                window.__canStream = true;
+                console.log("🌪️ CHAMP INITIALIZED WITH UNIFIED CONTROL ROUTE");
+            }
+        }
+
+        try {
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    if (navigator.serviceWorker.controller) {
+                        console.log("🎬 Service worker already controlling page. Re-attaching server channel.");
+                        navigator.serviceWorker.getRegistration().then((registration) => {
+                            if (registration) runWebTorrentServer(registration);
+                        });
+                    } else {
+                        navigator.serviceWorker
+                            .register("/sw.min.js", { scope: "/" })
+                            .then(() => navigator.serviceWorker.ready)
+                            .then((registration) => {
+                                runWebTorrentServer(registration);
+                                setTimeout(() => {
+                                    console.log("server:", !!window.globalWebTorrentClient?._server);
+                                    console.log("SW controller:", navigator.serviceWorker.controller);
+                                }, 3000);
+                            })
+                            .catch((e) => {
+                                console.error("🎬 Service worker compilation fallback error:", e);
+                                window.__canStream = false;
+                            });
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("🌪️ CHAMP BLOCK CRASHED:", e);
+        }
+    </script>
+</body>
+
+</html>
