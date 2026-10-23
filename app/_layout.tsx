@@ -15,7 +15,6 @@ import { Platform, View, StyleSheet, PermissionsAndroid } from "react-native";
 import Head from "expo-router/head";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
 // Correct import pattern for Vercel on Expo Web
 import { inject } from "@vercel/analytics";
 import { injectSpeedInsights } from "@vercel/speed-insights";
@@ -102,9 +101,9 @@ export default function RootLayout() {
   };
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.__hideSplash) {
-      // Hide the splash screen on ALL routes, including "/"
-      setTimeout(() => window.__hideSplash(), 500);
+    if (typeof window === "undefined") return;
+    if (pathname && pathname !== "/") {
+      window.__hideSplash?.();
     }
   }, [pathname]);
 
@@ -177,34 +176,33 @@ export default function RootLayout() {
 
   // 2. NATIVE RECORDER VERSION (Android/iOS)
   // If the web requested the camera, we render the native component instead of the WebView!
-    // 2. NATIVE RECORDER VERSION (Android/iOS)
-    // If the web requested the camera, we render the native component instead of the WebView!
- if (nativeRecorderParams) {
-   // Save the token to AsyncStorage so the Native Apollo Client can find it
-   if (nativeRecorderParams.token) {
-     AsyncStorage.setItem("token", nativeRecorderParams.token);
-   }
+  // 2. NATIVE RECORDER VERSION (Android/iOS)
+  // If the web requested the camera, we render the native component instead of the WebView!
+  if (nativeRecorderParams) {
+    // Save the token to AsyncStorage so the Native Apollo Client can find it
+    if (nativeRecorderParams.token) {
+      AsyncStorage.setItem("token", nativeRecorderParams.token);
+    }
 
-   return (
-     <SafeAreaProvider>
-       <ApolloProviderWrapper>
-         <Suspense
-           fallback={<View style={{ flex: 1, backgroundColor: "#000" }} />}
-         >
-           <NativeRecorder
-             neighborhoodId={nativeRecorderParams.neighborhoodId}
-             username={nativeRecorderParams.username}
-             onStreamEnd={() => {
-               setNativeRecorderParams(null);
-               webViewRef.current?.reload();
-             }}
-           />
-         </Suspense>
-       </ApolloProviderWrapper>
-     </SafeAreaProvider>
-   );
- }
-  
+    return (
+      <SafeAreaProvider>
+        <ApolloProviderWrapper>
+          <Suspense
+            fallback={<View style={{ flex: 1, backgroundColor: "#000" }} />}
+          >
+            <NativeRecorder
+              neighborhoodId={nativeRecorderParams.neighborhoodId}
+              username={nativeRecorderParams.username}
+              onStreamEnd={() => {
+                setNativeRecorderParams(null);
+                webViewRef.current?.reload();
+              }}
+            />
+          </Suspense>
+        </ApolloProviderWrapper>
+      </SafeAreaProvider>
+    );
+  }
 
   // 3. WEBVIEW VERSION (Default App Mode)
   return (

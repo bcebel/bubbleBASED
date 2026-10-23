@@ -62,53 +62,18 @@ class WebTorrentService {
       throw new Error("Cannot initialize WebTorrent on the server.");
     }
 
-    // 3. Load WebTorrent from a script tag if it's not already loaded
+    // 3. Native / Expo Go Fallback (Using Script Injection)
     if (!window.WebTorrent) {
-      // Try multiple CDNs so a single failure doesn't break the app
-      const sources = [
-        "https://ebubbl.com/webtorrent.min.js", // Your own site (works if deployed)
-        "https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js", // jsDelivr
-        "https://unpkg.com/webtorrent@latest/webtorrent.min.js", // unpkg
-      ];
-
-      let loaded = false;
-      for (const src of sources) {
-        if (loaded) break;
-        try {
-          await new Promise((resolve, reject) => {
-            const script = document.createElement("script");
-            script.type = "module";
-            script.src = src;
-            script.onload = () => {
-              loaded = true;
-              resolve(); 
-            };
-            script.onerror = () => reject(new Error(`Failed to load ${src}`));
-            document.head.appendChild(script);
-            // Timeout: if it hasn't loaded in 5 seconds, move to next source
-            setTimeout(() => {
-              if (!window.WebTorrent)
-                reject(new Error(`Timeout loading ${src}`));
-            }, 5000);
-          });
-        } catch (e) {
-          console.warn(
-            `⚠️ [WebTorrent] Fallback failed for ${src}:`,
-            e.message,
-          );
-        }
-      }
-
-      if (!window.WebTorrent) {
-        throw new Error(
-          "WebTorrent could not be loaded from any source. Check your network or try again later.",
-        );
-      }
+      await new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://ebubbl.com/webtorrent.min.js";
+        script.onload = resolve;
+        document.head.appendChild(script);
+      });
     }
 
-    // 4. Create the global client if we have WebTorrent but no client yet
     if (!window.globalWebTorrentClient && window.WebTorrent) {
-      console.log("🌪️ WebTorrent client created via CDN fallback");
+      console.log("🌪️ Native Fallback: Creating WebTorrent client via CDN");
       window.globalWebTorrentClient = new window.WebTorrent({
         tracker: { announce: this.trackers },
         webSeeds: true,
