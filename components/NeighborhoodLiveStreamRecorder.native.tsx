@@ -16,9 +16,8 @@ import {
 } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
 import { useMutation, gql } from "@apollo/client";
-import webtorrentService from "../utils/webtorrentService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Blob } from "expo-blob";
+
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
