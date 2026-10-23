@@ -36,7 +36,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/48.png",
       "build": {
         "publicFolder": "public"
@@ -105,7 +105,7 @@
         "expo-router",
         {
           "origin": "https://ebubbl.com",
-          "asyncRoutes": "production"
+          "asyncRoutes": { "web": false }
         }
       ],
       [
