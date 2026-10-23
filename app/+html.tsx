@@ -237,12 +237,12 @@ export default function Root({ children }: PropsWithChildren) {
         <script
           dangerouslySetInnerHTML={{
             __html: `
-      window.__hideSplash = () => {
-        const splash = document.getElementById("splash-screen");
-        if (!splash) return;
-        splash.style.opacity = "0";
-        setTimeout(() => { splash.style.display = "none"; }, 200);
-      };
+  window.__hideSplash = () => {
+  const splash = document.getElementById("splash-screen");
+  if (!splash) return;
+  splash.style.opacity = "0";
+  setTimeout(() => { splash.style.display = "none"; }, 200);
+};
     `,
           }}
         />

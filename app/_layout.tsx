@@ -6,24 +6,30 @@ import {
 import { useFonts } from "expo-font";
 import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { StatusBar } from "expo-status-bar";
-import { useEffect, useState, useRef, lazy, Suspense } from "react"; // 👈 Added useState, useRef
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import { WebView } from "react-native-webview";
-import { Platform, View, StyleSheet, PermissionsAndroid } from "react-native";
+import { Platform, View, StyleSheet } from "react-native";
 import Head from "expo-router/head";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Correct import pattern for Vercel on Expo Web
+// Web-only analytics
 import { inject } from "@vercel/analytics";
 import { injectSpeedInsights } from "@vercel/speed-insights";
 import { ApolloProviderWrapper } from "../context/apolloProvider";
 
-// 👈 Import your Native Recorder!
-const NativeRecorder = lazy(
-  () => import("../components/NeighborhoodLiveStreamRecorder.native"),
-);
+// 🚨 ONLY IMPORT NATIVE STUFF ON MOBILE 🚨
+let WebView = null;
+let PermissionsAndroid = null;
+let NativeRecorder = null;
+
+if (Platform.OS !== "web") {
+  WebView = require("react-native-webview").WebView;
+  PermissionsAndroid = require("react-native").PermissionsAndroid;
+  NativeRecorder = lazy(() =>
+    require("../components/NeighborhoodLiveStreamRecorder.native"),
+  );
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -32,7 +38,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  // 👈 State to hold the native camera params
+  // Bridge state for native camera
   const [nativeRecorderParams, setNativeRecorderParams] = useState(null);
   const webViewRef = useRef(null);
 
@@ -40,9 +46,24 @@ export default function RootLayout() {
     Montserrat: require("../assets/fonts/Montserrat-Medium.ttf"),
   });
 
+  // 🚨 ORIGINAL SPLASH SCREEN LOGIC 🚨
+  // 🚨 FIXED SPLASH SCREEN LOGIC 🚨
+useEffect(() => {
+  if (loaded) {
+    SplashScreen.hideAsync();
+  }
+}, [loaded]);
+  // Web-only analytics
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      inject();
+      injectSpeedInsights();
+    }
+  }, []);
+
+  // Bridge: Handle permission requests from the WebView (Android)
   const handlePermissionRequest = async (event) => {
     const { request } = event.nativeEvent;
-
     if (Platform.OS === "android") {
       try {
         const hasCameraPermission = await PermissionsAndroid.check(
@@ -51,7 +72,6 @@ export default function RootLayout() {
         const hasAudioPermission = await PermissionsAndroid.check(
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
         );
-
         let grantedCamera = hasCameraPermission;
         let grantedAudio = hasAudioPermission;
 
@@ -60,7 +80,6 @@ export default function RootLayout() {
             PermissionsAndroid.PERMISSIONS.CAMERA,
             PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
           ]);
-
           grantedCamera =
             result["android.permission.CAMERA"] ===
             PermissionsAndroid.RESULTS.GRANTED;
@@ -69,13 +88,9 @@ export default function RootLayout() {
             PermissionsAndroid.RESULTS.GRANTED;
         }
 
-        if (grantedCamera && grantedAudio) {
-          request.grant(request.resources);
-        } else {
-          request.deny();
-        }
+        if (grantedCamera && grantedAudio) request.grant(request.resources);
+        else request.deny();
       } catch (err) {
-        console.warn("WebView permission error:", err);
         request.deny();
       }
     } else {
@@ -83,42 +98,19 @@ export default function RootLayout() {
     }
   };
 
-  // 👈 Listen for the message from the web app
+  // Bridge: Listen for the "Open Native Recorder" message from the WebView
   const onMessage = (event) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === "OPEN_NATIVE_RECORDER") {
-        console.log("🚀 Web asked for native camera:", data);
         setNativeRecorderParams({
           neighborhoodId: data.neighborhoodId,
           username: data.username,
-          token: data.token, // 👈 Save it
+          token: data.token,
         });
       }
-    } catch (e) {
-      // Ignore non-JSON messages
-    }
+    } catch (e) {}
   };
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (pathname && pathname !== "/") {
-      window.__hideSplash?.();
-    }
-  }, [pathname]);
-
-  useEffect(() => {
-    if (Platform.OS === "web") {
-      inject();
-      injectSpeedInsights();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
 
   // 1. WEB VERSION
   if (Platform.OS === "web") {
@@ -130,12 +122,6 @@ export default function RootLayout() {
             name="description"
             content="Join ebubbl.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based."
           />
-          <style>{`
-          body {
-            font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
-            font-display: swap; 
-          }
-        `}</style>
         </Head>
         <ApolloProviderWrapper>
           <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
@@ -174,14 +160,15 @@ export default function RootLayout() {
     );
   }
 
-  // 2. NATIVE RECORDER VERSION (Android/iOS)
-  // If the web requested the camera, we render the native component instead of the WebView!
-  // 2. NATIVE RECORDER VERSION (Android/iOS)
-  // If the web requested the camera, we render the native component instead of the WebView!
-  if (nativeRecorderParams) {
-    // Save the token to AsyncStorage so the Native Apollo Client can find it
+  // 2. NATIVE RECORDER BRIDGE (Android/iOS)
+  // If the web requested the camera, render the native component
+  if (nativeRecorderParams && NativeRecorder) {
+    // Save the token so the Native Apollo Client can authenticate
     if (nativeRecorderParams.token) {
-      AsyncStorage.setItem("token", nativeRecorderParams.token);
+      require("@react-native-async-storage/async-storage").default.setItem(
+        "token",
+        nativeRecorderParams.token,
+      );
     }
 
     return (
@@ -204,7 +191,7 @@ export default function RootLayout() {
     );
   }
 
-  // 3. WEBVIEW VERSION (Default App Mode)
+  // 3. WEBVIEW (Default App Mode)
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -222,7 +209,7 @@ export default function RootLayout() {
         domStorageEnabled={true}
         mixedContentMode="always"
         onPermissionRequest={handlePermissionRequest}
-        onMessage={onMessage} // 👈 Connected the bridge here
+        onMessage={onMessage}
       />
     </SafeAreaView>
   );

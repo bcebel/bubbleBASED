@@ -36,7 +36,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "single",
+      "output": "static",
       "favicon": "./assets/images/48.png",
       "build": {
         "publicFolder": "public"
