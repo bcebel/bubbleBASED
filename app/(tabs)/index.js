@@ -127,7 +127,7 @@ export default function HomeScreen() {
               </Text>
 
               <Text style={styles.heroSub}>
-              Make and join groups of like-minded individuals.  Post, Chat & Livestream with your peers.  Bubbles and Users have their own privacy levels so post the the world or just to your besties.  It is up to you!  
+              Make and join groups of like-minded individuals.  Post, Chat & Livestream with your peers.  Post the the world or just to your besties.  It is up to you!  
               </Text>
 
               {/* ACTION BUTTONS (Login / Logout / Join) */}
