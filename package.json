@@ -21,6 +21,7 @@
     "@filebase/sdk": "^1.0.6",
     "@ipld/car": "^5.4.0",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/slider": "^5.2.2",
     "@thaunknown/idb-chunk-store": "^1.0.4",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",

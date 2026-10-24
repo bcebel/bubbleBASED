@@ -6,9 +6,12 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  Platform,
 } from "react-native";
+import { WebView } from "react-native-webview";
 import { getMedia } from "../components/mediaCache";
 import { enqueueDownload } from "./downloadQueue";
+import { Image } from "expo-image";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -212,9 +215,11 @@ export default function WebTorrentMedia({
 
   if (isImage) {
     return (
-      <img
+      <Image
         src={videoSrc}
-        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+        style={{ width: "100%", height: "100%" }}
+        contentFit="contain"
+        transition={100}
         alt=""
       />
     );
@@ -222,83 +227,123 @@ export default function WebTorrentMedia({
 
   return (
     <View style={styles.container} onMouseMove={resetActivityTimer}>
-      <video
-        ref={(el) => {
-          videoRef.current = el;
-          setVideoEl(el);
-        }}
-        src={videoSrc}
-        style={styles.video}
-        muted={muted}
-        volume={volume}
-        loop={true}
-        playsInline
-        autoPlay
-        preload="auto"
-        onTimeUpdate={() =>
-          videoRef.current && setCurrentTime(videoRef.current.currentTime)
-        }
-        onLoadedMetadata={() =>
-          videoRef.current && setDuration(videoRef.current.duration)
-        }
-        onLoadedData={() => console.log("🎬 Video loaded and ready")}
-        onClick={togglePlay}
-        onError={(e) => console.log("❌ Video error:", e)}
-      />
+      {Platform.OS === "web" ? (
+        <video
+          ref={(el) => {
+            videoRef.current = el;
+            setVideoEl(el);
+          }}
+          src={videoSrc}
+          style={styles.video}
+          muted={muted}
+          volume={volume}
+          loop={true}
+          playsInline
+          autoPlay
+          preload="auto"
+          onTimeUpdate={() =>
+            videoRef.current && setCurrentTime(videoRef.current.currentTime)
+          }
+          onLoadedMetadata={() =>
+            videoRef.current && setDuration(videoRef.current.duration)
+          }
+          onLoadedData={() => console.log("🎬 Video loaded and ready")}
+          onClick={togglePlay}
+          onError={(e) => console.log("❌ Video error:", e)}
+        />
+      ) : (
+        <View style={{ flex: 1, backgroundColor: "#000" }}>
+          <WebView
+            originWhitelist={["*"]}
+            source={{
+              html: `
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                    <style>
+                      body { margin: 0; padding: 0; background-color: black; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                      video { width: 100%; height: 100%; object-fit: contain; }
+                    </style>
+                  </head>
+                  <body>
+                    <video 
+                      src="${videoSrc}" 
+                      controls 
+                      autoplay 
+                      playsinline
+                      webkit-playsinline
+                      muted
+                    ></video>
+                  </body>
+                </html>
+              `,
+            }}
+            style={{ flex: 1, backgroundColor: "black" }}
+            allowsInlineMediaPlayback={true}
+            mediaPlaybackRequiresUserAction={false}
+            javaScriptEnabled={true}
+          />
+        </View>
+      )}
+      {Platform.OS === "web" && (
+        <View style={styles.controlsOverlay}>
+          <View style={styles.bottomControlBar}>
+            <Text style={styles.timeLabel}>{formatTime(currentTime)}</Text>
 
-      <View style={styles.controlsOverlay}>
-        <View style={styles.bottomControlBar}>
-          <Text style={styles.timeLabel}>{formatTime(currentTime)}</Text>
-
-          <View style={styles.volumeControlContainer}>
-            <TouchableOpacity style={styles.volumeButton} onPress={toggleMute}>
-              <Text style={styles.volumeIconText}>
-                {isMuted || volume === 0 ? "🔇" : volume < 0.5 ? "🔉" : "🔊"}
-              </Text>
-            </TouchableOpacity>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={isMuted ? 0 : volume}
-              onChange={handleVolumeChange}
-              style={{
-                cursor: "pointer",
-                height: "4px",
-                backgroundColor: "#00ffff",
-                accentColor: "#00ffff",
-                outline: "none",
-                border: "none",
-                marginLeft: "6px",
-                width: "60px",
-                opacity: 1,
-                display: "block",
-              }}
-            />
-          </View>
-
-          <TouchableOpacity
-            activeOpacity={1}
-            style={styles.seekHitbox}
-            onPress={handleSeek}
-          >
-            <View ref={progressBarRef} style={styles.progressBarTrack}>
-              <View
-                style={[
-                  styles.progressBarFill,
-                  { width: `${progressPercent}%` },
-                ]}
-              />
-              <View
-                style={[styles.progressKnob, { left: `${progressPercent}%` }]}
+            <View style={styles.volumeControlContainer}>
+              <TouchableOpacity
+                style={styles.volumeButton}
+                onPress={toggleMute}
+              >
+                <Text style={styles.volumeIconText}>
+                  {isMuted || volume === 0 ? "🔇" : volume < 0.5 ? "🔉" : "🔊"}
+                </Text>
+              </TouchableOpacity>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={isMuted ? 0 : volume}
+                onChange={handleVolumeChange}
+                style={{
+                  cursor: "pointer",
+                  height: "4px",
+                  backgroundColor: "#00ffff",
+                  accentColor: "#00ffff",
+                  outline: "none",
+                  border: "none",
+                  marginLeft: "6px",
+                  width: "60px",
+                  opacity: 1,
+                  display: "block",
+                }}
               />
             </View>
-          </TouchableOpacity>
 
-          <Text style={styles.timeLabel}>{formatTime(duration)}</Text>
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.seekHitbox}
+              onPress={handleSeek}
+            >
+              <View ref={progressBarRef} style={styles.progressBarTrack}>
+                <View
+                  style={[
+                    styles.progressBarFill,
+                    { width: `${progressPercent}%` },
+                  ]}
+                />
+                <View
+                  style={[styles.progressKnob, { left: `${progressPercent}%` }]}
+                />
+              </View>
+            </TouchableOpacity>
+
+            <Text style={styles.timeLabel}>{formatTime(duration)}</Text>
+          </View>
         </View>
-      </View>
+      )}
     </View>
   );
 }

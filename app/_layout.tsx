@@ -18,8 +18,6 @@ import Head from "expo-router/head";
 import { inject } from "@vercel/analytics";
 import { injectSpeedInsights } from "@vercel/speed-insights";
 
-SplashScreen.preventAutoHideAsync();
-
 export default function RootLayout() {
   const pathname = usePathname();
   const colorScheme = useColorScheme();
@@ -30,102 +28,73 @@ export default function RootLayout() {
     Montserrat: require("../assets/fonts/Montserrat-Medium.ttf"),
   });
 
-  // ⚡ FIXED: Force hide splash screen immediately on mount for web
-  useEffect(() => {
-    if (typeof window === "undefined") return;
 
-    // Try hiding immediately
-    window.__hideSplash?.();
-
-    // Safety fallback: if the DOM element rendered a split-second later, catch it
-    const timer = setTimeout(() => {
-      window.__hideSplash?.();
-      const splash = document.getElementById("splash-screen");
-      if (splash) {
-        splash.style.opacity = "0";
-        setTimeout(() => {
-          splash.style.display = "none";
-        }, 200);
+ 
+    useEffect(() => {
+      // ⚡ Optimization: Initialize Vercel Analytics only once on the client side
+      if (Platform.OS === "web") {
+        inject();
+        injectSpeedInsights();
       }
-    }, 100);
+    }, []);
 
-    return () => clearTimeout(timer);
-  }, []);
-  // ⚡ FIXED: Hide the splash screen on ANY pathname change or mount, including "/"
-  useEffect(() => {
-    console.log("[splash] pathname:", pathname);
-    if (typeof window === "undefined") return;
-    if (pathname) {
-      console.log("[splash] hiding");
-      window.__hideSplash?.();
-    }
-  }, [pathname]);
+    useEffect(() => {
+      if (loaded) {
+        SplashScreen.hideAsync();
+      }
+    }, [loaded]);
 
-  useEffect(() => {
-    // ⚡ Optimization: Initialize Vercel Analytics only once on the client side
-    if (Platform.OS === "web") {
-      inject();
-      injectSpeedInsights();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  return (
-    <SafeAreaProvider>
-      <Head>
-        <title>ebubbl 🫧</title>
-        <meta
-          name="description"
-          content="Join ebubbl.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based."
-        />
-        {/* ⚡ Optimization: Ensure fonts don't cause layout shifts */}
-        <style>{`
+    return (
+      <SafeAreaProvider>
+        <Head>
+          <title>ebubbl 🫧</title>
+          <meta
+            name="description"
+            content="Join ebubbl.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based."
+          />
+          {/* ⚡ Optimization: Ensure fonts don't cause layout shifts */}
+          <style>{`
           body {
             font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
             font-display: swap; 
           }
         `}</style>
-      </Head>
-      <ApolloProviderWrapper>
-        <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-          <View role="banner" style={{ flex: 0 }}>
-            <StatusBar style={isDark ? "light" : "dark"} />
-          </View>
+        </Head>
+        <ApolloProviderWrapper>
+          <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+            <View role="banner" style={{ flex: 0 }}>
+              <StatusBar style={isDark ? "light" : "dark"} />
+            </View>
 
-          {/* ⚡ Content renders immediately even if font is downloading */}
-          <View role="main" style={{ flex: 1 }}>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: {
-                  backgroundColor: isDark ? "#1C0A2E" : "#FFFFFF",
-                },
-              }}
-            >
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="login" options={{ title: "Login" }} />
-              <Stack.Screen name="register" options={{ title: "Register" }} />
-              <Stack.Screen
-                name="forgotpassword"
-                options={{ title: "Forgotpassword" }}
-              />
-              <Stack.Screen
-                name="reset-password"
-                options={{ title: "Reset-password" }}
-              />
-              <Stack.Screen
-                name="+not-found"
-                options={{ title: "Not Found" }}
-              />
-            </Stack>
-          </View>
-        </ThemeProvider>
-      </ApolloProviderWrapper>
-    </SafeAreaProvider>
-  );
-}
+            {/* ⚡ Content renders immediately even if font is downloading */}
+            <View role="main" style={{ flex: 1 }}>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: {
+                    backgroundColor: isDark ? "#1C0A2E" : "#FFFFFF",
+                  },
+                }}
+              >
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="login" options={{ title: "Login" }} />
+                <Stack.Screen name="register" options={{ title: "Register" }} />
+                <Stack.Screen
+                  name="forgotpassword"
+                  options={{ title: "Forgotpassword" }}
+                />
+                <Stack.Screen
+                  name="reset-password"
+                  options={{ title: "Reset-password" }}
+                />
+                <Stack.Screen
+                  name="+not-found"
+                  options={{ title: "Not Found" }}
+                />
+              </Stack>
+            </View>
+          </ThemeProvider>
+        </ApolloProviderWrapper>
+      </SafeAreaProvider>
+    );
+  }

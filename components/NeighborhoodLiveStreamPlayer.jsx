@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { warehouse } from "../components/StreamWearhouse.js";
-import webtorrentService from "../utils/webtorrentService";
+import webtorrentService from "../utils/webtorrentService.js";
 const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
 class StreamController {
@@ -28,7 +28,7 @@ class StreamController {
     this.chunkQueue = new Map();
     this.setupMagnet = null;
     this.detectedMimeType = 'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
-    //this.CHUNK_DURATION = 4;
+    this.CHUNK_DURATION = 8;
 
     this.MS = window.ManagedMediaSource || window.MediaSource;
     this.ms = new this.MS();
@@ -609,7 +609,7 @@ export default function NeighborhoodLiveStreamPlayer({
 
   return (
     <View style={styles.container}>
-      <div
+      <View
         ref={containerRef}
         style={{
           ...styles.videoContainer,

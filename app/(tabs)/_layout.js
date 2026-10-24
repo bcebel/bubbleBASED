@@ -14,14 +14,7 @@ export default function TabLayout() {
 
   
   
-  useEffect(() => {
- const onVisible = () => {
-   if (document.visibilityState !== "visible") return;
-   setWakeKey((k) => k + 1);
- };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, []);
+
 
   // Then wrap the tabs (or each screen's content) in <View key={wakeKey}>
 
