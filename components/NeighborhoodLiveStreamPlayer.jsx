@@ -10,6 +10,12 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
 class StreamController {
   constructor(sessionId, addLog, triggerFetch, container) {
+        if (container.__streamController) {
+      addLog("⚠️ Destroying previous active stream instance to prevent double rendering.");
+      container.__streamController.cleanupResources();
+    }
+    container.__streamController = this;
+
     this.prefetchQueue = [];
     this.prefetching = false;
     this.bufferQueue = [];
@@ -171,6 +177,9 @@ class StreamController {
       this.video.removeAttribute("src");
       this.video.remove();
     }
+        if (this.objectUrl) {
+          URL.revokeObjectURL(this.objectUrl); // 👈 Frees WebView memory
+        }
     if (this.ms && this.ms.readyState === "open") {
       try {
         this.ms.endOfStream();

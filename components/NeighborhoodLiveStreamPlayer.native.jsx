@@ -3,7 +3,7 @@
 // KEEP TORRENTS ALIVE AS LONG AS POSSIBLE WITHOUT OVERLOADING THE BROWSER. USE A WAREHOUSE TO CACHE VIDEO CHUNKS LOCALLY. //
 
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Text, Platform } from "react-native";
 import { warehouse } from "../components/StreamWearhouse.js";
 import webtorrentService from "../utils/webtorrentService.js";
 import { WebView } from "react-native-webview";
@@ -153,14 +153,15 @@ export default function NeighborhoodLiveStreamPlayer({
           }}
           style={{ flex: 1, backgroundColor: "black" }}
           allowsInlineMediaPlayback={true}
-          mediaPlaybackRequiresUserAction={false}
+          mediaPlaybackRequiresUserAction={true}
           onMessage={onWebViewMessage}
           originWhitelist={["*"]}
           javaScriptEnabled={true}
           domStorageEnabled={true}
           mixedContentMode="always"
+          onRenderProcessGone={() => webViewRef.current?.reload()}
           // 🚨 Force Android hardware acceleration for video
-          androidLayerType="hardware"
+          androidLayerType={Platform.OS === "android" ? "hardware" : undefined}
         />
       </View>
 
