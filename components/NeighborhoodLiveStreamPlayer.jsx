@@ -10,8 +10,10 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
 class StreamController {
   constructor(sessionId, addLog, triggerFetch, container) {
-        if (container.__streamController) {
-      addLog("⚠️ Destroying previous active stream instance to prevent double rendering.");
+    if (container.__streamController) {
+      addLog(
+        "⚠️ Destroying previous active stream instance to prevent double rendering.",
+      );
       container.__streamController.cleanupResources();
     }
     container.__streamController = this;
@@ -82,8 +84,8 @@ class StreamController {
     this.video.style.height = "100%";
     this.video.style.backgroundColor = "black";
     this.wrapper.style.transformOrigin = "center center";
-    wrapper.style.cssText =
-      "position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; background-color: black;";
+    this.wrapper.style.width = "100vh"; // Make it as tall as the screen
+    this.wrapper.style.height = "100vw"; // Make it as wide as the screen is tall
     this.wrapper.appendChild(this.video);
 
     if (window.ManagedMediaSource) {
@@ -177,9 +179,9 @@ class StreamController {
       this.video.removeAttribute("src");
       this.video.remove();
     }
-        if (this.objectUrl) {
-          URL.revokeObjectURL(this.objectUrl); // 👈 Frees WebView memory
-        }
+    if (this.objectUrl) {
+      URL.revokeObjectURL(this.objectUrl); // 👈 Frees WebView memory
+    }
     if (this.ms && this.ms.readyState === "open") {
       try {
         this.ms.endOfStream();
