@@ -145,17 +145,22 @@ export default function NeighborhoodLiveStreamPlayer({
   return (
     <View style={styles.container}>
       <View style={styles.videoContainer}>
-        {/* We use a WebView to handle the actual WebTorrent/MediaSource playback */}
         <WebView
+          key={`webview-${sessionId}`} // 👈 Forces a fresh instance per session
           ref={webViewRef}
           source={{
             uri: `https://ebubbl.com/livestream-player-only/${sessionId}`,
-          }} // 👈 You need a barebones web page for this
+          }}
           style={{ flex: 1, backgroundColor: "black" }}
           allowsInlineMediaPlayback={true}
           mediaPlaybackRequiresUserAction={false}
           onMessage={onWebViewMessage}
           originWhitelist={["*"]}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          mixedContentMode="always"
+          // 🚨 Force Android hardware acceleration for video
+          androidLayerType="hardware"
         />
       </View>
 

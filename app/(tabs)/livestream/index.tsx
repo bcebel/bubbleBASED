@@ -511,6 +511,9 @@ export default function StreamsScreen() {
         pagingEnabled
         showsVerticalScrollIndicator={false}
         decelerationRate="fast"
+        windowSize={3} // Only render 1 item above and below the current one
+        maxToRenderPerBatch={2}
+        removeClippedSubviews={true}
         renderItem={({ item }) => (
           <View style={{ height: SCREEN_HEIGHT, width: "100%" }}>
             <StreamItem stream={item} onDelete={() => refetch()} />
