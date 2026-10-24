@@ -118,18 +118,16 @@ export default function HomeScreen() {
             >
               <View style={styles.tagBadge}>
                 <Text style={styles.tagBadgeText}>
-                  From the Global Village
+                  Life is better with bubbles!
                 </Text>
               </View>
 
               <Text style={styles.heroTitle} role="heading" aria-level={2}>
-                welcome to ebubbl 🫧
+                welcome to ebubbl 
               </Text>
 
               <Text style={styles.heroSub}>
-                No algorithm deciding what you see. No strangers in your feed.
-                Just the bubbles you choose to be in, full of the people you
-                chose to meet.
+              Make and join groups of like-minded individuals.  Post, Chat & Livestream with your peers.  Bubbles and Users have their own privacy levels so post the the world or just to your besties.  It is up to you!  
               </Text>
 
               {/* ACTION BUTTONS (Login / Logout / Join) */}
@@ -219,8 +217,8 @@ export default function HomeScreen() {
                     <Text style={styles.mockCodeTextAccent}>
                       code: "switch"
                     </Text>
-                    <Text style={styles.mockCodeText}>network: "decentralized" </Text>
-                    <Text style={styles.mockCodeText}>algorithm: "none" </Text>
+                    <Text style={styles.mockCodeText}>network: "people" </Text>
+                    <Text style={styles.mockCodeText}>context: "based" </Text>
                     <Text style={styles.mockCodeText}> </Text>
                   </View>
                 </View>
@@ -232,12 +230,9 @@ export default function HomeScreen() {
           <View style={styles.quoteSection}>
             <BlurView intensity={40} tint="dark" style={styles.quoteGlassCard}>
               <Text style={styles.quoteText}>
-                We don't need a clique
-To make our clock tick -
-Our clique is the world
-The world is our clique
+                Good bubbles make great neighbors
               </Text>
-              <Text style={styles.quoteAuthor}>— Lady Kier</Text>
+              <Text style={styles.quoteAuthor}></Text>
             </BlurView>
           </View>
 
