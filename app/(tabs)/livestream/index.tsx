@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense, useRef } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import {
   View,
   Text,
@@ -82,13 +82,11 @@ function NavButton({ title }: { title: string }) {
 
 // --- INDIVIDUAL STREAM PLAYER ITEM ---
 function StreamItem({
-  isActive,
   stream,
   onDelete,
 }: {
   stream: any;
   onDelete?: (id: string) => void;
-  isActive: boolean; 
 }) {
   const [availableInWarehouse, setAvailableInWarehouse] = useState<number[]>(
     [],
@@ -135,7 +133,7 @@ function StreamItem({
   };
 
   useEffect(() => {
-    if (!sessionId || !isActive) return;
+    if (!sessionId) return;
     let isMounted = true;
 
     const fetchRotation = async () => {
@@ -155,7 +153,7 @@ function StreamItem({
   }, [sessionId]);
 
   useEffect(() => {
-   if (!sessionId || !isActive) return; 
+    if (!sessionId) return;
     let interval: NodeJS.Timeout;
 
     const findInitialData = async () => {
@@ -254,7 +252,6 @@ function StreamItem({
 
 // --- TAB SCREEN ROUTE ---
 export default function StreamsScreen() {
-    const [activeIndex, setActiveIndex] = useState(0);
   const router = useRouter();
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
 
@@ -262,14 +259,6 @@ export default function StreamsScreen() {
   const [authChecked, setAuthChecked] = useState(false);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
-    const onViewableItemsChanged = useRef(({ viewableItems }) => {
-      if (viewableItems.length > 0) {
-        setActiveIndex(viewableItems[0].index);
-      }
-    }).current;
-    const viewabilityConfig = useRef({
-      itemVisiblePercentThreshold: 50,
-    }).current;
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -517,8 +506,6 @@ export default function StreamsScreen() {
   return (
     <View style={styles.mainWrapper}>
       <FlatList
-        onViewableItemsChanged={onViewableItemsChanged} // 👈 Add
-        viewabilityConfig={viewabilityConfig} // 👈 Add
         data={streamsData?.streams || []}
         keyExtractor={(item) => item.id}
         pagingEnabled

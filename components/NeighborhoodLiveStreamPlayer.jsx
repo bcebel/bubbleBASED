@@ -338,45 +338,33 @@ class StreamController {
       this.nextIndex,
     );
 
-     if (this.headerLoaded && (hasInQueue || hasInWarehouse)) {
-       this.isProcessing = true;
-       const magnet = hasInWarehouse
-         ? "cached"
-         : this.chunkQueue.get(this.nextIndex);
+    if (this.headerLoaded && (hasInQueue || hasInWarehouse)) {
+      this.isProcessing = true;
+      const magnet = hasInWarehouse
+        ? "cached"
+        : this.chunkQueue.get(this.nextIndex);
+      try {
+        const buf = await this.download(magnet, this.nextIndex);
+        if (buf && !this.sb.updating) {
+          this.sb.appendBuffer(buf);
 
-       try {
-         const buf = await this.download(magnet, this.nextIndex);
+          this.nextIndex++;
 
-         if (buf && !this.sb.updating) {
-           try {
-             // Try to append the video chunk
-             this.sb.appendBuffer(buf);
-             this.nextIndex++; // Advance on success
-           } catch (appendError) {
-             // 🚨 If the decoder rejects it, log it and force advance!
-             console.error(
-               `❌ Android rejected chunk ${this.nextIndex}:`,
-               appendError,
-             );
-             this.nextIndex++; // Force advance so we don't get stuck
-           }
-
-           // Evict buffers older than 10 seconds behind current playback position
-           const t = this.video.currentTime;
-           if (t > 15 && this.sb && !this.sb.updating) {
-             try {
-               this.sb.remove(0, t - 10);
-             } catch (_) {}
-           }
-         } else {
-           this.isProcessing = false;
-         }
-       } catch (e) {
-         // 👈 This is the outer catch that was missing!
-         console.error("❌ Download failed:", e);
-         this.isProcessing = false;
-       }
-     }
+          // Evict buffers older than 10 seconds behind current playback position
+          const t = this.video.currentTime;
+          if (t > 15 && this.sb && !this.sb.updating) {
+            try {
+              // Remove everything from 0 up to (currentTime - 10)
+              this.sb.remove(0, t - 10);
+            } catch (_) {}
+          }
+        } else {
+          this.isProcessing = false;
+        }
+      } catch (e) {
+        this.isProcessing = false;
+      }
+    }
   }
 
   async download(magnet, index) {
