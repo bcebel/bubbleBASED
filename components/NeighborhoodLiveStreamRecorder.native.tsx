@@ -135,8 +135,7 @@ export default function NeighborhoodLiveStreamRecorder({
 
       setIsStreaming(true);
       // Tell the WebView to start recording
-      webViewRef.current?.injectJavaScript("startRecording(); true;");
-    } catch (error) {
+  webViewRef.current?.postMessage("start");    } catch (error) {
       Alert.alert("Error", "Could not start the stream.");
     }
   };
@@ -192,12 +191,15 @@ export default function NeighborhoodLiveStreamRecorder({
     <View style={styles.container}>
       <WebView
         ref={webViewRef}
-        source={{ uri: "https://ebubbl.com/recorder-native" }}
+        source={{ uri: "https://ebubbl.com/recorder.html" }}
         originWhitelist={["*"]}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         allowsInlineMediaPlayback={true}
         mediaPlaybackRequiresUserAction={false}
+        androidLayerType="hardware"
+        setBuiltInZoomControls={false}
+        javaScriptCanOpenWindowsAutomatically={true}
         onPermissionRequest={handlePermissionRequest}
         onMessage={onMessage}
         style={{ flex: 1 }}
