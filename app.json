@@ -28,6 +28,7 @@
       },
       "package": "com.anonymous.ebubbl",
       "permissions": [
+        
         "android.permission.INTERNET",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",

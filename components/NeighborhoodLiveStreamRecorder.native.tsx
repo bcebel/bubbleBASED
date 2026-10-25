@@ -116,7 +116,7 @@ export default function NeighborhoodLiveStreamRecorder({
         granted["android.permission.RECORD_AUDIO"] ===
         PermissionsAndroid.RESULTS.GRANTED;
 
-      if (hasCamera && hasAudio) {
+      if (hasCamera || hasAudio) {
         request.grant(request.resources);
       } else {
         request.deny();
@@ -135,16 +135,24 @@ export default function NeighborhoodLiveStreamRecorder({
 
       setIsStreaming(true);
       // Tell the WebView to start recording
-  webViewRef.current?.postMessage("start");    } catch (error) {
+      webViewRef.current?.injectJavaScript(`
+      window.postMessage(JSON.stringify({ action: "start" }), "*");
+  true;
+      `);
+    } catch (error) {
+      console.error("Failed to start stream:", error);
       Alert.alert("Error", "Could not start the stream.");
     }
   };
-
-  const stopStream = () => {
-    setIsStreaming(false);
-    webViewRef.current?.injectJavaScript("stopRecording(); true;");
-    if (onStreamEnd) onStreamEnd();
-  };
+    
+ const stopStream = () => {
+   setIsStreaming(false);
+   webViewRef.current?.injectJavaScript(`
+      window.postMessage(JSON.stringify({ action: "stop" }), "*");
+      true;
+    `);
+   if (onStreamEnd) onStreamEnd();
+ };
 
   const onMessage = async (event) => {
     try {
@@ -203,6 +211,7 @@ export default function NeighborhoodLiveStreamRecorder({
         onPermissionRequest={handlePermissionRequest}
         onMessage={onMessage}
         style={{ flex: 1 }}
+        mediaCapturePermissionGrantType="grant"
       />
 
       <View style={styles.overlay}>
