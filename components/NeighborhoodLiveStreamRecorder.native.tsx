@@ -74,9 +74,11 @@ async function readVideoAsBlob(uri) {
     encoding: FileSystem.EncodingType.Base64,
   });
 
+
+    const cleanBase64 = base64.replace(/[\r\n]+/g, "");
   // Return an object with base64Data, NOT a Blob
   return {
-    base64Data: base64,
+    base64Data: cleanBase64,
     type: "video/mp4",
   };
 }
@@ -280,6 +282,7 @@ const recordLoop = async () => {
       video = await cameraRef.current.recordAsync({
         maxDuration: 4,
         quality: "360p",
+        videoBitrate: 500000,
         codec: "avc1",
         mute: false,
       });
@@ -287,6 +290,17 @@ const recordLoop = async () => {
 
     if (!video || !video.uri) throw new Error("No video recorded");
 
+       const fileInfo = await FileSystem.getInfoAsync(video.uri);
+       if (!fileInfo.exists || fileInfo.size < 1000) {
+         // Less than 10KB is useless
+         console.warn(
+           "⚠️ Android sent an empty chunk. Skipping and retrying...",
+         );
+         setIsProcessing(false);
+         if (IS_ANDROID) isBusyRef.current = false;
+         if (isRecordingRef.current) setTimeout(recordLoop, 500); // Retry fast
+         return; // Abort this chunk entirely
+       }
     // 🚨 1. Define the index variables FIRST (before any logs or copy attempts)
     const currentIndex = chunkIndexRef.current;
     const dbChunkIndex = currentIndex === 0 ? -1 : currentIndex - 1;
