@@ -10,6 +10,10 @@
       "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/live-chunk/:path*"
     },
     {
+      "source": "/api/live-chunk-native",
+      "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/live-chunk-native"
+    },
+    {
       "source": "/api/webseed/:path*",
       "destination": "https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/webseed/:path*"
     },

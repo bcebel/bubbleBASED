@@ -24,6 +24,8 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 const IS_IOS = Platform.OS === "ios";
 const IS_ANDROID = Platform.OS === "android";
 
+console.log(IS_ANDROID, "this is an android");
+
 const CREATE_STREAM = gql`
   mutation CreateStream($title: String!, $neighborhoodId: ID!) {
     createStream(title: $title, neighborhoodId: $neighborhoodId) {
@@ -290,17 +292,7 @@ const recordLoop = async () => {
 
     if (!video || !video.uri) throw new Error("No video recorded");
 
-       const fileInfo = await FileSystem.getInfoAsync(video.uri);
-       if (!fileInfo.exists || fileInfo.size < 1000) {
-         // Less than 10KB is useless
-         console.warn(
-           "⚠️ Android sent an empty chunk. Skipping and retrying...",
-         );
-         setIsProcessing(false);
-         if (IS_ANDROID) isBusyRef.current = false;
-         if (isRecordingRef.current) setTimeout(recordLoop, 500); // Retry fast
-         return; // Abort this chunk entirely
-       }
+
     // 🚨 1. Define the index variables FIRST (before any logs or copy attempts)
     const currentIndex = chunkIndexRef.current;
     const dbChunkIndex = currentIndex === 0 ? -1 : currentIndex - 1;
