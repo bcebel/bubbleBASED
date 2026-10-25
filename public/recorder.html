@@ -44,7 +44,7 @@
 
                 localStream = await navigator.mediaDevices.getUserMedia({
                     video: { width: 640, height: 480, frameRate: 30 },
-                    audio: true
+                    audio: false
                 });
 
                 document.getElementById("preview").srcObject = localStream;

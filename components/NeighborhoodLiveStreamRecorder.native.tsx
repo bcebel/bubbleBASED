@@ -6,6 +6,21 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import { Platform, PermissionsAndroid } from "react-native";
 
+ const askPermissions = async () => {
+    try {
+      const granted = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+      ]);
+      return (
+        granted["android.permission.CAMERA"] === PermissionsAndroid.RESULTS.GRANTED &&
+        granted["android.permission.RECORD_AUDIO"] === PermissionsAndroid.RESULTS.GRANTED
+      );
+    } catch (err) {
+      return false;
+    }
+ };
+  
 const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
 const CREATE_STREAM = gql`
@@ -127,6 +142,13 @@ export default function NeighborhoodLiveStreamRecorder({
   };
 
   const startStream = async () => {
+
+     const hasPermissions = await askPermissions();
+    if (!hasPermissions) {
+      Alert.alert("Permission Denied", "We need camera and mic access to stream.");
+      return;
+    }
+    
     try {
       const { data } = await createStream({
         variables: { title: `${username}'s Live`, neighborhoodId },
