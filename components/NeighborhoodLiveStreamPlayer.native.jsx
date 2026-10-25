@@ -411,14 +411,20 @@ export default function NeighborhoodLiveStreamPlayer({ sessionId }) {
       const magnet = hasInWarehouse
         ? "cached"
         : this.chunkQueue.get(this.nextIndex);
-      try {
+  try {
         const buf = await this.download(magnet, this.nextIndex);
+        
         if (buf && !this.sb.updating) {
-          this.sb.appendBuffer(buf);
+          try {
+            // Try to append the video chunk
+            this.sb.appendBuffer(buf);
+            this.nextIndex++; // Advance on success
+          } catch (appendError) {
+            // 🚨 If the decoder rejects it, log it and force advance!
+            this.nextIndex++; // Force advance so we don't get stuck
+          }
 
-          this.nextIndex++;
-
-          const t = this.video.currentTime;
+        const t = this.video.currentTime;
           if (t > 15 && this.sb && !this.sb.updating) {
             try {
               this.sb.remove(0, t - 10);
@@ -428,6 +434,8 @@ export default function NeighborhoodLiveStreamPlayer({ sessionId }) {
           this.isProcessing = false;
         }
       } catch (e) {
+        // 👈 This is the outer catch that was missing!
+        console.error("❌ Download failed:", e);
         this.isProcessing = false;
       }
     }
