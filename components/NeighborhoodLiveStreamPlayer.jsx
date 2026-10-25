@@ -521,6 +521,17 @@ export default function NeighborhoodLiveStreamPlayer({
       }
     };
     autoInitialize();
+
+    return () => {
+      if (sessionId) {
+        console.log("👋 Unmounting player. Telling backend to stop seeding.");
+        fetch(`${process.env.EXPO_PUBLIC_HEROKU_URL}/api/stream-leave`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+        }).catch(() => {});
+      }
+    };
   }, [sessionId]);
 
   useEffect(() => {

@@ -12,7 +12,7 @@ import { gql, useQuery } from "@apollo/client";
 const NeighborhoodLiveStreamRecorder = lazy(() => {
   if (Platform.OS === "web") {
     // On the web, we just render the web version
-    return import("../../../components/NeighborhoodLiveStreamRecorder");
+    return import("../../../components/NeighborhoodLiveStreamRecorder.web")
   }
   // On native, we force the .native.tsx file (which uses expo-blob)
   return import("../../../components/NeighborhoodLiveStreamRecorder.native");

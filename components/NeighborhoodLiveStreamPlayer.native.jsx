@@ -1,6 +1,7 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { View } from "react-native";
 import { WebView } from "react-native-webview";
+
 
 const BACKEND_URL = "https://minnowspacebackend-e6635e46c3d0.herokuapp.com";
 
@@ -24,10 +25,24 @@ const blankCanvas = `
 
 export default function NeighborhoodLiveStreamPlayer({ sessionId }) {
   const webViewRef = useRef(null);
+   useEffect(() => {
+     return () => {
+       if (sessionId) {
+         console.log(`👋 Leaving native stream ${sessionId}`);
+         // Fire and forget: don't await this
+         fetch(`${BACKEND_URL}/api/stream-leave`, {
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({ sessionId }),
+         }).catch(() => {});
+       }
+     };
+   }, [sessionId]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "black" }}>
       <WebView
+        key={`webview-${sessionId}`}
         ref={webViewRef}
         source={{ html: blankCanvas }}
         originWhitelist={["*"]}
@@ -38,9 +53,9 @@ export default function NeighborhoodLiveStreamPlayer({ sessionId }) {
         androidLayerType="hardware"
         // 🚨 Notice the () => { ... } wrapping the code!
         onLoadEnd={() => {
-           setTimeout(() => {
-             // Inside the arrow function, we declare the string
-             const injectedCode = `
+          setTimeout(() => {
+            // Inside the arrow function, we declare the string
+            const injectedCode = `
             const BACKEND_URL = "${BACKEND_URL}";
 
             const warehouse = {
@@ -507,8 +522,8 @@ export default function NeighborhoodLiveStreamPlayer({ sessionId }) {
             true;
           `;
 
-             webViewRef.current?.injectJavaScript(injectedCode);
-           }, 500);
+            webViewRef.current?.injectJavaScript(injectedCode);
+          }, 500);
         }}
       />
     </View>
