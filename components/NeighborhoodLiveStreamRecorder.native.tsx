@@ -148,7 +148,7 @@ export default function NeighborhoodLiveStreamRecorder({
       Alert.alert("Permission Denied", "We need camera and mic access to stream.");
       return;
     }
-    
+
     try {
       const { data } = await createStream({
         variables: { title: `${username}'s Live`, neighborhoodId },
@@ -199,6 +199,7 @@ export default function NeighborhoodLiveStreamRecorder({
             chunkIndex: data.index,
             base64: data.base64,
             rotation: 0,
+            mimeType: data.mimeType,
           }),
         });
 
