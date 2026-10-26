@@ -264,34 +264,26 @@ class StreamController {
         this.thumbnailUrl = c.thumbnailUrl;
         this.thumbnailLoaded = true;
       }
-       if (c.chunkIndex === -1 && !this.headerLoaded) {
-         this.setupMagnet = c.magnetLink;
+      if (c.chunkIndex === -1 && !this.headerLoaded) {
+        this.setupMagnet = c.magnetLink;
 
-         // 🚨 Dynamic Codec Check for WebM
-         if (
-           c.fileName &&
-           c.fileName.startsWith("AN-") &&
-           c.fileName.endsWith(".webm")
-         ) {
-           const webmCodecs = [
-             'video/webm; codecs="vp8,opus"',
-             'video/webm; codecs="vp9,opus"',
-             'video/webm; codecs="vp8"',
-             "video/webm",
-           ];
+        if (c.fileName && c.fileName.startsWith("AN-")) {
+          const mp4Codecs = [
+            'video/mp4; codecs="avc1.42E01E"',
+            'video/mp4; codecs="avc1.4d4015"',
+            "video/mp4",
+          ];
+          this.detectedMimeType =
+            mp4Codecs.find((type) => this.MS.isTypeSupported(type)) ||
+            "video/mp4";
+        } else {
+          this.detectedMimeType =
+            c.mimeType?.replace(/['"]+/g, '"') ||
+            'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
+        }
 
-           // Find the first one the browser actually supports
-           this.detectedMimeType =
-             webmCodecs.find((type) => this.MS.isTypeSupported(type)) ||
-             "video/webm";
-         } else {
-           this.detectedMimeType =
-             c.mimeType?.replace(/['"]+/g, '"') ||
-             'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
-         }
-
-         if (this.ms.readyState === "open") this.createSourceBuffer();
-       }
+        if (this.ms.readyState === "open") this.createSourceBuffer();
+      }
 if (c.chunkIndex >= 0) {
   this.chunkQueue.set(c.chunkIndex, c.magnetLink);
   if (c.fileName && c.fileName.startsWith("AN-")) {
