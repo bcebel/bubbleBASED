@@ -302,6 +302,12 @@ if (c.chunkIndex >= 0) {
   }
 
   async tick() {
+       if (!this.hasWaited) {
+         this.hasWaited = true;
+         this.addLog("⏳ Waiting 2s for MediaSource...");
+         await new Promise((resolve) => setTimeout(resolve, 2000));
+       }
+
     if (this.isProcessing) return;
     if (this.ms.readyState !== "open") await this.once(this.ms, "sourceopen");
     if (this.sb?.updating) return;

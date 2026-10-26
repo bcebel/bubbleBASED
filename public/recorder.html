@@ -78,7 +78,21 @@
                     }
                 };
 
-                mediaRecorder.start(4000); // 4 second chunks
+            mediaRecorder.start();
+
+                // Wait 1.5 seconds before forcing the first chunk capture so the header is fully populated
+                setTimeout(() => {
+                    if (mediaRecorder.state === "recording") {
+                        mediaRecorder.requestData();
+                    }
+                }, 1500);
+
+                // Then transition into regular 4-second intervals
+                setTimeout(() => {
+                    if (mediaRecorder.state === "recording") {
+                        mediaRecorder.start(4000);
+                    }
+                }, 2000);// 4 second chunks
             } catch (err) {
                 document.getElementById("status").innerText = "Error: " + err.message;
                 if (window.ReactNativeWebView) {
