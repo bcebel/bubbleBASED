@@ -1,53 +1,25 @@
-import React, { useState, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { WebView } from "react-native-webview";
+import React, { useState, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  Platform,
+} from "react-native";
+import {
+  CameraView,
+  useCameraPermissions,
+  useMicrophonePermissions,
+} from "expo-camera";
+import * as FileSystem from "expo-file-system/legacy";
 import { useMutation, gql } from "@apollo/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as FileSystem from "expo-file-system/legacy";
-import { Platform, PermissionsAndroid } from "react-native";
-
-const askPermissions = async () => {
-  try {
-    const granted = await PermissionsAndroid.requestMultiple([
-      PermissionsAndroid.PERMISSIONS.CAMERA,
-      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-    ]);
-    return (
-      granted["android.permission.CAMERA"] ===
-        PermissionsAndroid.RESULTS.GRANTED &&
-      granted["android.permission.RECORD_AUDIO"] ===
-        PermissionsAndroid.RESULTS.GRANTED
-    );
-  } catch (err) {
-    return false;
-  }
-};
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
-
-// 1. Add the GraphQL mutation back at the top
-const SEND_CHUNK = gql`
-  mutation SendNeighborhoodMessage(
-    $content: String!
-    $neighborhoodId: ID!
-    $magnetLink: String
-    $fileType: String
-    $sessionId: String
-    $chunkIndex: Int
-  ) {
-    sendMessage(
-      content: $content
-      neighborhoodId: $neighborhoodId
-      room: "neighborhood"
-      magnetLink: $magnetLink
-      fileType: $fileType
-      sessionId: $sessionId
-      chunkIndex: $chunkIndex
-    ) {
-      id
-    }
-  }
-`;
+const IS_IOS = Platform.OS === "ios";
+const IS_ANDROID = Platform.OS === "android";
 
 const CREATE_STREAM = gql`
   mutation CreateStream($title: String!, $neighborhoodId: ID!) {
@@ -58,75 +30,29 @@ const CREATE_STREAM = gql`
   }
 `;
 
-// The HTML page that will run inside the WebView
-const recorderHTML = `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-      <style>
-        body { margin: 0; padding: 0; background: black; overflow: hidden; }
-        video { width: 100vw; height: 100vh; object-fit: cover; }
-      </style>
-    </head>
-    <body>
-      <video id="preview" autoplay playsinline muted></video>
-      <script>
-        let mediaRecorder;
-        let chunkIndex = 0;
-        
-        async function startRecording() {
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-              video: { width: 640, height: 480, frameRate: 30 },
-              audio: true
-            });
-            
-            document.getElementById("preview").srcObject = stream;
-            
-            // Use WebM if supported, otherwise fallback to MP4
-            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') 
-              ? 'video/webm;codecs=vp8,opus' 
-              : 'video/mp4';
-
-            mediaRecorder = new MediaRecorder(stream, { mimeType });
-
-            mediaRecorder.ondataavailable = async (e) => {
-              if (e.data.size > 0) {
-                const reader = new FileReader();
-                reader.readAsDataURL(e.data);
-                reader.onloadend = () => {
-                  const base64data = reader.result.split(',')[1];
-                  const index = chunkIndex === 0 ? -1 : chunkIndex - 1;
-                  
-                  window.ReactNativeWebView.postMessage(JSON.stringify({
-                    type: "CHUNK",
-                    index: index,
-                    base64: base64data,
-                    mimeType: mimeType
-                  }));
-                  
-                  chunkIndex++;
-                };
-              }
-            };
-
-            mediaRecorder.start(4000); // 4 second chunks
-            window.ReactNativeWebView.postMessage(JSON.stringify({ type: "STARTED" }));
-          } catch (err) {
-            window.ReactNativeWebView.postMessage(JSON.stringify({ type: "ERROR", message: err.message }));
-          }
-        }
-
-        function stopRecording() {
-          if (mediaRecorder && mediaRecorder.state !== "inactive") {
-            mediaRecorder.stop();
-            mediaRecorder.stream.getTracks().forEach(t => t.stop());
-          }
-        }
-      </script>
-    </body>
-  </html>
+const SEND_CHUNK = gql`
+  mutation SendNeighborhoodMessage(
+    $content: String!
+    $neighborhoodId: ID!
+    $magnetLink: String
+    $fileType: String
+    $sessionId: String
+    $chunkIndex: Int
+    $fileName: String
+  ) {
+    sendMessage(
+      content: $content
+      neighborhoodId: $neighborhoodId
+      room: "neighborhood"
+      magnetLink: $magnetLink
+      fileType: $fileType
+      sessionId: $sessionId
+      chunkIndex: $chunkIndex
+      fileName: $fileName
+    ) {
+      id
+    }
+  }
 `;
 
 export default function NeighborhoodLiveStreamRecorder({
@@ -134,174 +60,178 @@ export default function NeighborhoodLiveStreamRecorder({
   username,
   onStreamEnd,
 }) {
-  const [sendChunk] = useMutation(SEND_CHUNK);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [micPermission, requestMicPermission] = useMicrophonePermissions();
+
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [chunkCount, setChunkCount] = useState(0);
-  const webViewRef = useRef(null);
+
+  const cameraRef = useRef(null);
+  const isRecordingRef = useRef(false);
   const sessionIdRef = useRef("");
+  const chunkIndexRef = useRef(0);
+  const isBusyRef = useRef(false);
 
   const [createStream] = useMutation(CREATE_STREAM);
+  const [sendChunk] = useMutation(SEND_CHUNK);
 
-  // Handle WebView permissions (Camera/Mic)
-  const handlePermissionRequest = async (event) => {
-    const { request } = event.nativeEvent;
-    try {
-      const granted = await PermissionsAndroid.requestMultiple([
-        PermissionsAndroid.PERMISSIONS.CAMERA,
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-      ]);
+  if (!cameraPermission?.granted || !micPermission?.granted) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.text}>We need camera and microphone access.</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={requestCameraPermission}
+        >
+          <Text style={styles.buttonText}>Grant Camera</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={requestMicPermission}>
+          <Text style={styles.buttonText}>Grant Microphone</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
-      const hasCamera =
-        granted["android.permission.CAMERA"] ===
-        PermissionsAndroid.RESULTS.GRANTED;
-      const hasAudio =
-        granted["android.permission.RECORD_AUDIO"] ===
-        PermissionsAndroid.RESULTS.GRANTED;
-
-      if (hasCamera || hasAudio) {
-        request.grant(request.resources);
-      } else {
-        request.deny();
-      }
-    } catch (err) {
-      request.deny();
-    }
-  };
-
-  
   const startStream = async () => {
-    const hasPermissions = await askPermissions();
-    if (!hasPermissions) {
-      Alert.alert(
-        "Permission Denied",
-        "We need camera and mic access to stream.",
-      );
-      return;
-    }
-
     try {
+      setIsProcessing(true);
       const { data } = await createStream({
         variables: { title: `${username}'s Live`, neighborhoodId },
       });
       sessionIdRef.current = data.createStream.sessionId;
-
+      chunkIndexRef.current = 0;
       setIsStreaming(true);
-      // Tell the WebView to start recording
-      webViewRef.current?.injectJavaScript(`
-      window.postMessage(JSON.stringify({ action: "start" }), "*");
-  true;
-      `);
+      isRecordingRef.current = true;
+      setIsProcessing(false);
+      recordLoop();
     } catch (error) {
-      console.error("Failed to start stream:", error);
       Alert.alert("Error", "Could not start the stream.");
     }
   };
 
-  const stopStream = () => {
-    setIsStreaming(false);
-    webViewRef.current?.injectJavaScript(`
-      window.postMessage(JSON.stringify({ action: "stop" }), "*");
-      true;
-    `);
-    if (onStreamEnd) onStreamEnd();
-  };
+  const recordLoop = async () => {
+    if (!isRecordingRef.current || !cameraRef.current) return;
+    if (IS_ANDROID && isBusyRef.current) return;
+    if (IS_ANDROID) isBusyRef.current = true;
 
-  const onMessage = async (event) => {
     try {
-      const data = JSON.parse(event.nativeEvent.data);
+      setIsProcessing(true);
 
-      if (data.type === "STARTED") {
-        console.log("🎥 WebView Camera Started");
-      } else if (data.type === "ERROR") {
-        Alert.alert("Camera Error", data.message);
-      } else if (data.type === "CHUNK") {
-        // Upload the chunk to the backend
-        const token = await AsyncStorage.getItem("token");
+      let video;
+      if (IS_IOS) {
+        video = await cameraRef.current.recordAsync({ maxDuration: 4 });
+      } else {
+        video = await cameraRef.current.recordAsync({
+          maxDuration: 4,
+          quality: "360p",
+          codec: "avc1",
+          mute: false,
+        });
+      }
 
-        const res = await fetch(`${BACKEND_URL}/api/live-chunk-native`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
+      if (!video || !video.uri) throw new Error("No video recorded");
+
+      const currentIndex = chunkIndexRef.current;
+      const dbChunkIndex = currentIndex === 0 ? -1 : currentIndex - 1;
+
+      // Read base64
+      const base64 = await FileSystem.readAsStringAsync(video.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const cleanBase64 = base64.replace(/[\r\n]+/g, "");
+
+      // Upload to native route
+      const token = await AsyncStorage.getItem("token");
+      const res = await fetch(`${BACKEND_URL}/api/live-chunk-native`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          sessionId: sessionIdRef.current,
+          chunkIndex: dbChunkIndex,
+          rotation: 0,
+          base64: cleanBase64,
+          mimeType: 'video/mp4; codecs="mp4a.40.2,avc1.4d4015"',
+        }),
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+
+        await sendChunk({
+          variables: {
+            content: currentIndex === 0 ? "STREAM_HEADER" : "",
+            neighborhoodId,
+            magnetLink: result.magnetUri,
+            fileType: currentIndex === 0 ? "video_header" : "video_chunk",
             sessionId: sessionIdRef.current,
-            chunkIndex: data.index,
-            base64: data.base64,
-            rotation: 0,
-            mimeType: data.mimeType,
-          }),
+            chunkIndex: dbChunkIndex,
+            fileName: `AN-chunk-${dbChunkIndex}.mp4`,
+          },
         });
 
-        if (res.ok) {
-          const result = await res.json();
-
-          console.log(`✅ Uploaded chunk ${data.index}`);
-
-          // Tell the database
-          // (Assuming you have a SEND_CHUNK mutation here to save the message)
-
-          // 🚨 NOW tell GraphQL so the subscription fires!
-          await sendChunk({
-            variables: {
-              content: data.index === -1 ? "STREAM_HEADER" : "",
-              neighborhoodId,
-              magnetLink: result.magnetUri,
-              fileType: data.index === -1 ? "video_header" : "video_chunk",
-              sessionId: sessionIdRef.current,
-              chunkIndex: data.index,
-            },
-          });
-
-          setChunkCount((prev) => prev + 1);
-        }
+        setChunkCount((prev) => prev + 1);
+        chunkIndexRef.current += 1;
       }
-    } catch (e) {
-      console.error("WebView Message Error:", e);
+
+      await FileSystem.deleteAsync(video.uri, { idempotent: true });
+      setIsProcessing(false);
+      if (IS_ANDROID) isBusyRef.current = false;
+
+      if (isRecordingRef.current) {
+        if (IS_IOS) recordLoop();
+        else setTimeout(recordLoop, 150);
+      }
+    } catch (error) {
+      setIsProcessing(false);
+      if (IS_ANDROID) isBusyRef.current = false;
+      if (isRecordingRef.current) setTimeout(recordLoop, 1000);
     }
   };
 
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        webViewRef.current?.injectJavaScript(`
-        window.postMessage(JSON.stringify({ action: "start" }), "*");
-        true;
-      `);
-      }, 1000); // Wait 1 second for the WebView to load
+  const stopStream = async () => {
+    isRecordingRef.current = false;
+    setIsStreaming(false);
+    if (cameraRef.current) cameraRef.current.stopRecording();
+    if (onStreamEnd) onStreamEnd();
+  };
 
-      return () => clearTimeout(timer);
-    }, []);
   return (
     <View style={styles.container}>
-      <WebView
-        ref={webViewRef}
-        source={{ uri: "https://ebubbl.com/recorder.html" }}
-        originWhitelist={["*"]}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        allowsInlineMediaPlayback={true}
-        mediaPlaybackRequiresUserAction={false}
-        androidLayerType="hardware"
-        setBuiltInZoomControls={false}
-        javaScriptCanOpenWindowsAutomatically={true}
-        onPermissionRequest={handlePermissionRequest}
-        onMessage={onMessage}
-        style={{ flex: 1 }}
-        mediaCapturePermissionGrantType="grant"
+      <CameraView
+        ref={cameraRef}
+        style={styles.camera}
+        mode="video"
+        facing="back"
       />
-
       <View style={styles.overlay}>
         {!isStreaming ? (
-          <TouchableOpacity style={styles.button} onPress={startStream}>
-            <Text style={styles.buttonText}>🔴 START NATIVE STREAM</Text>
+          <TouchableOpacity
+            style={[styles.button, styles.startBtn]}
+            onPress={startStream}
+            disabled={isProcessing}
+          >
+            {isProcessing ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>🔴 START LIVE STREAM</Text>
+            )}
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: "#444" }]}
+            style={[styles.button, styles.stopBtn]}
             onPress={stopStream}
           >
             <Text style={styles.buttonText}>⏹️ STOP</Text>
           </TouchableOpacity>
+        )}
+        {isStreaming && (
+          <Text style={styles.statusText}>
+            📡 Streaming: {chunkCount} chunks
+          </Text>
         )}
       </View>
     </View>
@@ -310,12 +240,23 @@ export default function NeighborhoodLiveStreamRecorder({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000" },
-  overlay: { position: "absolute", bottom: 40, left: 20, right: 20 },
-  button: {
-    backgroundColor: "#ff375f",
-    padding: 15,
-    borderRadius: 10,
+  camera: { flex: 1 },
+  text: { color: "#fff", textAlign: "center", marginBottom: 20 },
+  overlay: {
+    position: "absolute",
+    bottom: 40,
+    left: 20,
+    right: 20,
     alignItems: "center",
   },
+  button: {
+    padding: 15,
+    borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
+  },
+  startBtn: { backgroundColor: "#ff375f" },
+  stopBtn: { backgroundColor: "#444" },
   buttonText: { color: "white", fontWeight: "bold", fontSize: 16 },
+  statusText: { color: "#00ffff", marginTop: 15, fontWeight: "bold" },
 });
