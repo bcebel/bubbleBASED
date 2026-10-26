@@ -37,75 +37,68 @@
     let chunkIndex = 0;
     let localStream;
 
-    async function startRecording() {
-        try {
-            document.getElementById("status").innerText = "Requesting camera...";
+        async function startRecording() {
+            try {
+                document.getElementById("status").innerText = "Requesting camera...";
 
-            localStream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 640, height: 480, frameRate: 30 },
-                audio: false
-            });
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480, frameRate: 30 },
+                    audio: false
+                });
 
-            document.getElementById("preview").srcObject = localStream;
-            document.getElementById("status").innerText = "Camera Active. Recording...";
+                const preview = document.getElementById("preview");
+                preview.srcObject = localStream;
 
-    const mimeType = MediaRecorder.isTypeSupported('video/mp4; codecs="avc1.42E01E"')
-                ? 'video/mp4; codecs="avc1.42E01E"'
-                : 'video/mp4';
+                document.getElementById("status").innerText = "Warming up camera...";
 
-            mediaRecorder = new MediaRecorder(localStream, { mimeType });
+                // 🚨 WAIT FOR THE PREVIEW TO ACTUALLY PLAY FRAMES
+                await new Promise((resolve) => {
+                    if (preview.readyState >= 3) {
+                        resolve();
+                    } else {
+                        preview.onplaying = () => resolve();
+                    }
+                });
 
-            // Inside your WebView HTML script:
-            mediaRecorder.ondataavailable = async (e) => {
-                if (e.data.size > 0) {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(e.data);
-                    reader.onloadend = () => {
-                        const base64data = reader.result.split(',')[1];
-                          const index = chunkIndex === 0 ? -1 : chunkIndex - 1;
+                document.getElementById("status").innerText = "Camera Active. Recording...";
 
-                        window.ReactNativeWebView.postMessage(JSON.stringify({
-                            type: "CHUNK",
-                            index: index, // Use the actual sequential number
-                            base64: base64data,
-                            mimeType: mimeType
-                        }));
+                // Use WebM because Android likes it, or MP4 if it insists
+                const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+                    ? 'video/webm;codecs=vp8,opus'
+                    : 'video/mp4';
 
-                        chunkIndex++;
-                    };
+                mediaRecorder = new MediaRecorder(localStream, { mimeType });
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(e.data);
+                        reader.onloadend = () => {
+                            const base64data = reader.result.split(',')[1];
+                            const index = chunkIndex === 0 ? -1 : chunkIndex - 1;
+
+                            window.ReactNativeWebView.postMessage(JSON.stringify({
+                                type: "CHUNK",
+                                index: index,
+                                base64: base64data,
+                                mimeType: mimeType
+                            }));
+
+                            chunkIndex++;
+                        };
+                    }
+                };
+
+                // Now that frames are flowing, start recording
+                mediaRecorder.start(4000);
+
+            } catch (err) {
+                document.getElementById("status").innerText = "Error: " + err.message;
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({ type: "ERROR", message: err.message }));
                 }
-            };
-
-       // 1. Start recording normally without an automatic timeslice interval
-            mediaRecorder.start();
-
-            // 2. Force the recorder to hold onto the first segment 
-            // for a solid 2 to 3 seconds so it packs real frames and a complete moov atom into it
-            setTimeout(() => {
-                if (mediaRecorder && mediaRecorder.state === "recording") {
-                    mediaRecorder.requestData(); // This flushes out a thick, multi-second chunk -1
-                }
-            }, 3000); // 3 seconds of buffer time
-
-            // 3. After the fat header is safely captured, start your regular 4-second interval
-            setTimeout(() => {
-                if (mediaRecorder && mediaRecorder.state === "recording") {
-                    setInterval(() => {
-                        if (mediaRecorder && mediaRecorder.state === "recording") {
-                            mediaRecorder.requestData(); // This triggers your standard 4-second chunks (0, 1, 2...)
-                        }
-                    }, 4000);
-                }
-            }, 3500);
-
-        } catch (err) {
-            document.getElementById("status").innerText = "Error: " + err.message;
-            if (window.ReactNativeWebView) {
-                window.ReactNativeWebView.postMessage(JSON.stringify({ type: "ERROR", message: err.message }));
             }
         }
-    }
-
     function stopRecording() {
         if (mediaRecorder && mediaRecorder.state !== "inactive") {
             mediaRecorder.stop();

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { WebView } from "react-native-webview";
 import { useMutation, gql } from "@apollo/client";
@@ -168,6 +168,7 @@ export default function NeighborhoodLiveStreamRecorder({
     }
   };
 
+  
   const startStream = async () => {
     const hasPermissions = await askPermissions();
     if (!hasPermissions) {
@@ -260,6 +261,16 @@ export default function NeighborhoodLiveStreamRecorder({
     }
   };
 
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        webViewRef.current?.injectJavaScript(`
+        window.postMessage(JSON.stringify({ action: "start" }), "*");
+        true;
+      `);
+      }, 1000); // Wait 1 second for the WebView to load
+
+      return () => clearTimeout(timer);
+    }, []);
   return (
     <View style={styles.container}>
       <WebView
