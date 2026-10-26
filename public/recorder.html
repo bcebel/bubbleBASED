@@ -52,7 +52,7 @@
     const mimeType = MediaRecorder.isTypeSupported('video/mp4; codecs="avc1.42E01E"')
                 ? 'video/mp4; codecs="avc1.42E01E"'
                 : 'video/mp4';
-                
+
             mediaRecorder = new MediaRecorder(localStream, { mimeType });
 
             // Inside your WebView HTML script:
@@ -76,9 +76,30 @@
                 }
             };
 
-            // Just start it cleanly with 4-second blocks
-            mediaRecorder.start(4000);
+            setTimeout(() => {
+                console.log("waiting");
+            }, 500);
+       // 1. Start recording normally without an automatic timeslice interval
+            mediaRecorder.start();
 
+            // 2. Force the recorder to hold onto the first segment 
+            // for a solid 2 to 3 seconds so it packs real frames and a complete moov atom into it
+            setTimeout(() => {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    mediaRecorder.requestData(); // This flushes out a thick, multi-second chunk -1
+                }
+            }, 3000); // 3 seconds of buffer time
+
+            // 3. After the fat header is safely captured, start your regular 4-second interval
+            setTimeout(() => {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    setInterval(() => {
+                        if (mediaRecorder && mediaRecorder.state === "recording") {
+                            mediaRecorder.requestData(); // This triggers your standard 4-second chunks (0, 1, 2...)
+                        }
+                    }, 4000);
+                }
+            }, 3500);
 
         } catch (err) {
             document.getElementById("status").innerText = "Error: " + err.message;
