@@ -49,9 +49,10 @@
             document.getElementById("preview").srcObject = localStream;
             document.getElementById("status").innerText = "Camera Active. Recording...";
 
-            // Exact match string without spaces to satisfy Android WebViews
-            const mimeType = 'video/mp4; codecs="mp4a.40.2,avc1.4d4015"';
-
+    const mimeType = MediaRecorder.isTypeSupported('video/mp4; codecs="avc1.42E01E"')
+                ? 'video/mp4; codecs="avc1.42E01E"'
+                : 'video/mp4';
+                
             mediaRecorder = new MediaRecorder(localStream, { mimeType });
 
             // Inside your WebView HTML script:
