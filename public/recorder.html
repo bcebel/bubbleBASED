@@ -37,9 +37,9 @@
     let chunkIndex = 0;
     let localStream;
 
-  async function startRecording() {
-        try {
-            document.getElementById("status").innerText = "Requesting camera...";
+        async function startRecording() {
+            try {
+                document.getElementById("status").innerText = "Requesting camera...";
 
             localStream = await navigator.mediaDevices.getUserMedia({
                 video: { width: 640, height: 480, frameRate: 30 },
@@ -49,34 +49,62 @@
             document.getElementById("preview").srcObject = localStream;
             document.getElementById("status").innerText = "Camera Active. Recording...";
 
-            const mimeType = MediaRecorder.isTypeSupported('video/mp4; codecs="avc1.42E01E"')
-                ? 'video/mp4; codecs="avc1.42E01E"'
-                : 'video/mp4';            mediaRecorder = new MediaRecorder(localStream, { mimeType });
+                const mimeType = MediaRecorder.isTypeSupported('video/mp4; codecs="avc1.42E01E"')
+                    ? 'video/mp4; codecs="avc1.42E01E"'
+                    : 'video/mp4'; mediaRecorder = new MediaRecorder(localStream, { mimeType });
 
-            let isFirstChunk = true;
+                let isFirstChunk = true;
 
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(e.data);
-                    reader.onloadend = () => {
-                        const base64data = reader.result.split(',')[1];
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(e.data);
+                        reader.onloadend = () => {
+                            const base64data = reader.result.split(',')[1];
 
-                        // 🎯 FORCE THE FIRST BLOB TO BE -1 (The Header), THEN 0, 1, 2...
-                        const index = isFirstChunk ? -1 : chunkIndex++;
-                        if (isFirstChunk) {
-                            isFirstChunk = false;
-                        }
+                            // 🎯 FORCE THE FIRST BLOB TO BE -1 (The Header), THEN 0, 1, 2...
+                            const index = isFirstChunk ? -1 : chunkIndex++;
+                            if (isFirstChunk) {
+                                isFirstChunk = false;
+                            }
 
-                        if (window.ReactNativeWebView) {
-                            window.ReactNativeWebView.postMessage(JSON.stringify({
-                                type: "CHUNK",
-                                index: index,
-                                base64: base64data,
-                                mimeType: mimeType
-                            }));
-                        }
-                    };
+                            if (window.ReactNativeWebView) {
+                                window.ReactNativeWebView.postMessage(JSON.stringify({
+                                    type: "CHUNK",
+                                    index: index,
+                                    base64: base64data,
+                                    mimeType: mimeType
+                                }));
+                            }
+                        };
+                    }
+                };
+
+                // 1. Start recording continuously
+                mediaRecorder.start();
+
+                // 2. Wait 1.5 seconds so Android has time to build a real >1200 byte moov atom
+                setTimeout(() => {
+                    if (mediaRecorder && mediaRecorder.state === "recording") {
+                        mediaRecorder.requestData(); // This forces out chunk -1 (header)
+                    }
+                }, 1500);
+
+                // 3. Start regular 4-second chunk slices after the header is safe
+                setTimeout(() => {
+                    if (mediaRecorder && mediaRecorder.state === "recording") {
+                        setInterval(() => {
+                            if (mediaRecorder && mediaRecorder.state === "recording") {
+                                mediaRecorder.requestData(); // This triggers chunk 0, 1, 2...
+                            }
+                        }, 4000);
+                    }
+                }, 2000);
+
+            } catch (err) {
+                document.getElementById("status").innerText = "Error: " + err.message;
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({ type: "ERROR", message: err.message }));
                 }
             };
 
@@ -107,10 +135,14 @@
                 window.ReactNativeWebView.postMessage(JSON.stringify({ type: "ERROR", message: err.message }));
             }
         }
-    }
-    function stopRecording() {
-        if (mediaRecorder && mediaRecorder.state !== "inactive") {
-            mediaRecorder.stop();
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+            }
+            document.getElementById("status").innerText = "Stopped.";
         }
         if (localStream) {
             localStream.getTracks().forEach(t => t.stop());
@@ -118,13 +150,13 @@
         document.getElementById("status").innerText = "Stopped.";
     }
 
-    document.addEventListener("message", (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            if (data.action === "start") startRecording();
-            if (data.action === "stop") stopRecording();
-        } catch (e) { }
-    });
+        document.addEventListener("message", (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.action === "start") startRecording();
+                if (data.action === "stop") stopRecording();
+            } catch (e) { }
+        });
 
     window.addEventListener("message", (event) => {
         try {

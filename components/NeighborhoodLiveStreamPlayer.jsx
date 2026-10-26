@@ -295,11 +295,11 @@ class StreamController {
   }
 
   async tick() {
-       if (!this.hasWaited) {
-         this.hasWaited = true;
-         this.addLog("⏳ Waiting 2s for MediaSource...");
-         await new Promise((resolve) => setTimeout(resolve, 2000));
-       }
+    if (!this.hasWaited) {
+      this.hasWaited = true;
+      this.addLog("⏳ Waiting 2s for MediaSource...");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
 
     if (this.isProcessing) return;
     if (this.ms.readyState !== "open") await this.once(this.ms, "sourceopen");
@@ -310,7 +310,8 @@ class StreamController {
     if (!this.sb && this.detectedMimeType) {
       try {
         if (!this.MS.isTypeSupported(this.detectedMimeType)) {
-this.detectedMimeType = "video/webm";        }
+          this.detectedMimeType = "video/webm";
+        }
         this.sb = this.ms.addSourceBuffer(this.detectedMimeType);
         this.sb.mode = "sequence";
         this.sb.addEventListener("updateend", () => {
