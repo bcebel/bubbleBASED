@@ -2,7 +2,7 @@
 // DONT DEFAULT TO SERVER VIDEO. INSTEAD, USE WEBTORRENT TO PULL VIDEO CHUNKS FROM PEERS. USE SERVER AS FALLBACK ONLY IF NO PEERS HAVE THE DATA READILY AVAILABLE. //
 // KEEP TORRENTS ALIVE AS LONG AS POSSIBLE WITHOUT OVERLOADING THE BROWSER. USE A WAREHOUSE TO CACHE VIDEO CHUNKS LOCALLY. //
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
 import { warehouse } from "../components/StreamWearhouse.js";
 import webtorrentService from "../utils/webtorrentService.js";
@@ -481,10 +481,10 @@ export default function NeighborhoodLiveStreamPlayer({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0);
 
-  const addLog = (msg) => {
-    setLogs((prev) => [...prev.slice(-5), msg]);
-    console.log(`[Stream] ${msg}`);
-  };
+const addLog = useCallback((msg) => {
+  setLogs((prev) => [...prev.slice(-5), msg]);
+  console.log(`[Stream] ${msg}`);
+}, []);
 
   useEffect(() => {
     const autoInitialize = async () => {
@@ -575,7 +575,7 @@ export default function NeighborhoodLiveStreamPlayer({
         controllerRef.current.addChunks(initialChunks);
       controllerRef.current.tick();
     }
-  }, [isJoined, initialChunks, availableInWarehouse]);
+  }, [isJoined, availableInWarehouse.length]);
 
   useEffect(() => {
     if (!sessionId) return;
