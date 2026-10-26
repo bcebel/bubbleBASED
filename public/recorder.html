@@ -75,8 +75,14 @@
 
                 mediaRecorder = new MediaRecorder(localStream, { mimeType });
 
-                mediaRecorder.ondataavailable = (e) => {
+               mediaRecorder.ondataavailable = (e) => {
                     if (e.data.size > 0) {
+                        // 🚨 IGNORE THE 751-BYTE GHOST HEADER
+                        if (e.data.size < 10000) {
+                            console.warn("Ignoring tiny ghost header:", e.data.size);
+                            return; // Skip it!
+                        }
+
                         const reader = new FileReader();
                         reader.readAsDataURL(e.data);
                         reader.onloadend = () => {
@@ -94,7 +100,6 @@
                         };
                     }
                 };
-
                 // Now that frames are flowing, start recording
                 mediaRecorder.start(4000);
 
