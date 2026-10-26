@@ -39,6 +39,10 @@
 
         async function startRecording() {
             try {
+
+                const isMp4Supported = MediaRecorder.isTypeSupported('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
+                console.log("Does this Android browser actually support H.264 MP4?", isMp4Supported);
+                
                 document.getElementById("status").innerText = "Requesting camera...";
 
                 localStream = await navigator.mediaDevices.getUserMedia({

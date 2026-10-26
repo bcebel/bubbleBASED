@@ -295,119 +295,90 @@ class StreamController {
   }
 
   async tick() {
-    if (this.tickLock) return;
-    this.tickLock = true;
+    if (this.isProcessing) return;
+    if (this.ms.readyState !== "open") await this.once(this.ms, "sourceopen");
+    if (this.sb?.updating) return;
 
-    try {
-      if (this.isProcessing) return;
-      if (this.ms.readyState !== "open") await this.once(this.ms, "sourceopen");
-      if (this.sb?.updating) return;
+    if (this.isManaged && !this.canAppend) return;
 
-      if (this.isManaged && !this.canAppend) return;
-
-      if (!this.sb && this.detectedMimeType) {
-        try {
-          if (!this.MS.isTypeSupported(this.detectedMimeType)) {
-            this.detectedMimeType =
-              'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
-          }
-          this.sb = this.ms.addSourceBuffer(this.detectedMimeType);
-          this.sb.mode = "sequence";
-          this.sb.addEventListener("updateend", () => {
-            this.isProcessing = false;
-            this.processBufferQueue();
-            this.tick();
-          });
-        } catch (e) {
-          console.error("❌ SourceBuffer Fail:", e);
+    if (!this.sb && this.detectedMimeType) {
+      try {
+        if (!this.MS.isTypeSupported(this.detectedMimeType)) {
+          this.detectedMimeType = 'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
         }
+        this.sb = this.ms.addSourceBuffer(this.detectedMimeType);
+        this.sb.mode = "sequence";
+        this.sb.addEventListener("updateend", () => {
+          this.isProcessing = false;
+          this.processBufferQueue();
+          this.tick();
+        });
+      } catch (e) {
+        console.error("❌ SourceBuffer Fail:", e);
       }
+    }
 
-      if (!this.sb || this.sb.updating) return;
+    if (!this.sb || this.sb.updating) return;
 
-      if (!this.headerLoaded) {
-        const hasHeaderInWarehouse = await warehouse.getChunk(
-          this.sessionId,
-          -1,
-        );
-        if (this.setupMagnet || hasHeaderInWarehouse) {
-          this.isProcessing = true;
-          try {
-            this.addLog("📥 Attempting to download header (-1)...");
-            const magnet = this.setupMagnet || "cached";
-            const buf = await this.download(magnet, -1);
-
-            if (buf) {
-              this.addLog(`✅ Header downloaded, size: ${buf.length}`);
-              try {
-                if (!this.sb.updating) {
-                  this.sb.appendBuffer(buf);
-                }
-              } catch (appendError) {
-                console.error("❌ HEADER APPEND FAILED:", appendError.message);
-              }
-              this.headerLoaded = true;
-              this.nextIndex = 0;
-              const tryPlay = (delay = 100) => {
-                this.video.play().catch(() => {
-                  if (delay < 5000) {
-                    this.video.currentTime += 0.1;
-                    setTimeout(() => tryPlay(delay * 1.5), delay);
-                  }
-                });
-              };
-              tryPlay();
-            } else {
-              this.isProcessing = false;
-            }
-          } catch (e) {
-            this.isProcessing = false;
-          }
-          return;
-        }
-      }
-
-      const hasInQueue = this.chunkQueue.has(this.nextIndex);
-      const hasInWarehouse = await warehouse.getChunk(
-        this.sessionId,
-        this.nextIndex,
-      );
-
-      if (this.headerLoaded && (hasInQueue || hasInWarehouse)) {
+    if (!this.headerLoaded) {
+      const hasHeaderInWarehouse = await warehouse.getChunk(this.sessionId, -1);
+      if (this.setupMagnet || hasHeaderInWarehouse) {
         this.isProcessing = true;
-        const magnet = hasInWarehouse
-          ? "cached"
-          : this.chunkQueue.get(this.nextIndex);
         try {
-          const buf = await this.download(magnet, this.nextIndex);
-          if (buf && !this.sb.updating) {
-            try {
-              this.sb.appendBuffer(buf);
-              this.nextIndex++;
-            } catch (appendError) {
-              console.error(
-                `❌ CHUNK ${this.nextIndex} APPEND FAILED:`,
-                appendError.message,
-              );
-              this.nextIndex++;
-            }
-
-            const t = this.video.currentTime;
-            if (t > 15 && this.sb && !this.sb.updating) {
-              try {
-                this.sb.remove(0, t - 10);
-              } catch (_) {}
-            }
+          const magnet = this.setupMagnet || "cached";
+          const buf = await this.download(magnet, -1);
+          if (buf) {
+            this.sb.appendBuffer(buf);
+            this.headerLoaded = true;
+            this.nextIndex = 0;
+            const tryPlay = (delay = 100) => {
+              this.video.play().catch(() => {
+                if (delay < 5000) {
+                  this.video.currentTime += 0.1;
+                  setTimeout(() => tryPlay(delay * 1.5), delay);
+                }
+              });
+            };
+            tryPlay();
           } else {
             this.isProcessing = false;
           }
         } catch (e) {
-          console.error("❌ Download failed:", e);
           this.isProcessing = false;
         }
+        return;
       }
-    } finally {
-      this.tickLock = false;
+    }
+
+    const hasInQueue = this.chunkQueue.has(this.nextIndex);
+    const hasInWarehouse = await warehouse.getChunk(
+      this.sessionId,
+      this.nextIndex,
+    );
+
+    if (this.headerLoaded && (hasInQueue || hasInWarehouse)) {
+      this.isProcessing = true;
+      const magnet = hasInWarehouse
+        ? "cached"
+        : this.chunkQueue.get(this.nextIndex);
+      try {
+        const buf = await this.download(magnet, this.nextIndex);
+        if (buf && !this.sb.updating) {
+          this.sb.appendBuffer(buf);
+          this.nextIndex++;
+
+          const t = this.video.currentTime;
+          if (t > 15 && this.sb && !this.sb.updating) {
+            try {
+              this.sb.remove(0, t - 10);
+            } catch (_) {}
+          }
+        } else {
+          this.isProcessing = false;
+        }
+      } catch (e) {
+        this.isProcessing = false;
+      }
     }
   }
 
