@@ -282,12 +282,13 @@ class StreamController {
 
         if (this.ms.readyState === "open") this.createSourceBuffer();
       }
-if (c.chunkIndex >= 0) {
-  this.chunkQueue.set(c.chunkIndex, c.magnetLink);
-  if (c.fileName && c.fileName.startsWith("AN-")) {
-    this.androidChunks.add(c.chunkIndex);
-  }
-}    });
+      if (c.chunkIndex >= 0) {
+        this.chunkQueue.set(c.chunkIndex, c.magnetLink);
+        if (c.fileName && c.fileName.startsWith("AN-")) {
+          this.androidChunks.add(c.chunkIndex);
+        }
+      }
+    });
     this.tick();
   }
 
@@ -358,32 +359,32 @@ if (c.chunkIndex >= 0) {
       const magnet = hasInWarehouse
         ? "cached"
         : this.chunkQueue.get(this.nextIndex);
-       try {
-         const buf = await this.download(magnet, this.nextIndex);
-         if (buf && !this.sb.updating) {
-           // 🚨 Add the Android timestamp fix HERE
-           if (this.androidChunks.has(this.nextIndex) && this.nextIndex > 0) {
-             this.sb.timestampOffset = this.nextIndex * 4;
-           }
+      try {
+        const buf = await this.download(magnet, this.nextIndex);
+        if (buf && !this.sb.updating) {
+          // 🚨 Add the Android timestamp fix HERE
+          if (this.androidChunks.has(this.nextIndex) && this.nextIndex > 0) {
+            this.sb.timestampOffset = this.nextIndex * 4;
+          }
 
-           this.sb.appendBuffer(buf);
+          this.sb.appendBuffer(buf);
 
-           this.nextIndex++;
+          this.nextIndex++;
 
-           // Evict buffers older than 10 seconds behind current playback position
-           const t = this.video.currentTime;
-           if (t > 15 && this.sb && !this.sb.updating) {
-             try {
-               // Remove everything from 0 up to (currentTime - 10)
-               this.sb.remove(0, t - 10);
-             } catch (_) {}
-           }
-         } else {
-           this.isProcessing = false;
-         }
-       } catch (e) {
-         this.isProcessing = false;
-       }
+          // Evict buffers older than 10 seconds behind current playback position
+          const t = this.video.currentTime;
+          if (t > 15 && this.sb && !this.sb.updating) {
+            try {
+              // Remove everything from 0 up to (currentTime - 10)
+              this.sb.remove(0, t - 10);
+            } catch (_) {}
+          }
+        } else {
+          this.isProcessing = false;
+        }
+      } catch (e) {
+        this.isProcessing = false;
+      }
     }
   }
 

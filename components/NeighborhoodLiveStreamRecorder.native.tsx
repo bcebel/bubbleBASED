@@ -6,24 +6,26 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import { Platform, PermissionsAndroid } from "react-native";
 
- const askPermissions = async () => {
-    try {
-      const granted = await PermissionsAndroid.requestMultiple([
-        PermissionsAndroid.PERMISSIONS.CAMERA,
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-      ]);
-      return (
-        granted["android.permission.CAMERA"] === PermissionsAndroid.RESULTS.GRANTED &&
-        granted["android.permission.RECORD_AUDIO"] === PermissionsAndroid.RESULTS.GRANTED
-      );
-    } catch (err) {
-      return false;
-    }
- };
-  
+const askPermissions = async () => {
+  try {
+    const granted = await PermissionsAndroid.requestMultiple([
+      PermissionsAndroid.PERMISSIONS.CAMERA,
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+    ]);
+    return (
+      granted["android.permission.CAMERA"] ===
+        PermissionsAndroid.RESULTS.GRANTED &&
+      granted["android.permission.RECORD_AUDIO"] ===
+        PermissionsAndroid.RESULTS.GRANTED
+    );
+  } catch (err) {
+    return false;
+  }
+};
+
 const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
-  // 1. Add the GraphQL mutation back at the top
+// 1. Add the GraphQL mutation back at the top
 const SEND_CHUNK = gql`
   mutation SendNeighborhoodMessage(
     $content: String!
@@ -46,9 +48,6 @@ const SEND_CHUNK = gql`
     }
   }
 `;
-
-
-
 
 const CREATE_STREAM = gql`
   mutation CreateStream($title: String!, $neighborhoodId: ID!) {
@@ -170,10 +169,12 @@ export default function NeighborhoodLiveStreamRecorder({
   };
 
   const startStream = async () => {
-
-     const hasPermissions = await askPermissions();
+    const hasPermissions = await askPermissions();
     if (!hasPermissions) {
-      Alert.alert("Permission Denied", "We need camera and mic access to stream.");
+      Alert.alert(
+        "Permission Denied",
+        "We need camera and mic access to stream.",
+      );
       return;
     }
 
@@ -194,15 +195,15 @@ export default function NeighborhoodLiveStreamRecorder({
       Alert.alert("Error", "Could not start the stream.");
     }
   };
-    
- const stopStream = () => {
-   setIsStreaming(false);
-   webViewRef.current?.injectJavaScript(`
+
+  const stopStream = () => {
+    setIsStreaming(false);
+    webViewRef.current?.injectJavaScript(`
       window.postMessage(JSON.stringify({ action: "stop" }), "*");
       true;
     `);
-   if (onStreamEnd) onStreamEnd();
- };
+    if (onStreamEnd) onStreamEnd();
+  };
 
   const onMessage = async (event) => {
     try {
