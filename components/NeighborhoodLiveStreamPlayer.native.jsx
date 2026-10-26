@@ -329,11 +329,16 @@ export default function NeighborhoodLiveStreamPlayer({ sessionId }) {
         this.thumbnailUrl = c.thumbnailUrl;
         this.thumbnailLoaded = true;
       }
-      if (c.chunkIndex === -1 && !this.headerLoaded) {
+          if (c.chunkIndex === -1 && !this.headerLoaded) {
         this.setupMagnet = c.magnetLink;
-        this.detectedMimeType =
-          c.mimeType?.replace(/['"]+/g, '"') ||
-          'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
+        
+        // 🚨 Check if it's Android WebM
+        if (c.fileName && c.fileName.startsWith("AN-") && c.fileName.endsWith(".webm")) {
+           this.detectedMimeType = 'video/webm; codecs="vp8,opus"';
+        } else {
+           this.detectedMimeType = c.mimeType?.replace(/['"]+/g, '"') || 'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
+        }
+        
         if (this.ms.readyState === "open") this.createSourceBuffer();
       }
       if (c.chunkIndex >= 0) this.chunkQueue.set(c.chunkIndex, c.magnetLink);

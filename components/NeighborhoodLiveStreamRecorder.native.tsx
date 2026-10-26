@@ -48,51 +48,7 @@ const SEND_CHUNK = gql`
 `;
 
 
-  // 3. Update onMessage
-  const onMessage = async (event) => {
-    try {
-      const data = JSON.parse(event.nativeEvent.data);
 
-      if (data.type === "CHUNK") {
-        const token = await AsyncStorage.getItem("token");
-
-        // Upload to REST
-        const res = await fetch(`${BACKEND_URL}/api/live-chunk-native`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            sessionId: sessionIdRef.current,
-            chunkIndex: data.index,
-            base64: data.base64,
-            rotation: 0,
-          }),
-        });
-
-        if (res.ok) {
-          const result = await res.json();
-          
-          // 🚨 NOW tell GraphQL so the subscription fires!
-          await sendChunk({
-            variables: {
-              content: data.index === -1 ? "STREAM_HEADER" : "",
-              neighborhoodId,
-              magnetLink: result.magnetUri,
-              fileType: data.index === -1 ? "video_header" : "video_chunk",
-              sessionId: sessionIdRef.current,
-              chunkIndex: data.index,
-            },
-          });
-
-          setChunkCount((prev) => prev + 1);
-        }
-      }
-    } catch (e) {
-      console.error("WebView Message Error:", e);
-    }
-  };
 
 const CREATE_STREAM = gql`
   mutation CreateStream($title: String!, $neighborhoodId: ID!) {
