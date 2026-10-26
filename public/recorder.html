@@ -61,11 +61,11 @@
                     reader.readAsDataURL(e.data);
                     reader.onloadend = () => {
                         const base64data = reader.result.split(',')[1];
+                          const index = chunkIndex === 0 ? -1 : chunkIndex - 1;
 
-                        // 🛑 Stop shifting chunkIndex to -1. Let it stream natively: 0, 1, 2, 3...
                         window.ReactNativeWebView.postMessage(JSON.stringify({
                             type: "CHUNK",
-                            index: chunkIndex, // Use the actual sequential number
+                            index: index, // Use the actual sequential number
                             base64: base64data,
                             mimeType: mimeType
                         }));
