@@ -312,7 +312,11 @@ class StreamController {
     if (!this.sb || this.sb.updating) return;
 
     if (!this.headerLoaded) {
+      this.addLog("🔍 Checking for header in warehouse..."); // 👈
       const hasHeaderInWarehouse = await warehouse.getChunk(this.sessionId, -1);
+      this.addLog(
+        `Header in warehouse: ${!!hasHeaderInWarehouse}, setupMagnet: ${!!this.setupMagnet}`,
+      ); // 👈 ADD THIS
       if (this.setupMagnet || hasHeaderInWarehouse) {
         this.isProcessing = true;
         try {
@@ -347,7 +351,7 @@ class StreamController {
       this.nextIndex,
     );
 
-    if (this.headerLoaded && (hasInQueue || hasInWarehouse)) {
+    if (this.headerLoaded === true && (hasInQueue || hasInWarehouse)) {
       this.isProcessing = true;
       const magnet = hasInWarehouse
         ? "cached"

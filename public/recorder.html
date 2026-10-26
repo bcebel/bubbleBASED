@@ -78,7 +78,7 @@
                mediaRecorder.ondataavailable = (e) => {
                     if (e.data.size > 0) {
                         // 🚨 IGNORE THE 751-BYTE GHOST HEADER
-                        if (e.data.size < 10000) {
+                        if (e.data.size < 500) {
                             console.warn("Ignoring tiny ghost header:", e.data.size);
                             return; // Skip it!
                         }
@@ -94,7 +94,7 @@
                                 index: index,
                                 base64: base64data,
                                 mimeType: mimeType
-                            }));
+                            })500);
 
                             chunkIndex++;
                         };
