@@ -264,133 +264,150 @@ class StreamController {
         this.thumbnailUrl = c.thumbnailUrl;
         this.thumbnailLoaded = true;
       }
-       if (c.chunkIndex === -1 && !this.headerLoaded) {
-         this.setupMagnet = c.magnetLink;
+      if (c.chunkIndex === -1 && !this.headerLoaded) {
+        this.setupMagnet = c.magnetLink;
 
-    if (c.fileName && c.fileName.startsWith("AN-")) {
-      const mp4Codecs = [
-        'video/mp4; codecs="avc1.42E01E"',
-        'video/mp4; codecs="avc1.4d4015"',
-        "video/mp4",
-      ];
-      this.detectedMimeType =
-        mp4Codecs.find((type) => this.MS.isTypeSupported(type)) || "video/mp4";
-    } else {
-      this.detectedMimeType =
-        c.mimeType?.replace(/['"]+/g, '"') ||
-        'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
-    }
+        if (c.fileName && c.fileName.startsWith("AN-")) {
+          const mp4Codecs = [
+            'video/mp4; codecs="avc1.42E01E"',
+            'video/mp4; codecs="avc1.4d4015"',
+            "video/mp4",
+          ];
+          this.detectedMimeType =
+            mp4Codecs.find((type) => this.MS.isTypeSupported(type)) ||
+            "video/mp4";
+        } else {
+          this.detectedMimeType =
+            c.mimeType?.replace(/['"]+/g, '"') ||
+            'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
+        }
 
-         if (this.ms.readyState === "open") this.createSourceBuffer();
-       }
-if (c.chunkIndex >= 0) {
-  this.chunkQueue.set(c.chunkIndex, c.magnetLink);
-  if (c.fileName && c.fileName.startsWith("AN-")) {
-    this.androidChunks.add(c.chunkIndex);
-  }
-}    });
+        if (this.ms.readyState === "open") this.createSourceBuffer();
+      }
+      if (c.chunkIndex >= 0) {
+        this.chunkQueue.set(c.chunkIndex, c.magnetLink);
+        if (c.fileName && c.fileName.startsWith("AN-")) {
+          this.androidChunks.add(c.chunkIndex);
+        }
+      }
+    });
     this.tick();
   }
 
   async tick() {
-    if (!this.hasWaited) {
-      this.hasWaited = true;
-      this.addLog("⏳ Waiting 2s for MediaSource...");
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    }
+    if (this.tickLock) return;
+    this.tickLock = true;
 
-    if (this.isProcessing) return;
-    if (this.ms.readyState !== "open") await this.once(this.ms, "sourceopen");
-    if (this.sb?.updating) return;
+    try {
+      if (this.isProcessing) return;
+      if (this.ms.readyState !== "open") await this.once(this.ms, "sourceopen");
+      if (this.sb?.updating) return;
 
-    if (this.isManaged && !this.canAppend) return;
+      if (this.isManaged && !this.canAppend) return;
 
-    if (!this.sb && this.detectedMimeType) {
-      try {
-        if (!this.MS.isTypeSupported(this.detectedMimeType)) {
-          this.detectedMimeType = "video/webm";
-        }
-        this.sb = this.ms.addSourceBuffer(this.detectedMimeType);
-        this.sb.mode = "sequence";
-        this.sb.addEventListener("updateend", () => {
-          this.isProcessing = false;
-          this.processBufferQueue();
-          this.tick();
-        });
-      } catch (e) {
-        console.error("❌ SourceBuffer Fail:", e);
-      }
-    }
-
-    if (!this.sb || this.sb.updating) return;
-
-    if (!this.headerLoaded) {
-      const hasHeaderInWarehouse = await warehouse.getChunk(this.sessionId, -1);
-      if (this.setupMagnet || hasHeaderInWarehouse) {
-        this.isProcessing = true;
+      if (!this.sb && this.detectedMimeType) {
         try {
-          const magnet = this.setupMagnet || "cached";
-          const buf = await this.download(magnet, -1);
-          if (buf) {
-            this.sb.appendBuffer(buf);
-            this.headerLoaded = true;
-            this.nextIndex = 0;
-            const tryPlay = (delay = 100) => {
-              this.video.play().catch(() => {
-                if (delay < 5000) {
-                  this.video.currentTime += 0.1;
-                  setTimeout(() => tryPlay(delay * 1.5), delay);
+          if (!this.MS.isTypeSupported(this.detectedMimeType)) {
+            this.detectedMimeType =
+              'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
+          }
+          this.sb = this.ms.addSourceBuffer(this.detectedMimeType);
+          this.sb.mode = "sequence";
+          this.sb.addEventListener("updateend", () => {
+            this.isProcessing = false;
+            this.processBufferQueue();
+            this.tick();
+          });
+        } catch (e) {
+          console.error("❌ SourceBuffer Fail:", e);
+        }
+      }
+
+      if (!this.sb || this.sb.updating) return;
+
+      if (!this.headerLoaded) {
+        const hasHeaderInWarehouse = await warehouse.getChunk(
+          this.sessionId,
+          -1,
+        );
+        if (this.setupMagnet || hasHeaderInWarehouse) {
+          this.isProcessing = true;
+          try {
+            this.addLog("📥 Attempting to download header (-1)...");
+            const magnet = this.setupMagnet || "cached";
+            const buf = await this.download(magnet, -1);
+
+            if (buf) {
+              this.addLog(`✅ Header downloaded, size: ${buf.length}`);
+              try {
+                if (!this.sb.updating) {
+                  this.sb.appendBuffer(buf);
                 }
-              });
-            };
-            tryPlay();
+              } catch (appendError) {
+                console.error("❌ HEADER APPEND FAILED:", appendError.message);
+              }
+              this.headerLoaded = true;
+              this.nextIndex = 0;
+              const tryPlay = (delay = 100) => {
+                this.video.play().catch(() => {
+                  if (delay < 5000) {
+                    this.video.currentTime += 0.1;
+                    setTimeout(() => tryPlay(delay * 1.5), delay);
+                  }
+                });
+              };
+              tryPlay();
+            } else {
+              this.isProcessing = false;
+            }
+          } catch (e) {
+            this.isProcessing = false;
+          }
+          return;
+        }
+      }
+
+      const hasInQueue = this.chunkQueue.has(this.nextIndex);
+      const hasInWarehouse = await warehouse.getChunk(
+        this.sessionId,
+        this.nextIndex,
+      );
+
+      if (this.headerLoaded && (hasInQueue || hasInWarehouse)) {
+        this.isProcessing = true;
+        const magnet = hasInWarehouse
+          ? "cached"
+          : this.chunkQueue.get(this.nextIndex);
+        try {
+          const buf = await this.download(magnet, this.nextIndex);
+          if (buf && !this.sb.updating) {
+            try {
+              this.sb.appendBuffer(buf);
+              this.nextIndex++;
+            } catch (appendError) {
+              console.error(
+                `❌ CHUNK ${this.nextIndex} APPEND FAILED:`,
+                appendError.message,
+              );
+              this.nextIndex++;
+            }
+
+            const t = this.video.currentTime;
+            if (t > 15 && this.sb && !this.sb.updating) {
+              try {
+                this.sb.remove(0, t - 10);
+              } catch (_) {}
+            }
           } else {
             this.isProcessing = false;
           }
         } catch (e) {
+          console.error("❌ Download failed:", e);
           this.isProcessing = false;
         }
-        return;
       }
-    }
-
-    const hasInQueue = this.chunkQueue.has(this.nextIndex);
-    const hasInWarehouse = await warehouse.getChunk(
-      this.sessionId,
-      this.nextIndex,
-    );
-
-    if (this.headerLoaded && (hasInQueue || hasInWarehouse)) {
-      this.isProcessing = true;
-      const magnet = hasInWarehouse
-        ? "cached"
-        : this.chunkQueue.get(this.nextIndex);
-      try {
-        const buf = await this.download(magnet, this.nextIndex);
-        if (buf && !this.sb.updating) {
-          // 🚨 Add the Android timestamp fix HERE
-          if (this.androidChunks.has(this.nextIndex) && this.nextIndex > 0) {
-            this.sb.timestampOffset = this.nextIndex * 4;
-          }
-
-          this.sb.appendBuffer(buf);
-
-          this.nextIndex++;
-
-          // Evict buffers older than 10 seconds behind current playback position
-          const t = this.video.currentTime;
-          if (t > 15 && this.sb && !this.sb.updating) {
-            try {
-              // Remove everything from 0 up to (currentTime - 10)
-              this.sb.remove(0, t - 10);
-            } catch (_) {}
-          }
-        } else {
-          this.isProcessing = false;
-        }
-      } catch (e) {
-        this.isProcessing = false;
-      }
+    } finally {
+      this.tickLock = false;
     }
   }
 
@@ -416,6 +433,7 @@ if (c.chunkIndex >= 0) {
         { signal: AbortSignal.timeout(8000) },
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      this.addLog(`✅ Fetch success for chunk ${index}`);
       const buf = new Uint8Array(await res.arrayBuffer());
       await warehouse.saveChunk(this.sessionId, index, buf); // cache it
       return buf;
