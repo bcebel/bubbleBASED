@@ -2,7 +2,6 @@ import React, { useRef, useEffect } from "react";
 import { View } from "react-native";
 import { WebView } from "react-native-webview";
 
-
 const BACKEND_URL = "https://minnowspacebackend-e6635e46c3d0.herokuapp.com";
 
 // 1. The HTML Canvas
@@ -25,19 +24,19 @@ const blankCanvas = `
 
 export default function NeighborhoodLiveStreamPlayer({ sessionId }) {
   const webViewRef = useRef(null);
-   useEffect(() => {
-     return () => {
-       if (sessionId) {
-         console.log(`👋 Leaving native stream ${sessionId}`);
-         // Fire and forget: don't await this
-         fetch(`${BACKEND_URL}/api/stream-leave`, {
-           method: "POST",
-           headers: { "Content-Type": "application/json" },
-           body: JSON.stringify({ sessionId }),
-         }).catch(() => {});
-       }
-     };
-   }, [sessionId]);
+  useEffect(() => {
+    return () => {
+      if (sessionId) {
+        console.log(`👋 Leaving native stream ${sessionId}`);
+        // Fire and forget: don't await this
+        fetch(`${BACKEND_URL}/api/stream-leave`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+        }).catch(() => {});
+      }
+    };
+  }, [sessionId]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "black" }}>
