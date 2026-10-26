@@ -54,44 +54,30 @@
 
             mediaRecorder = new MediaRecorder(localStream, { mimeType });
 
-            mediaRecorder.ondataavailable = (e) => {
+            // Inside your WebView HTML script:
+            mediaRecorder.ondataavailable = async (e) => {
                 if (e.data.size > 0) {
                     const reader = new FileReader();
                     reader.readAsDataURL(e.data);
                     reader.onloadend = () => {
                         const base64data = reader.result.split(',')[1];
-                        const index = chunkIndex === 0 ? -1 : chunkIndex - 1;
 
-                        if (window.ReactNativeWebView) {
-                            window.ReactNativeWebView.postMessage(JSON.stringify({
-                                type: "CHUNK",
-                                index: index,
-                                base64: base64data,
-                                mimeType: mimeType
-                            }));
-                        }
+                        // 🛑 Stop shifting chunkIndex to -1. Let it stream natively: 0, 1, 2, 3...
+                        window.ReactNativeWebView.postMessage(JSON.stringify({
+                            type: "CHUNK",
+                            index: chunkIndex, // Use the actual sequential number
+                            base64: base64data,
+                            mimeType: mimeType
+                        }));
+
                         chunkIndex++;
                     };
                 }
             };
 
-            // Start continuous recording (no intervals yet)
-            mediaRecorder.start();
+            // Just start it cleanly with 4-second blocks
+            mediaRecorder.start(4000);
 
-            // 1.5 second warmup: Force the encoder to flush the populated header (chunk -1)
-            setTimeout(() => {
-                if (mediaRecorder && mediaRecorder.state === "recording") {
-                    mediaRecorder.requestData();
-                }
-            }, 1500);
-
-            // Setup an interval to manually slice subsequent chunks every 4 seconds
-            // without ever killing or restarting the core MediaRecorder instance.
-            setInterval(() => {
-                if (mediaRecorder && mediaRecorder.state === "recording") {
-                    mediaRecorder.requestData();
-                }
-            }, 4000);
 
         } catch (err) {
             document.getElementById("status").innerText = "Error: " + err.message;
