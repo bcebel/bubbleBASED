@@ -90,6 +90,7 @@ export default function NeighborhoodLiveStreamRecorder({
       sessionIdRef.current = data.createStream.sessionId;
       setIsStreaming(true);
 
+          console.log("🚀 Injecting start command to WebView...");
       // Tell the HTML page to start recording
       webViewRef.current?.injectJavaScript(`
         window.postMessage(JSON.stringify({ action: "start" }), "*");
@@ -109,49 +110,52 @@ export default function NeighborhoodLiveStreamRecorder({
     if (onStreamEnd) onStreamEnd();
   };
 
-  const onMessage = async (event) => {
-    try {
-      const data = JSON.parse(event.nativeEvent.data);
+   const onMessage = async (event) => {
+     try {
+       const data = JSON.parse(event.nativeEvent.data);
 
-      if (data.type === "ERROR") {
-        Alert.alert("Camera Error", data.message);
-      } else if (data.type === "CHUNK") {
-        const token = await AsyncStorage.getItem("token");
-        const res = await fetch(`${BACKEND_URL}/api/live-chunk-native`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            sessionId: sessionIdRef.current,
-            chunkIndex: data.index,
-            rotation: 0,
-            base64: data.base64,
-            mimeType: data.mimeType,
-          }),
-        });
+       if (data.type === "CHUNK") {
+         // Upload to backend (for fallback and database record)
+         const token = await AsyncStorage.getItem("token");
+         const res = await fetch(`${BACKEND_URL}/api/live-chunk-native`, {
+           method: "POST",
+           headers: {
+             "Content-Type": "application/json",
+             ...(token ? { Authorization: `Bearer ${token}` } : {}),
+           },
+           body: JSON.stringify({
+             sessionId: sessionIdRef.current,
+             chunkIndex: data.index,
+             rotation: 0,
+             base64: data.base64,
+             mimeType: data.mimeType,
+           }),
+         });
 
-        if (res.ok) {
-          const result = await res.json();
-          await sendChunk({
-            variables: {
-              content: data.index === -1 ? "STREAM_HEADER" : "",
-              neighborhoodId,
-              magnetLink: result.magnetUri,
-              fileType: data.index === -1 ? "video_header" : "video_chunk",
-              sessionId: sessionIdRef.current,
-              chunkIndex: data.index,
-              fileName: `chunk-${data.index}.mp4`,
-            },
-          });
-          setChunkCount((prev) => prev + 1);
-        }
-      }
-    } catch (e) {
-      console.error("WebView Message Error:", e);
-    }
-  };
+         if (res.ok) {
+           const result = await res.json();
+
+           // 🚨 Use the local WebTorrent magnet link if available
+           const finalMagnet = data.magnetURI || result.magnetUri;
+
+           await sendChunk({
+             variables: {
+               content: data.index === -1 ? "STREAM_HEADER" : "",
+               neighborhoodId,
+               magnetLink: finalMagnet, // 👈 Use the local peer's magnet link
+               fileType: data.index === -1 ? "video_header" : "video_chunk",
+               sessionId: sessionIdRef.current,
+               chunkIndex: data.index,
+               fileName: `chunk-${data.index}.mp4`,
+             },
+           });
+           setChunkCount((prev) => prev + 1);
+         }
+       }
+     } catch (e) {
+       console.error("WebView Message Error:", e);
+     }
+   };
 
   return (
     <View style={styles.container}>

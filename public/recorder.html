@@ -26,6 +26,12 @@
             z-index: 10;
         }
     </style>
+
+    <script type="module">
+        import WebTorrent from '/webtorrent.min.js';
+        window.WebTorrent = WebTorrent;
+    </script>
+
 </head>
 
 <body>
@@ -36,93 +42,80 @@
     let mediaRecorder;
     let chunkIndex = 0;
     let localStream;
+    let torrentClient;
 
-        async function startRecording() {
-            try {
-
-                const isMp4Supported = MediaRecorder.isTypeSupported('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
-                console.log("Does this Android browser actually support H.264 MP4?", isMp4Supported);
-
-                document.getElementById("status").innerText = "Requesting camera...";
-
-                localStream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: 640, height: 480, frameRate: 30 },
-                    audio: false
-                });
-
-                const preview = document.getElementById("preview");
-                preview.srcObject = localStream;
-
-                document.getElementById("status").innerText = "Warming up camera...";
-
-                // 🚨 WAIT FOR THE PREVIEW TO ACTUALLY PLAY FRAMES
-                await new Promise((resolve) => {
-                    if (preview.readyState >= 3) {
-                        resolve();
-                    } else {
-                        preview.onplaying = () => resolve();
-                    }
-                });
-
-                document.getElementById("status").innerText = "Camera Active. Recording...";
-                
-                const mimeType = 'video/mp4; codecs="avc1.42E01E"';
-
-                mediaRecorder = new MediaRecorder(localStream, { mimeType });
-
-               mediaRecorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) {
-                        const reader = new FileReader();
-                        reader.readAsDataURL(e.data);
-                        reader.onloadend = () => {
-                            const base64data = reader.result.split(',')[1];
-                            const index = chunkIndex === 0 ? -1 : chunkIndex - 1;
-
-                            window.ReactNativeWebView.postMessage(JSON.stringify({
-                                type: "CHUNK",
-                                index: index,
-                                base64: base64data,
-                                mimeType: mimeType
-                            }));
-
-                            chunkIndex++;
-                        };
-                    }
-                };
-                    if (e.data.size > 0) {
-                        // 🚨 IGNORE THE 751-BYTE GHOST HEADER
-                        if (e.data.size < 500) {
-                            console.warn("Ignoring tiny ghost header:", e.data.size);
-                            return; // Skip it!
-                        }
-
-                        const reader = new FileReader();
-                        reader.readAsDataURL(e.data);
-                        reader.onloadend = () => {
-                            const base64data = reader.result.split(',')[1];
-                            const index = chunkIndex === 0 ? -1 : chunkIndex - 1;
-
-                            window.ReactNativeWebView.postMessage(JSON.stringify({
-                                type: "CHUNK",
-                                index: index,
-                                base64: base64data,
-                                mimeType: mimeType
-                            }));
-
-                            chunkIndex++;
-                        };
-                    }
-                };
-                // Now that frames are flowing, start recording
-                mediaRecorder.start(4000);
-
-            } catch (err) {
-                document.getElementById("status").innerText = "Error: " + err.message;
-                if (window.ReactNativeWebView) {
-                    window.ReactNativeWebView.postMessage(JSON.stringify({ type: "ERROR", message: err.message }));
-                }
-            }
+    // 🚨 INITIALIZE WEBTORRENT
+    function initTorrent() {
+        if (!torrentClient) {
+            torrentClient = new window.WebTorrent();
         }
+        return torrentClient;
+    }
+
+    async function startRecording() {
+             console.log("🎥 HTML Recorder: Received start command");
+        try {
+            if (!window.WebTorrent) {
+                document.getElementById("status").innerText = "Loading WebTorrent...";
+                await new Promise((resolve) => {
+                    const check = setInterval(() => {
+                        if (window.WebTorrent) {
+                            clearInterval(check);
+                            resolve();
+                        }
+                    }, 100);
+                });
+            }
+            localStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480, frameRate: 30 },
+                audio: false
+            });
+
+            const preview = document.getElementById("preview");
+            preview.srcObject = localStream;
+
+            await new Promise((resolve) => {
+                if (preview.readyState >= 3) resolve();
+                else preview.onplaying = resolve;
+            });
+
+            const mimeType = 'video/mp4; codecs="avc1.42E01E"';
+            mediaRecorder = new MediaRecorder(localStream, { mimeType });
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(e.data);
+                    reader.onloadend = async () => {
+                        const base64data = reader.result.split(',')[1];
+                        const index = chunkIndex === 0 ? -1 : chunkIndex - 1;
+
+                        // 🚨 SEED THE CHUNK WITH WEBTORRENT
+                        const client = initTorrent();
+                        const buffer = e.data;
+
+                        client.seed(buffer, { name: `chunk-${index}.mp4` }, (torrent) => {
+                            console.log(`Seeded chunk ${index}: ${torrent.magnetURI}`);
+
+                            window.ReactNativeWebView.postMessage(JSON.stringify({
+                                type: "CHUNK",
+                                index: index,
+                                base64: base64data,
+                                mimeType: mimeType,
+                                magnetURI: torrent.magnetURI // 🚨 SEND THE MAGNET LINK
+                            }));
+                        });
+
+                        chunkIndex++;
+                    };
+                }
+            };
+
+            mediaRecorder.start(4000);
+        } catch (err) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({ type: "ERROR", message: err.message }));
+        }
+    }
     function stopRecording() {
         if (mediaRecorder && mediaRecorder.state !== "inactive") {
             mediaRecorder.stop();
