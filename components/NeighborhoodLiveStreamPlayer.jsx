@@ -285,6 +285,10 @@ class StreamController {
     this.tick();
   }
   async tick() {
+       if (!this.container || !this.container.isConnected) {
+         this.addLog("⏹️ Container disconnected, stopping tick loop.");
+         return;
+       }
     if (this.isProcessing) return;
     if (this.ms.readyState !== "open") await this.once(this.ms, "sourceopen");
 
@@ -304,7 +308,6 @@ class StreamController {
 
           // Double-check sb state right before appending
           if (buf && this.sb && !this.sb.updating) {
-
             if (this.ms.readyState !== "open" || !this.sb.buffered) {
               this.addLog(
                 "⚠️ SourceBuffer was detached from MediaSource. Aborting append.",
@@ -469,12 +472,21 @@ class StreamController {
   }
 
   destroy() {
+    // 🚨 STOP THE TICK LOOP
+    this.isProcessing = true;
+
     clearInterval(this.watchdog);
+
     if (this.video) {
       this.video.pause();
       this.video.src = "";
       this.video.remove();
+      this.video = null;
     }
+
+    // 🚨 NULL OUT THE SOURCEBUFFER AND MEDIASOURCE
+    this.sb = null;
+    this.ms = null;
   }
 }
 
@@ -545,16 +557,22 @@ useEffect(() => {
   };
   autoInitialize();
 
-  return () => {
-    if (sessionId) {
-      console.log("👋 Unmounting player. Telling backend to stop seeding.");
-      fetch(`${process.env.EXPO_PUBLIC_HEROKU_URL}/api/stream-leave`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      }).catch(() => {});
-    }
-  };
+   return () => {
+     if (sessionId) {
+       console.log("👋 Unmounting player. Telling backend to stop seeding.");
+       fetch(`${process.env.EXPO_PUBLIC_HEROKU_URL}/api/stream-leave`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ sessionId }),
+       }).catch(() => {});
+     }
+
+     // 🚨 STOP THE CONTROLLER AND DESTROY THE SOURCEBUFFER
+     if (controllerRef.current) {
+       controllerRef.current.destroy();
+       controllerRef.current = null;
+     }
+   };
 }, [sessionId]);
 
   useEffect(() => {
