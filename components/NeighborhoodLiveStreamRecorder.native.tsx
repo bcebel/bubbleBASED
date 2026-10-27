@@ -170,6 +170,10 @@ export default function NeighborhoodLiveStreamRecorder({
         domStorageEnabled={true}
         allowsInlineMediaPlayback={true}
         mediaPlaybackRequiresUserAction={false}
+        allowingReadAccessToURL="*"
+        allowFileAccess={true}
+        allowFileAccessFromFileURLs={true}
+        allowUniversalAccessFromFileURLs={true}
         androidLayerType="hardware"
         onPermissionRequest={handlePermissionRequest}
         onMessage={onMessage}
