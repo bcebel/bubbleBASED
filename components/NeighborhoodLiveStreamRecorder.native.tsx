@@ -90,10 +90,13 @@ export default function NeighborhoodLiveStreamRecorder({
       sessionIdRef.current = data.createStream.sessionId;
       setIsStreaming(true);
 
-          console.log("🚀 Injecting start command to WebView...");
-      // Tell the HTML page to start recording
+      // 🚨 CALL THE FUNCTION DIRECTLY
       webViewRef.current?.injectJavaScript(`
-        window.postMessage(JSON.stringify({ action: "start" }), "*");
+        if (window.startRecording) {
+          window.startRecording();
+        } else {
+          console.error("startRecording is not defined yet");
+        }
         true;
       `);
     } catch (error) {
