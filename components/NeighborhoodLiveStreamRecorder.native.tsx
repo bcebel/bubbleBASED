@@ -169,7 +169,7 @@ export default function NeighborhoodLiveStreamRecorder({
             fileType: currentIndex === 0 ? "video_header" : "video_chunk",
             sessionId: sessionIdRef.current,
             chunkIndex: dbChunkIndex,
-            fileName: `AN-chunk-${dbChunkIndex}.mp4`,
+            fileName: `chunk-${dbChunkIndex}.mp4`,
           },
         });
 
