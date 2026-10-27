@@ -104,7 +104,79 @@
 
 
 
-        async function startRecording() {
+            async function startRecording() {
+                console.log("🎥 HTML Recorder: Received start command");
+                try {
+                    if (!window.WebTorrent) {
+                        document.getElementById("status").innerText = "Loading WebTorrent...";
+                        await new Promise((resolve) => {
+                            const check = setInterval(() => {
+                                if (window.WebTorrent) {
+                                    clearInterval(check);
+                                    resolve();
+                                }
+                            }, 100);
+                        });
+                    }
+
+                    document.getElementById("status").innerText = "Requesting camera...";
+
+                    // 🚨 STORE THE STREAM GLOBALLY so it doesn't get GC'd
+                    window.localStream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: 640, height: 360 },
+                        audio: true
+                    });
+
+                    const preview = document.getElementById("preview");
+                    preview.srcObject = window.localStream;
+
+                    // 🚨 FORCE PLAY AND WAIT FOR IT
+                    try {
+                        await preview.play();
+                        console.log("🎥 Preview is playing");
+                    } catch (playErr) {
+                        console.warn("Play error:", playErr);
+                        // Even if play fails, continue (some WebViews block autoplay but still render)
+                    }
+
+                    document.getElementById("status").innerText = "Camera Active. Recording...";
+
+                    const mimeType = 'video/mp4; codecs="mp4a.40.2, avc1.42E01E"';
+                    mediaRecorder = new MediaRecorder(window.localStream, { mimeType });
+
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) {
+                            const reader = new FileReader();
+                            reader.readAsDataURL(e.data);
+                            reader.onloadend = async () => {
+                                const base64data = reader.result.split(',')[1];
+                                const index = chunkIndex === 0 ? -1 : chunkIndex - 1;
+
+                                const client = initTorrent();
+                                client.seed(e.data, { name: `chunk-${index}.mp4` }, (torrent) => {
+                                    console.log(`Seeded chunk ${index}: ${torrent.magnetURI}`);
+                                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                                        type: "CHUNK",
+                                        index: index,
+                                        base64: base64data,
+                                        mimeType: mimeType,
+                                        magnetURI: torrent.magnetURI
+                                    }));
+                                });
+
+                                chunkIndex++;
+                            };
+                        }
+                    };
+
+                    mediaRecorder.start(4000);
+                } catch (err) {
+                    document.getElementById("status").innerText = "Error: " + err.message;
+                    if (window.ReactNativeWebView) {
+                        window.ReactNativeWebView.postMessage(JSON.stringify({ type: "ERROR", message: err.message }));
+                    }
+                }
+            }
 
             console.log("🎥 HTML Recorder: Received start command");
 
