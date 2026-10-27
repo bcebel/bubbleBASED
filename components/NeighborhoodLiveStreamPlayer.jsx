@@ -141,6 +141,7 @@ class StreamController {
     const nextBuffer = this.bufferQueue.shift();
     try {
       this.sb.appendBuffer(nextBuffer);
+      this.addLog(`✅ Successfully appended chunk ${index}`);
     } catch (e) {
       console.error("❌ Append error:", e);
     }
@@ -196,6 +197,7 @@ class StreamController {
   }
 
   forceTick() {
+    this.isProcessing = false;
     this.tick();
   }
 
@@ -267,11 +269,9 @@ class StreamController {
       if (c.chunkIndex === -1 && !this.headerLoaded) {
         this.setupMagnet = c.magnetLink;
 
-
-          this.detectedMimeType =
-            c.mimeType?.replace(/['"]+/g, '"') ||
-            'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
-        
+        this.detectedMimeType =
+          c.mimeType?.replace(/['"]+/g, '"') ||
+          'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
 
         if (this.ms.readyState === "open") this.createSourceBuffer();
       }
@@ -284,48 +284,40 @@ class StreamController {
     });
     this.tick();
   }
-
   async tick() {
     if (this.isProcessing) return;
     if (this.ms.readyState !== "open") await this.once(this.ms, "sourceopen");
-    if (this.sb?.updating) return;
+
+    // 🛡️ HARD GUARD: If the SourceBuffer is updating, abort immediately!
+    if (!this.sb || this.sb.updating) return;
 
     if (this.isManaged && !this.canAppend) return;
 
-    if (!this.sb && this.detectedMimeType) {
-      try {
-        if (!this.MS.isTypeSupported(this.detectedMimeType)) {
-          this.detectedMimeType = 'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
-        }
-        this.sb = this.ms.addSourceBuffer(this.detectedMimeType);
-        this.sb.mode = "sequence";
-        this.sb.addEventListener("updateend", () => {
-          this.isProcessing = false;
-          this.processBufferQueue();
-          this.tick();
-        });
-      } catch (e) {
-        console.error("❌ SourceBuffer Fail:", e);
-      }
-    }
-
-    if (!this.sb || this.sb.updating) return;
-
+    // --- Header Loading Block ---
     if (!this.headerLoaded) {
-      this.addLog("🔍 Checking for header in warehouse..."); // 👈
       const hasHeaderInWarehouse = await warehouse.getChunk(this.sessionId, -1);
-      this.addLog(
-        `Header in warehouse: ${!!hasHeaderInWarehouse}, setupMagnet: ${!!this.setupMagnet}`,
-      ); // 👈 ADD THIS
       if (this.setupMagnet || hasHeaderInWarehouse) {
         this.isProcessing = true;
         try {
           const magnet = this.setupMagnet || "cached";
           const buf = await this.download(magnet, -1);
-          if (buf) {
+
+          // Double-check sb state right before appending
+          if (buf && this.sb && !this.sb.updating) {
+
+            if (this.ms.readyState !== "open" || !this.sb.buffered) {
+              this.addLog(
+                "⚠️ SourceBuffer was detached from MediaSource. Aborting append.",
+              );
+              this.isProcessing = false;
+              return;
+            }
+
             this.sb.appendBuffer(buf);
             this.headerLoaded = true;
+            this.addLog("✅ Header appended successfully!");
             this.nextIndex = 0;
+
             const tryPlay = (delay = 100) => {
               this.video.play().catch(() => {
                 if (delay < 5000) {
@@ -339,12 +331,14 @@ class StreamController {
             this.isProcessing = false;
           }
         } catch (e) {
+          console.error("🔥 CRITICAL BUFFER APPEND EXCEPTION:", e);
           this.isProcessing = false;
         }
         return;
       }
     }
 
+    // --- Regular Chunk Block ---
     const hasInQueue = this.chunkQueue.has(this.nextIndex);
     const hasInWarehouse = await warehouse.getChunk(
       this.sessionId,
@@ -358,20 +352,22 @@ class StreamController {
         : this.chunkQueue.get(this.nextIndex);
       try {
         const buf = await this.download(magnet, this.nextIndex);
-        if (buf && !this.sb.updating) {
+
+        // 🛡️ GUARD: Ensure SourceBuffer is completely free before appending the chunk
+        if (buf && this.sb && !this.sb.updating) {
           this.sb.appendBuffer(buf);
           this.nextIndex++;
 
           const t = this.video.currentTime;
-          if (t > 15 && this.sb && !this.sb.updating) {
+          if (t > 15 && !this.sb.updating) {
             try {
               this.sb.remove(0, t - 10);
             } catch (_) {}
           }
-        } else {
-          this.isProcessing = false;
         }
+        this.isProcessing = false;
       } catch (e) {
+        console.error("🔥 CRITICAL CHUNK APPEND EXCEPTION:", e);
         this.isProcessing = false;
       }
     }
@@ -382,17 +378,36 @@ class StreamController {
     const cached = await warehouse.getChunk(this.sessionId, index);
     if (cached) return cached;
 
-    // 2. Try P2P with a timeout
+    // 🚀 FAST PATH FOR HEADER (-1): Skip P2P timeout if peers don't have it yet,
+    // go straight to HTTP fallback to get the stream unblocked immediately!
+    if (index === -1) {
+      try {
+        const res = await fetch(
+          `${BACKEND_URL}/api/live-chunk/${this.sessionId}/${index}`,
+          { signal: AbortSignal.timeout(8000) },
+        );
+        if (res.ok) {
+          this.addLog(`✅ Direct HTTP fetch success for header (-1)`);
+          const buf = new Uint8Array(await res.arrayBuffer());
+          await warehouse.saveChunk(this.sessionId, index, buf);
+          return buf;
+        }
+      } catch (err) {
+        console.warn(`[stream] Header (-1) HTTP fetch failed:`, err);
+      }
+    }
+
+    // 2. Try P2P with a timeout (for regular chunks >= 0)
     const p2p = await Promise.race([
       this.tryP2P(magnet, index),
       new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
     ]);
     if (p2p) {
-      await warehouse.saveChunk(this.sessionId, index, p2p); // cache it
+      await warehouse.saveChunk(this.sessionId, index, p2p);
       return p2p;
     }
 
-    // 3. Fall back to HTTP fetch from Heroku
+    // 3. Fall back to HTTP fetch for regular chunks
     try {
       const res = await fetch(
         `${BACKEND_URL}/api/live-chunk/${this.sessionId}/${index}`,
@@ -401,7 +416,7 @@ class StreamController {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       this.addLog(`✅ Fetch success for chunk ${index}`);
       const buf = new Uint8Array(await res.arrayBuffer());
-      await warehouse.saveChunk(this.sessionId, index, buf); // cache it
+      await warehouse.saveChunk(this.sessionId, index, buf);
       return buf;
     } catch (err) {
       console.warn(`[stream] chunk ${index} failed both paths`, err);
@@ -486,64 +501,61 @@ const addLog = useCallback((msg) => {
   console.log(`[Stream] ${msg}`);
 }, []);
 
-  useEffect(() => {
-    const autoInitialize = async () => {
-      if (!controllerRef.current && sessionId) {
-        addLog("🚀 Auto-initializing player...");
-        const controller = new StreamController(
-          sessionId,
-          addLog,
-          () => {},
-          containerRef.current,
-        );
-        controller.onThumbnailLoaded = (thumbnailUrl) => {
-          setThumbnail(thumbnailUrl);
-          if (onThumbnailLoaded) onThumbnailLoaded(thumbnailUrl);
-        };
+useEffect(() => {
+  const autoInitialize = async () => {
+    if (!controllerRef.current && sessionId) {
+      addLog("🚀 Auto-initializing player...");
+      const controller = new StreamController(
+        sessionId,
+        addLog,
+        () => {},
+        containerRef.current,
+      );
+      controller.onThumbnailLoaded = (thumbnailUrl) => {
+        setThumbnail(thumbnailUrl);
+        if (onThumbnailLoaded) onThumbnailLoaded(thumbnailUrl);
+      };
 
-        controllerRef.current = controller;
-        setIsJoined(true);
-        // DELETE THESE TWO LINES:
-        if (containerRef.current)
-          containerRef.current.appendChild(controller.video);
-        controller.video.src = URL.createObjectURL(controller.ms);
+      controllerRef.current = controller;
+      setIsJoined(true);
+      if (containerRef.current)
+        containerRef.current.appendChild(controller.video);
+      controller.video.src = URL.createObjectURL(controller.ms);
 
-        const v = controller.video;
-        v.addEventListener("timeupdate", () => setCurrentTime(v.currentTime));
-        v.addEventListener("durationchange", () =>
-          setDuration(v.duration || 0),
-        );
-        v.addEventListener("play", () => setIsPaused(false));
-        v.addEventListener("pause", () => setIsPaused(true));
-        v.addEventListener("volumechange", () =>
-          setVolume(v.muted ? 0 : v.volume),
-        );
+      const v = controller.video;
+      v.addEventListener("timeupdate", () => setCurrentTime(v.currentTime));
+      v.addEventListener("durationchange", () => setDuration(v.duration || 0));
+      v.addEventListener("play", () => setIsPaused(false));
+      v.addEventListener("pause", () => setIsPaused(true));
+      v.addEventListener("volumechange", () =>
+        setVolume(v.muted ? 0 : v.volume),
+      );
 
-        if (initialChunks.length > 0) {
-          initialChunks.forEach((chunk) => {
-            if (chunk.thumbnailUrl && !thumbnail) {
-              setThumbnail(chunk.thumbnailUrl);
-              if (onThumbnailLoaded) onThumbnailLoaded(chunk.thumbnailUrl);
-            }
-          });
-        }
-        await controller.sweepWarehouse();
-        addLog("✅ Auto-initialization complete.");
+      if (initialChunks.length > 0) {
+        initialChunks.forEach((chunk) => {
+          if (chunk.thumbnailUrl && !thumbnail) {
+            setThumbnail(chunk.thumbnailUrl);
+            if (onThumbnailLoaded) onThumbnailLoaded(chunk.thumbnailUrl);
+          }
+        });
       }
-    };
-    autoInitialize();
+      await controller.sweepWarehouse();
+      addLog("✅ Auto-initialization complete.");
+    }
+  };
+  autoInitialize();
 
-    return () => {
-      if (sessionId) {
-        console.log("👋 Unmounting player. Telling backend to stop seeding.");
-        fetch(`${process.env.EXPO_PUBLIC_HEROKU_URL}/api/stream-leave`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId }),
-        }).catch(() => {});
-      }
-    };
-  }, [sessionId]);
+  return () => {
+    if (sessionId) {
+      console.log("👋 Unmounting player. Telling backend to stop seeding.");
+      fetch(`${process.env.EXPO_PUBLIC_HEROKU_URL}/api/stream-leave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      }).catch(() => {});
+    }
+  };
+}, [sessionId]);
 
   useEffect(() => {
     if (initialChunks.length > 0) {
@@ -565,17 +577,7 @@ const addLog = useCallback((msg) => {
     }
   }, [onThumbnailLoaded]);
 
-  useEffect(() => {
-    if (isJoined && controllerRef.current) controllerRef.current.forceTick();
-  }, [availableInWarehouse]);
 
-  useEffect(() => {
-    if (isJoined && controllerRef.current) {
-      if (initialChunks.length > 0)
-        controllerRef.current.addChunks(initialChunks);
-      controllerRef.current.tick();
-    }
-  }, [isJoined, availableInWarehouse.length]);
 
   useEffect(() => {
     if (!sessionId) return;

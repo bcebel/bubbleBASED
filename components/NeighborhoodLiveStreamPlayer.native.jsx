@@ -258,6 +258,7 @@ export default function NeighborhoodLiveStreamPlayer({ sessionId }) {
   }
 
   forceTick() {
+  this.isProcessing = false;
     this.tick();
   }
 
@@ -345,46 +346,38 @@ export default function NeighborhoodLiveStreamPlayer({ sessionId }) {
     this.tick();
   }
 
-  async tick() {
+async tick() {
     if (this.isProcessing) return;
     if (this.ms.readyState !== "open") await this.once(this.ms, "sourceopen");
-    if (this.sb?.updating) return;
+    
+    // 🛡️ HARD GUARD: If the SourceBuffer is updating, abort immediately!
+    if (!this.sb || this.sb.updating) return;
 
     if (this.isManaged && !this.canAppend) return;
 
-    if (!this.sb && this.detectedMimeType) {
-      try {
-        if (!this.MS.isTypeSupported(this.detectedMimeType)) {
-          this.detectedMimeType = 'video/mp4; codecs="mp4a.40.2, avc1.4d4015"';
-        }
-        this.sb = this.ms.addSourceBuffer(this.detectedMimeType);
-        this.sb.mode = "sequence";
-        this.sb.addEventListener("updateend", () => {
-          this.isProcessing = false;
-          this.processBufferQueue();
-          this.tick();
-        });
-      } catch (e) {
-        console.error("❌ SourceBuffer Fail:", e);
-      }
-    }
-
-    if (!this.sb || this.sb.updating) return;
-
+    // --- Header Loading Block ---
     if (!this.headerLoaded) {
-      const hasHeaderInWarehouse = await warehouse.getChunk(
-        this.sessionId,
-        -1
-      );
+      const hasHeaderInWarehouse = await warehouse.getChunk(this.sessionId, -1);
       if (this.setupMagnet || hasHeaderInWarehouse) {
         this.isProcessing = true;
         try {
           const magnet = this.setupMagnet || "cached";
           const buf = await this.download(magnet, -1);
-          if (buf) {
+          
+          // Double-check sb state right before appending
+          if (buf && this.sb && !this.sb.updating) {
+
+if (this.ms.readyState !== "open" || !this.sb.buffered) {
+              this.addLog("⚠️ SourceBuffer was detached from MediaSource. Aborting append.");
+              this.isProcessing = false;
+              return;
+            }
+
             this.sb.appendBuffer(buf);
             this.headerLoaded = true;
+            this.addLog("✅ Header appended successfully!");
             this.nextIndex = 0;
+            
             const tryPlay = (delay = 100) => {
               this.video.play().catch(() => {
                 if (delay < 5000) {
@@ -398,56 +391,63 @@ export default function NeighborhoodLiveStreamPlayer({ sessionId }) {
             this.isProcessing = false;
           }
         } catch (e) {
+          console.error("🔥 CRITICAL BUFFER APPEND EXCEPTION:", e);
           this.isProcessing = false;
         }
         return;
       }
     }
 
+    // --- Regular Chunk Block ---
     const hasInQueue = this.chunkQueue.has(this.nextIndex);
-    const hasInWarehouse = await warehouse.getChunk(
-      this.sessionId,
-      this.nextIndex
-    );
+    const hasInWarehouse = await warehouse.getChunk(this.sessionId, this.nextIndex);
 
-    if (this.headerLoaded && (hasInQueue || hasInWarehouse)) {
+    if (this.headerLoaded === true && (hasInQueue || hasInWarehouse)) {
       this.isProcessing = true;
-      const magnet = hasInWarehouse
-        ? "cached"
-        : this.chunkQueue.get(this.nextIndex);
-  try {
+      const magnet = hasInWarehouse ? "cached" : this.chunkQueue.get(this.nextIndex);
+      try {
         const buf = await this.download(magnet, this.nextIndex);
         
-        if (buf && !this.sb.updating) {
-          try {
-            // Try to append the video chunk
-            this.sb.appendBuffer(buf);
-            this.nextIndex++; // Advance on success
-          } catch (appendError) {
-            // 🚨 If the decoder rejects it, log it and force advance!
-            this.nextIndex++; // Force advance so we don't get stuck
-          }
+        // 🛡️ GUARD: Ensure SourceBuffer is completely free before appending the chunk
+        if (buf && this.sb && !this.sb.updating) {
+          this.sb.appendBuffer(buf);
+          this.nextIndex++;
 
-        const t = this.video.currentTime;
-          if (t > 15 && this.sb && !this.sb.updating) {
+          const t = this.video.currentTime;
+          if (t > 15 && !this.sb.updating) {
             try {
               this.sb.remove(0, t - 10);
             } catch (_) {}
           }
-        } else {
-          this.isProcessing = false;
         }
+        this.isProcessing = false;
       } catch (e) {
-        // 👈 This is the outer catch that was missing!
-        console.error("❌ Download failed:", e);
+        console.error("🔥 CRITICAL CHUNK APPEND EXCEPTION:", e);
         this.isProcessing = false;
       }
     }
   }
 
-  async download(magnet, index) {
+async download(magnet, index) {
     const cached = await warehouse.getChunk(this.sessionId, index);
     if (cached) return cached;
+
+    // 🚀 FAST PATH FOR HEADER (-1): Bypass P2P timeout for index -1 and hit HTTP directly
+    if (index === -1) {
+      try {
+        const res = await fetch(
+          BACKEND_URL + "/api/live-chunk/" + this.sessionId + "/" + index,
+          { signal: AbortSignal.timeout(8000) }
+        );
+        if (res.ok) {
+          const buf = new Uint8Array(await res.arrayBuffer());
+          await warehouse.saveChunk(this.sessionId, index, buf);
+          return buf;
+        }
+      } catch (err) {
+        console.warn("[stream] Header (-1) HTTP fetch failed:", err);
+      }
+    }
 
     const p2p = await Promise.race([
       this.tryP2P(magnet, index),
@@ -472,7 +472,6 @@ export default function NeighborhoodLiveStreamPlayer({ sessionId }) {
       return null;
     }
   }
-
   async tryP2P(magnet, index) {
     return new Promise(async (resolve) => {
       if (!magnet || magnet === "cached") return resolve(null);
