@@ -65,17 +65,30 @@
                 });
 
                 document.getElementById("status").innerText = "Camera Active. Recording...";
-
-                // Use WebM because Android likes it, or MP4 if it insists
-           const mimeType = MediaRecorder.isTypeSupported('video/mp4; codecs="avc1.42E01E"')
-                    ? 'video/mp4; codecs="avc1.42E01E"'
-                    : MediaRecorder.isTypeSupported('video/mp4')
-                        ? 'video/mp4'
-                        : 'video/webm';
+                
+                const mimeType = 'video/mp4; codecs="avc1.42E01E"';
 
                 mediaRecorder = new MediaRecorder(localStream, { mimeType });
 
                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(e.data);
+                        reader.onloadend = () => {
+                            const base64data = reader.result.split(',')[1];
+                            const index = chunkIndex === 0 ? -1 : chunkIndex - 1;
+
+                            window.ReactNativeWebView.postMessage(JSON.stringify({
+                                type: "CHUNK",
+                                index: index,
+                                base64: base64data,
+                                mimeType: mimeType
+                            }));
+
+                            chunkIndex++;
+                        };
+                    }
+                };
                     if (e.data.size > 0) {
                         // 🚨 IGNORE THE 751-BYTE GHOST HEADER
                         if (e.data.size < 500) {

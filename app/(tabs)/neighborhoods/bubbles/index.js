@@ -427,8 +427,8 @@ const currentUserId = meData?.me?.id;
             </ScrollView>
         </View>
 
-        {/* PAGE 3: GLOBAL */}
-<View style={{ width, flex: 1 }}>                 <ScrollView 
+        <View style={{ width, flex: 1 }}>
+          <ScrollView 
       nestedScrollEnabled={true} 
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 100 }}
