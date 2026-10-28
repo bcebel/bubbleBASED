@@ -89,12 +89,13 @@ export default function NeighborhoodLiveStreamRecorder({
       });
       sessionIdRef.current = data.createStream.sessionId;
       setIsStreaming(true);
+         const token = await AsyncStorage.getItem("token");
 
       // 🚨 CALL THE FUNCTION DIRECTLY
       // Inside your startStream function in React Native (NeighborhoodLiveStreamRecorder.android.tsx):
       webViewRef.current?.injectJavaScript(`
   if (window.startRecording) {
-    window.startRecording("${sessionIdRef.current}");
+    window.startRecording("${sessionIdRef.current}, ${token}");
   } else {
     console.error("startRecording is not defined yet");
   }
@@ -105,6 +106,7 @@ export default function NeighborhoodLiveStreamRecorder({
     }
   };
 
+      
   const stopStream = () => {
     setIsStreaming(false);
     webViewRef.current?.injectJavaScript(`
@@ -121,6 +123,12 @@ export default function NeighborhoodLiveStreamRecorder({
        if (data.type === "CHUNK") {
          // Upload to backend (for fallback and database record)
          const token = await AsyncStorage.getItem("token");
+         console.log(
+           "🔑 Token being sent to live-chunk-native:",
+           token
+             ? "Token exists (" + token.substring(0, 10) + "...)"
+             : "❌ NO TOKEN FOUND",
+         );
          const res = await fetch(`${BACKEND_URL}/api/live-chunk-native`, {
            method: "POST",
            headers: {

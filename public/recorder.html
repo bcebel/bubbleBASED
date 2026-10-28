@@ -42,6 +42,7 @@
         let localStream;
         let torrentClient;
         let currentSessionId;
+        let authToken = "";
 
         function initTorrent() {
             if (!torrentClient) {
@@ -55,6 +56,7 @@
             if (sessionId) {
                 currentSessionId = sessionId;
             }
+            if (token) authToken = token;
             console.log("🎥 HTML Recorder: Starting for session:", currentSessionId);
             try {
                 if (!window.WebTorrent) {
@@ -112,6 +114,10 @@
                             try {
                                 await fetch(`https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/live-chunk-native`, {
                                     method: 'POST',
+                                    headers: {
+                                        
+                                        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+                                    },
                                     body: formData // Express/Multer handles this natively without size limits or base64 bugs
                                 });
                             } catch (err) {
