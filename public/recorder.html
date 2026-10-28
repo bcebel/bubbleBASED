@@ -95,41 +95,40 @@
                 mediaRecorder = new MediaRecorder(localStream, { mimeType });
 
           // Inside your HTML recorder onDataAvailable:
+                // Inside your HTML recorder onDataAvailable:
                 mediaRecorder.ondataavailable = async (e) => {
                     if (e.data.size > 0) {
                         const index = chunkIndex === 0 ? -1 : chunkIndex - 1;
 
-                        // 1. Seed via WebTorrent instantly
+                        // 1. Seed via WebTorrent instantly (Primary P2P pipeline - never block this)
                         const client = initTorrent();
                         client.seed(e.data, { name: `chunk-${index}.mp4` }, async (torrent) => {
                             console.log(`Seeded chunk ${index}: ${torrent.magnetURI}`);
 
-                            // 2. Upload the raw Blob to Heroku as a clean multipart file (No base64 corruption!)
+                            // 2. Send the magnet link up via postMessage immediately
+                            window.ReactNativeWebView.postMessage(JSON.stringify({
+                                type: "CHUNK",
+                                index: index,
+                                magnetURI: torrent.magnetURI
+                            }));
+
+                            // 3. Optional Heroku Backup Upload (Fire-and-forget, don't let it block or crash the stream)
                             const formData = new FormData();
                             formData.append('sessionId', currentSessionId);
                             formData.append('chunkIndex', index);
                             formData.append('mimeType', mimeType);
                             formData.append('chunkFile', e.data, `chunk-${index}.mp4`);
 
-                            try {
-                                await fetch(`https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/live-chunk-native`, {
-                                    method: 'POST',
-                                    headers: {
-                                        
-                                        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
-                                    },
-                                    body: formData // Express/Multer handles this natively without size limits or base64 bugs
-                                });
-                            } catch (err) {
-                                console.error("Heroku backup upload failed:", err);
-                            }
-
-                            // 3. Send the magnet link up via postMessage
-                            window.ReactNativeWebView.postMessage(JSON.stringify({
-                                type: "CHUNK",
-                                index: index,
-                                magnetURI: torrent.magnetURI
-                            }));
+                            fetch(`https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/live-chunk-native`, {
+                                method: 'POST',
+                                headers: {
+                                    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+                                },
+                                body: formData
+                            }).catch(err => {
+                                // Silently catch Heroku hiccups so a 503 doesn't break your local WebTorrent broadcast
+                                console.warn("Heroku backup sync skipped:", err);
+                            });
                         });
 
                         chunkIndex++;
