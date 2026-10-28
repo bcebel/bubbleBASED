@@ -157,7 +157,7 @@
         document.addEventListener("message", (event) => {
             try {
                 const data = JSON.parse(event.data);
-                if (data.action === "start") startRecording();
+            if (data.action === "start") startRecording(data.sessionId, data.token); 
                 if (data.action === "stop") stopRecording();
             } catch (e) { }
         });
@@ -165,7 +165,7 @@
         window.addEventListener("message", (event) => {
             try {
                 const data = JSON.parse(event.data);
-                if (data.action === "start") startRecording();
+               if (data.action === "start") startRecording(data.sessionId, data.token); 
                 if (data.action === "stop") stopRecording();
             } catch (e) { }
         });
