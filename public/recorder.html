@@ -110,7 +110,7 @@
                             formData.append('chunkFile', e.data, `chunk-${index}.mp4`);
 
                             try {
-                                await fetch(`${BACKEND_URL}/api/live-chunk-native`, {
+                                await fetch(`https://minnowspacebackend-e6635e46c3d0.herokuapp.com/api/live-chunk-native`, {
                                     method: 'POST',
                                     body: formData // Express/Multer handles this natively without size limits or base64 bugs
                                 });
