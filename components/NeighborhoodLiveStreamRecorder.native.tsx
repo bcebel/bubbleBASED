@@ -117,58 +117,35 @@ webViewRef.current?.injectJavaScript(`
     if (onStreamEnd) onStreamEnd();
   };
 
-   const onMessage = async (event) => {
-     try {
-       const data = JSON.parse(event.nativeEvent.data);
+const onMessage = async (event) => {
+  try {
+    const data = JSON.parse(event.nativeEvent.data);
 
-       if (data.type === "CHUNK") {
-         // Upload to backend (for fallback and database record)
-         const token = await AsyncStorage.getItem("token");
-         console.log(
-           "🔑 Token being sent to live-chunk-native:",
-           token
-             ? "Token exists (" + token.substring(0, 10) + "...)"
-             : "❌ NO TOKEN FOUND",
-         );
-         const res = await fetch(`${BACKEND_URL}/api/live-chunk-native`, {
-           method: "POST",
-           headers: {
-             "Content-Type": "application/json",
-             ...(token ? { Authorization: `Bearer ${token}` } : {}),
-           },
-           body: JSON.stringify({
-             sessionId: sessionIdRef.current,
-             chunkIndex: data.index,
-             rotation: 0,
-             base64: data.base64,
-             mimeType: data.mimeType,
-           }),
-         });
+    if (data.type === "CHUNK") {
+      console.log(`📥 Received chunk ${data.index} magnet link from WebView`);
 
-         if (res.ok) {
-           const result = await res.json();
+      // Skip the redundant Heroku fetch here, because the HTML recorder
+      // already uploaded the raw binary FormData file directly!
+      // Just broadcast the magnet link via GraphQL:
 
-           // 🚨 Use the local WebTorrent magnet link if available
-           const finalMagnet = data.magnetURI || result.magnetUri;
+      await sendChunk({
+        variables: {
+          content: data.index === -1 ? "STREAM_HEADER" : "",
+          neighborhoodId,
+          magnetLink: data.magnetURI,
+          fileType: data.index === -1 ? "video_header" : "video_chunk",
+          sessionId: sessionIdRef.current,
+          chunkIndex: data.index,
+          fileName: `chunk-${data.index}.mp4`,
+        },
+      });
 
-           await sendChunk({
-             variables: {
-               content: data.index === -1 ? "STREAM_HEADER" : "",
-               neighborhoodId,
-               magnetLink: finalMagnet, // 👈 Use the local peer's magnet link
-               fileType: data.index === -1 ? "video_header" : "video_chunk",
-               sessionId: sessionIdRef.current,
-               chunkIndex: data.index,
-               fileName: `chunk-${data.index}.mp4`,
-             },
-           });
-           setChunkCount((prev) => prev + 1);
-         }
-       }
-     } catch (e) {
-       console.error("WebView Message Error:", e);
-     }
-   };
+      setChunkCount((prev) => prev + 1);
+    }
+  } catch (e) {
+    console.error("WebView Message Error:", e);
+  }
+};
 
   return (
     <View style={styles.container}>
