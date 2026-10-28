@@ -13,10 +13,13 @@ import {
 import AffiliateCard from "./AffiliateCard";
 import WebTorrentMedia from "./WebTorrentMedia";
 import { useMutation, useQuery, gql } from "@apollo/client";
-import { DELETE_POST, GET_COMMENTS } from "../components/graphql/queries";
+import {
+  DELETE_POST,
+  GET_COMMENTS,
+  GET_NEIGHBORHOOD_INFO,
+} from "../components/graphql/queries";
 import CommentSection from "./CommentSection";
 import { canModerate } from "../utils/permissions";
-import { GET_NEIGHBORHOOD_INFO } from "../components/graphql/queries";
 const getFileType = (fileName = "") => {
   const ext = fileName.split(".").pop()?.toLowerCase();
   if (

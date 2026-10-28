@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#F5F2FA"
       },
-      "package": "com.anonymous.ebubbl",
+      "package": "com.ebubbl.app",
       "permissions": [
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.RECORD_AUDIO",

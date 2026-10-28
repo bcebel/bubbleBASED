@@ -58,7 +58,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="neighborhoods/bubbles"
+        name="neighborhoods/bubbles/index"
         options={{
           tabBarIcon: () => (
             <View style={styles.bubbleGlass}>
@@ -149,7 +149,6 @@ export default function TabLayout() {
         options={{ href: null }}
       />
       <Tabs.Screen name="neighborhoods/bubbles/[id]" options={{ href: null }} />
-      <Tabs.Screen name="bubbles" options={{ href: null }} />
       <Tabs.Screen
         name="neighborhoods/bubbles/global"
         options={{ href: null }}
