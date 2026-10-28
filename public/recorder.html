@@ -104,7 +104,7 @@
 
                             // 2. Upload the raw Blob to Heroku as a clean multipart file (No base64 corruption!)
                             const formData = new FormData();
-                            formData.append('sessionId', sessionIdRef.current);
+                            formData.append('sessionId', currentSessionId);
                             formData.append('chunkIndex', index);
                             formData.append('mimeType', mimeType);
                             formData.append('chunkFile', e.data, `chunk-${index}.mp4`);
