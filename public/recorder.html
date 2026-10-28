@@ -41,6 +41,7 @@
         let chunkIndex = 0;
         let localStream;
         let torrentClient;
+        let currentSessionId;
 
         function initTorrent() {
             if (!torrentClient) {
@@ -49,8 +50,12 @@
             return torrentClient;
         }
 
-        async function startRecording() {
+        async function startRecording(sessionId) {
             console.log("🎥 HTML Recorder: Received start command");
+            if (sessionId) {
+                currentSessionId = sessionId;
+            }
+            console.log("🎥 HTML Recorder: Starting for session:", currentSessionId);
             try {
                 if (!window.WebTorrent) {
                     document.getElementById("status").innerText = "Loading WebTorrent...";

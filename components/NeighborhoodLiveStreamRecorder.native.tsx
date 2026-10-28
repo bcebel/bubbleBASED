@@ -91,14 +91,15 @@ export default function NeighborhoodLiveStreamRecorder({
       setIsStreaming(true);
 
       // 🚨 CALL THE FUNCTION DIRECTLY
+      // Inside your startStream function in React Native (NeighborhoodLiveStreamRecorder.android.tsx):
       webViewRef.current?.injectJavaScript(`
-        if (window.startRecording) {
-          window.startRecording();
-        } else {
-          console.error("startRecording is not defined yet");
-        }
-        true;
-      `);
+  if (window.startRecording) {
+    window.startRecording("${sessionIdRef.current}");
+  } else {
+    console.error("startRecording is not defined yet");
+  }
+  true;
+`);
     } catch (error) {
       Alert.alert("Error", "Could not start the stream.");
     }
