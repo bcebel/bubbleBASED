@@ -14,7 +14,7 @@ import { BlurView } from "expo-blur";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Head from "expo-router/head";
-import WebTorrentMedia from "@/components/WebTorrentMedia";
+import WebTorrentMedia from "@/components/WebTorrentMediaPosts";
 import { themes } from "../../components/theme";
 import { warehouse } from "../../components/StreamWearhouse";
 import { mediaCache } from "../../components/mediaCache";

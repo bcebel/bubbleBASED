@@ -110,68 +110,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      {/* Hidden screens - leave them exactly as they are */}
-      <Tabs.Screen name="PostComposer" options={{ href: null }} />
-      <Tabs.Screen
-        name="/PostFeed"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="post/[id]"
-        options={{ href: null }}
-      />
-
-      <Tabs.Screen name="gallery2" options={{ href: null }} />
-      <Tabs.Screen
-        name="/bublic"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="/pending-requests"
-        options={{ href: null }}
-      />
-      <Tabs.Screen name="setup/personal/myGallery" options={{ href: null }} />
-      <Tabs.Screen name="bubbles/global" options={{ href: null }} />
-      <Tabs.Screen
-        name="/neighborhood-postfeed"
-        options={{ href: null }}
-      />
-      <Tabs.Screen name="neighborhoods/staticParams" options={{ href: null }} />
-      <Tabs.Screen
-        name="/neighborhood-chat"
-        options={{ href: null }}
-      />
-      <Tabs.Screen name="/[id]" options={{ href: null }} />
-      <Tabs.Screen
-        name="/global"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="/create"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="/neighborhood-livestream"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="/invite-links"
-        options={{ href: null }}
-      />
-      <Tabs.Screen name="setup/setup" options={{ href: null }} />{" "}
-      <Tabs.Screen name="setup/personal/[id]" options={{ href: null }} />
-      <Tabs.Screen
-        name="/neighborhood-members"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="/neighborhood-gallery"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="/neighborhoodgallery"
-        options={{ href: null }}
-      />
+ 
     </Tabs>
   );
 }

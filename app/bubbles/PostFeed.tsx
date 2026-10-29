@@ -11,7 +11,7 @@ import {
 import { useQuery } from "@apollo/client";
 import { GET_POSTS } from "../../components/graphql/queries";
 import FeedItem from "../../components/FeedItem";
-import PostComposer from "../(tabs)/PostComposer";
+import PostComposer from "../../app/PostComposer";
 import RandomAd from "../../components/RandomAd";
 import { Link } from "expo-router";
 

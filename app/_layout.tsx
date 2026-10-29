@@ -57,37 +57,27 @@ useEffect(() => {
         `}</style>
         </Head>
         <ApolloProviderWrapper>
-            <View role="banner" style={{ flex: 0 }}>
-              <StatusBar style={isDark ? "light" : "dark"} />
-            </View>
+          <View role="banner" style={{ flex: 0 }}>
+            <StatusBar style={isDark ? "light" : "dark"} />
+          </View>
 
-            {/* ⚡ Content renders immediately even if font is downloading */}
-            <View role="main" style={{ flex: 1 }}>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: {
-                    backgroundColor: isDark ? "#1C0A2E" : "#FFFFFF",
-                  },
-                }}
-              >
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="login" options={{ title: "Login" }} />
-                <Stack.Screen name="register" options={{ title: "Register" }} />
-                <Stack.Screen
-                  name="forgotpassword"
-                  options={{ title: "Forgotpassword" }}
-                />
-                <Stack.Screen
-                  name="reset-password"
-                  options={{ title: "Reset-password" }}
-                />
-                <Stack.Screen
-                  name="+not-found"
-                  options={{ title: "Not Found" }}
-                />
-              </Stack>
-            </View>
+          {/* ⚡ Content renders immediately even if font is downloading */}
+          <View role="main" style={{ flex: 1 }}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: {
+                  backgroundColor: isDark ? "#1C0A2E" : "#FFFFFF",
+                },
+              }}
+            >
+\
+              <Stack.Screen
+                name="+not-found"
+                options={{ title: "Not Found" }}
+              />
+            </Stack>
+          </View>
         </ApolloProviderWrapper>
       </SafeAreaProvider>
     );

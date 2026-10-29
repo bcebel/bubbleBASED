@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { Image } from "expo-image";
-import WebTorrentMedia from "./WebTorrentMedia";
+import WebTorrentMedia from "./WebTorrentMediaPosts";
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 

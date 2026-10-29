@@ -41,7 +41,7 @@ import * as FileSystem from "expo-file-system";
 import { useVideoPlayer, VideoView } from "expo-video";
 import AdMessage from "./AdMessage";
 import ChatMediaRenderer from "./ChatMediaRenderer";
-import WebTorrentMedia from "@/components/WebTorrentMedia";
+import WebTorrentMedia from "@/components/WebTorrentMediaPosts";
 const NeighborhoodLiveStreamRecorder = lazy(
   () => import("@/components/NeighborhoodLiveStreamRecorder"),
 );

@@ -11,7 +11,7 @@ import {
   FlatList,
 } from "react-native";
 import AffiliateCard from "./AffiliateCard";
-import WebTorrentMedia from "./WebTorrentMedia";
+import WebTorrentMedia from "./WebTorrentMediaPosts";
 import { useMutation, useQuery, gql } from "@apollo/client";
 import {
   DELETE_POST,

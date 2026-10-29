@@ -11,7 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
-import WebTorrentMedia from "../components/WebTorrentMedia";
+import WebTorrentMedia from "../components/WebTorrentMediaPosts";
 import { Image } from "expo-image";
 import AdMessage from "./AdMessage";
 

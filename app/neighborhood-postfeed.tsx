@@ -13,6 +13,9 @@ import PostFeed from "./PostFeed"; // Adjust path if needed
 
 export default function NeighborhoodGalleryScreen() {
   const params = useLocalSearchParams();
+
+  console.log(params);
+
   const router = useRouter();
   const handleGoBack = () => {
     // 🌟 This forces Expo Router to cleanly pop the post screen
