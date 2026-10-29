@@ -12,7 +12,9 @@ import {
 import { WebView } from "react-native-webview";
 import { useMutation, gql } from "@apollo/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
+const router = useRouter(); 
 const BACKEND_URL = process.env.EXPO_PUBLIC_HEROKU_URL;
 
 const CREATE_STREAM = gql`
@@ -168,9 +170,17 @@ const onMessage = async (event) => {
       />
       <View style={styles.overlay}>
         {!isStreaming ? (
-          <TouchableOpacity style={styles.button} onPress={startStream}>
-            <Text style={styles.buttonText}>🔴 START LIVE STREAM</Text>
-          </TouchableOpacity>
+          <View>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.replace("/livestream")}
+            >
+              <Text style={styles.backText}>← Back</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={startStream}>
+              <Text style={styles.buttonText}>🔴 START LIVE STREAM</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <TouchableOpacity
             style={[styles.button, { backgroundColor: "#444" }]}
@@ -193,7 +203,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000" },
   overlay: {
     position: "absolute",
-    bottom: 40,
+    bottom: 100,
     left: 20,
     right: 20,
     alignItems: "center",
@@ -207,4 +217,6 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "white", fontWeight: "bold", fontSize: 16 },
   statusText: { color: "#00ffff", marginTop: 15, fontWeight: "bold" },
+  backButton: { color: "red", marginBottom: 200},
+  backText: {color: "white"}
 });

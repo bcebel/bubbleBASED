@@ -52,8 +52,11 @@ export default function SelectorScreenNative() {
   // 2. Otherwise, show the native bubble picker
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <Text style={styles.backText}>← Back</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>Pick a Bubble to Stream To</Text>
-      
+
       {lHoods ? (
         <ActivityIndicator size="large" color="#fff" />
       ) : (
@@ -81,10 +84,6 @@ export default function SelectorScreenNative() {
           </TouchableOpacity>
         </ScrollView>
       )}
-
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>← Back</Text>
-      </TouchableOpacity>
     </View>
   );
 }
