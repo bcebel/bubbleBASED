@@ -1,9 +1,11 @@
-
-/*
 import { ScrollViewStyleReset } from "expo-router/html";
 import { type PropsWithChildren } from "react";
+import { useServerDocumentContext } from "expo-router/html";
 
 export default function Root({ children }: PropsWithChildren) {
+  const { headNodes, bodyNodes, htmlAttributes, bodyAttributes } =
+    useServerDocumentContext();
+
   const title = "ebubbl 🫧";
   const description =
     "Join ebubbl.com 🫧 a private social network where you control your privacy, earn from your content, and connect in digital neighborhoods. Bubbly & based.";
@@ -11,7 +13,7 @@ export default function Root({ children }: PropsWithChildren) {
   const image = "https://ebubbl.com/bble.png";
 
   return (
-    <html lang="en">
+    <html lang="en" {...htmlAttributes}>
       <head>
         <meta charSet="utf-8" />
 
@@ -148,9 +150,10 @@ export default function Root({ children }: PropsWithChildren) {
           content="6430b649-d08d-495d-8ef7-5f05702bf594"
         />
         <link rel="preload" as="image" href="/bble.png" />
+        {headNodes}
       </head>
 
-      <body>
+      <body {...bodyAttributes}>
         <div
           id="splash-screen"
           style={{
@@ -178,7 +181,6 @@ export default function Root({ children }: PropsWithChildren) {
             }}
           >
             digital bubbles 🫧 for everyone
-            <a href="/cameratest">cameratest</a>
           </h1>
 
           <img
@@ -235,7 +237,7 @@ export default function Root({ children }: PropsWithChildren) {
         </div>
 
         <div id="root">{children}</div>
-
+        {bodyNodes}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -342,5 +344,3 @@ export default function Root({ children }: PropsWithChildren) {
     </html>
   );
 }
-
-*/

@@ -1,8 +1,4 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "expo-router/react-navigation";
+
 import { useFonts } from "expo-font";
 import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -38,12 +34,12 @@ export default function RootLayout() {
       }
     }, []);
 
-    useEffect(() => {
-      if (loaded) {
-        SplashScreen.hideAsync();
-      }
-    }, [loaded]);
-
+useEffect(() => {
+  SplashScreen.hideAsync().catch(() => {});
+  if (typeof window !== "undefined" && window.__hideSplash) {
+    window.__hideSplash();
+  }
+}, []);
     return (
       <SafeAreaProvider>
         <Head>
@@ -61,7 +57,6 @@ export default function RootLayout() {
         `}</style>
         </Head>
         <ApolloProviderWrapper>
-          <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
             <View role="banner" style={{ flex: 0 }}>
               <StatusBar style={isDark ? "light" : "dark"} />
             </View>
@@ -93,7 +88,6 @@ export default function RootLayout() {
                 />
               </Stack>
             </View>
-          </ThemeProvider>
         </ApolloProviderWrapper>
       </SafeAreaProvider>
     );
