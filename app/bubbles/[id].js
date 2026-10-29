@@ -18,7 +18,7 @@ import {
   UPDATE_BUBBLE_PHOTO,
   LEAVE_NEIGHBORHOOD,
   JOIN_NEIGHBORHOOD,
-} from "../../../components/graphql/queries";
+} from "../../components/graphql/queries";
 import { ImageBackground } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
@@ -145,13 +145,13 @@ export default function NeighborhoodDetailScreen() {
     );
   }
 
-const isMember = neighborhood.members?.some(
-  (m) => m.user?.username === username,
-);
+  const isMember = neighborhood.members?.some(
+    (m) => m.user?.username === username,
+  );
 
-const hasPendingRequest = neighborhood.joinRequests?.some(
-  (r) => r.user?.id === userData?.me?.id && r.status === "pending",
-);
+  const hasPendingRequest = neighborhood.joinRequests?.some(
+    (r) => r.user?.id === userData?.me?.id && r.status === "pending",
+  );
 
   const handleJoin = async () => {
     try {

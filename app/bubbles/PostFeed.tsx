@@ -9,10 +9,10 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useQuery } from "@apollo/client";
-import { GET_POSTS } from "../../../components/graphql/queries";
-import FeedItem from "../../../components/FeedItem";
-import PostComposer from "../PostComposer";
-import RandomAd from "../../../components/RandomAd";
+import { GET_POSTS } from "../../components/graphql/queries";
+import FeedItem from "../../components/FeedItem";
+import PostComposer from "../(tabs)/PostComposer";
+import RandomAd from "../../components/RandomAd";
 import { Link } from "expo-router";
 
 export default function PostFeed({

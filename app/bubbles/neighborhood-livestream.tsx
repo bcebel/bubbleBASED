@@ -21,8 +21,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Head from "expo-router/head";
 import WebTorrentMedia from "@/components/WebTorrentMedia";
 
-import NeighborhoodLiveStreamPlayer from "../../../components/NeighborhoodLiveStreamPlayer";
-import { warehouse } from "../../../components/StreamWearhouse.js";
+import NeighborhoodLiveStreamPlayer from "../../components/NeighborhoodLiveStreamPlayer";
+import { warehouse } from "../../components/StreamWearhouse.js";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
 const API_BASE = "https://minnowspacebackend-e6635e46c3d0.herokuapp.com";
@@ -45,7 +45,6 @@ const DELETE_STREAM = gql`
     deleteStream(streamId: $streamId)
   }
 `;
-
 
 const LIVESTREAM_CHUNK_SUBSCRIPTION = gql`
   subscription OnLivestreamChunkAdded($sessionId: String!) {
@@ -243,7 +242,7 @@ function StreamItem({
 
 // --- TAB SCREEN ROUTE ---
 export default function StreamsScreen() {
-      const { neighborhoodId } = useLocalSearchParams();
+  const { neighborhoodId } = useLocalSearchParams();
   const router = useRouter();
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
 
@@ -261,15 +260,14 @@ export default function StreamsScreen() {
     checkLogin();
   }, []);
 
-const {
-  data: streamsData,
-  loading,
-  refetch,
-} = useQuery(GET_ACTIVE_LIVESTREAMS, {
-  variables: { neighborhoodId },
-  pollInterval: 5000,
-
-});
+  const {
+    data: streamsData,
+    loading,
+    refetch,
+  } = useQuery(GET_ACTIVE_LIVESTREAMS, {
+    variables: { neighborhoodId },
+    pollInterval: 5000,
+  });
 
   // 1. auth not resolved yet
   if (!authChecked) {
@@ -279,7 +277,6 @@ const {
       </View>
     );
   }
-
 
   // 3. logged in → actual app
   if (loading) {
@@ -291,8 +288,7 @@ const {
   }
 
   return (
-      <View style={styles.mainWrapper}>
-          
+    <View style={styles.mainWrapper}>
       <FlatList
         data={streamsData?.streams || []}
         keyExtractor={(item) => item.id}
