@@ -10,6 +10,7 @@ class WebTorrentService {
         ? window.enhancedTrackers
         : [
             "wss://tracker-0ad4cca9fd92.herokuapp.com",
+            "wss://tracker2-c3c2b7aba721.herokuapp.com",
             "wss://tracker.files.fm:7073/announce",
             "wss://tracker.webtorrent.dev",
             "wss://tracker.openwebtorrent.com",
