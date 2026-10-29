@@ -2023,7 +2023,7 @@ function NeighborhoodChatScreen() {
 
   return (
     <View style={styles.container}>
-      <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
+      <Link href={`/${neighborhoodId}`} replace asChild>
         <TouchableOpacity style={styles.backButton}>
           <Text style={styles.backButtonText}>← Back to Bubble</Text>
         </TouchableOpacity>

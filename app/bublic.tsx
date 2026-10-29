@@ -22,10 +22,10 @@ import { Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   GET_NEIGHBORHOODS,
-  GET_GLOBAL_BUBBLES,
+  GET_PUBLIC_BUBBLES,
   JOIN_NEIGHBORHOOD,
   LEAVE_NEIGHBORHOOD,
-} from "../../../../components/graphql/queries";
+} from "../components/graphql/queries";
 import WebTorrentMedia from "@/components/WebTorrentMedia";
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
@@ -71,7 +71,8 @@ export default function NeighborhoodsScreen() {
     error,
     data,
     refetch,
-  } = useQuery(GET_GLOBAL_BUBBLES, {
+  } = useQuery(GET_PUBLIC_BUBBLES, {
+    skip: !isLoggedIn,
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "network-only",
   });
@@ -83,7 +84,7 @@ export default function NeighborhoodsScreen() {
     try {
       await joinNeighborhood({
         variables: { neighborhoodId },
-        refetchQueries: [{ query: GET_GLOBAL_BUBBLES }],
+        refetchQueries: [{ query: GET_PUBLIC_BUBBLES }],
       });
       alert("✅ Joined neighborhood!");
     } catch (err) {
@@ -101,7 +102,7 @@ export default function NeighborhoodsScreen() {
     try {
       await leaveNeighborhood({
         variables: { neighborhoodId },
-        refetchQueries: [{ query: GET_GLOBAL_BUBBLES }],
+        refetchQueries: [{ query: GET_PUBLIC_BUBBLES }],
       });
       alert("👋 Left neighborhood");
     } catch (err) {
@@ -112,14 +113,225 @@ export default function NeighborhoodsScreen() {
   // 🚨 Loading state (only after login check)
   if (loading) return <ActivityIndicator size="large" style={styles.loading} />;
 
+  // 🚨 Logged out: Show the preview
+  if (!isLoggedIn) {
+    return (
+      <>
+        <Head>
+          <title>ebubbl - bubblehub</title>
+          <meta
+            name="description"
+            content="🫧  Make and join bubbles for whatever topic you would like!  Private and public bubbles, private and public profiles, you decide what to share with who, always."
+          />
+        </Head>
+
+        <View style={styles.container}>
+          <ImageBackground
+            source={require("@/assets/images/bbl.jpg")}
+            style={styles.heroBubble}
+            resizeMode="cover"
+          />
+
+          {/* NAV HEADER */}
+          <View
+            style={[
+              styles.navContainer,
+              isDesktop ? styles.navDesktop : styles.navMobile,
+            ]}
+          >
+            <View style={styles.brandContainer}>
+              <View style={styles.logoBadge}>
+                <Text style={styles.logoBadgeText}>bB</Text>
+              </View>
+              <Text style={styles.brandTitle}>ebubbl</Text>
+            </View>
+
+            <View style={styles.navLinks}>
+              <NavButton title="" />
+              <NavButton title="" />
+              <NavButton title="" />
+
+              <BlurView
+                intensity={50}
+                tint="dark"
+                style={styles.bubbleGlassCompact}
+              >
+                <TouchableOpacity
+                  style={styles.navActionButton}
+                  onPress={() => router.replace("/login")}
+                >
+                  <Text style={styles.navActionButtonText}>Sign In</Text>
+                </TouchableOpacity>
+              </BlurView>
+            </View>
+          </View>
+
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* HERO SECTION */}
+            <View
+              style={[
+                styles.heroSection,
+                isDesktop && styles.heroSectionDesktop,
+              ]}
+            >
+              <View
+                style={[
+                  styles.heroTextContainer,
+                  isDesktop && styles.heroTextDesktop,
+                ]}
+              >
+                <View style={styles.tagBadge}>
+                  <Text style={styles.tagBadgeText}>
+                    Your Own Social Network
+                  </Text>
+                </View>
+
+                <Text style={styles.heroTitle} role="heading" aria-level={1}>
+                  Make your own feed 🫧
+                </Text>
+
+                <Text style={styles.heroSub}>
+                  "Make and join bubbles for whatever topic you would like!
+                  Private and public bubbles, private and public profiles, you
+                  decide what to share with who, always. Meet new people, or
+                  chill with your best friends. All good. Different bubbles for
+                  different parts of your life. Assemble your perfect team.
+                </Text>
+
+                {/* ACTION BUTTONS (Login / Logout / Join) */}
+                <View style={styles.actionsRow}>
+                  <BlurView
+                    intensity={50}
+                    tint="dark"
+                    style={styles.bubbleGlass}
+                  >
+                    <TouchableOpacity
+                      style={styles.primaryButton}
+                      onPress={() => router.replace("/register")}
+                    >
+                      <Text style={styles.actionButtonText}>Join ebubbl</Text>
+                    </TouchableOpacity>
+                  </BlurView>
+
+                  <BlurView
+                    intensity={50}
+                    tint="dark"
+                    style={styles.bubbleGlass}
+                  >
+                    <TouchableOpacity
+                      style={styles.secondaryButton}
+                      onPress={() => router.replace("/login")}
+                    >
+                      <Text style={styles.actionButtonText}>
+                        Log in to make one.
+                      </Text>
+                    </TouchableOpacity>
+                  </BlurView>
+
+                  <BlurView
+                    intensity={50}
+                    tint="dark"
+                    style={styles.bubbleGlass}
+                  ></BlurView>
+                </View>
+              </View>
+
+              {/* CODE / PEER STATUS CARD */}
+              <View
+                style={[
+                  styles.heroVisualCard,
+                  isDesktop && styles.heroVisualDesktop,
+                ]}
+              >
+                <BlurView
+                  intensity={30}
+                  tint="dark"
+                  style={styles.demoGlassCard}
+                >
+                  {/* 1. WebTorrent Live Media Player */}
+                  <View style={styles.mediaFrame}>
+                    <WebTorrentMedia
+                      media={{
+                        cid: "QmdBW11LZ34UUwNK5oMSqFdaehLap9gFEGTinhh3WUwYyV",
+                        magnetLink:
+                          "magnet:?xt=urn:btih:c24538ae212eb0ec480bb190dcd9fd08bb581820&dn=video-QmdBW11LZ34UUwNK5oMSqFdaehLap9gFEGTinhh3WUwYyV&tr=wss%3A%2F%2Ftracker-0ad4cca9fd92.herokuapp.com&tr=wss%3A%2F%2Ftracker.files.fm%3A7073%2Fannounce&tr=wss%3A%2F%2Ftracker.webtorrent.dev&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.files.fm%3A7073&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&ws=https%3A%2F%2Ffuchsia-solid-parrot-571.mypinata.cloud%2Fipfs%2FQmdBW11LZ34UUwNK5oMSqFdaehLap9gFEGTinhh3WUwYyV",
+                        fileName: "post_1789941035452.mp4",
+                        fileType: "video",
+                      }}
+                      isFocused={true}
+                    />
+                    <View style={styles.peerBadge}>
+                      <View style={styles.liveDot} />
+                      <Text style={styles.peerBadgeText}></Text>
+                    </View>
+                  </View>
+
+                  {/* 2. Mock Terminal Status Box */}
+                  <View style={styles.mockTerminalBox}>
+                    <View style={styles.terminalHeader}>
+                      <View
+                        style={[styles.dot, { backgroundColor: "#FF5F56" }]}
+                      />
+                      <View
+                        style={[styles.dot, { backgroundColor: "#FFBD2E" }]}
+                      />
+                      <View
+                        style={[styles.dot, { backgroundColor: "#27C93F" }]}
+                      />
+                      <Text style={styles.terminalTitle}></Text>
+                    </View>
+                    <View style={styles.mockContentBox}>
+                      <Text style={styles.mockCodeText}>// ebubbl</Text>
+                      <Text style={styles.mockCodeTextAccent}>
+                        invitation: "based"{" "}
+                      </Text>
+                      <Text style={styles.mockCodeText}>privacy: "based" </Text>
+                      <Text style={styles.mockCodeText}>context: "based" </Text>
+                      <Text style={styles.mockCodeText}> </Text>
+                    </View>
+                  </View>
+                </BlurView>
+              </View>
+            </View>
+
+            {/* MARGARET MEAD QUOTE */}
+            <View style={styles.quoteSection}>
+              <BlurView
+                intensity={40}
+                tint="dark"
+                style={styles.quoteGlassCard}
+              >
+                <Text style={styles.quoteText}>
+                  "It's a beautiful day in the neighborhood"
+                </Text>
+                <Text style={styles.quoteAuthor}>— Mr. Rogers </Text>
+              </BlurView>
+            </View>
+
+            {/* FOOTER */}
+            <View style={styles.footerContainer}>
+              <Text style={styles.footerText}>
+                © {new Date().getFullYear()} ebubbl. Click tabs for more info.
+              </Text>
+            </View>
+          </ScrollView>
+        </View>
+      </>
+    );
+  }
+
   // 🚨 Query error state
   if (error) return <Text style={styles.error}>Error: {error.message}</Text>;
 
-  const neighborhoods = data?.discoverGlobalNeighborhoods || [];
+  const neighborhoods = data?.discoverNeighborhoods || [];
 
   const renderItem = ({ item }) => {
     return (
-      <Link href={`/bubbles/${item.id}`} asChild>
+      <Link href={`/${item.id}`} asChild>
         <View style={styles.neighborhoodItem}>
           <ImageBackground
             source={
@@ -158,13 +370,12 @@ export default function NeighborhoodsScreen() {
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
           <TouchableOpacity
             style={styles.createButton}
-            onPress={() => router.replace(`/neighborhoods/bubbles/create`)}
+            onPress={() => router.replace(`/create`)}
           >
             <Text style={styles.createButtonText}>➕ Create New Bubble</Text>
           </TouchableOpacity>
         </BlurView>
-        <Text style={styles.bubbleGlass2}>Publishes to web</Text>
-        <Text style={styles.bubbleGlass2}>if your user setting is public</Text>
+        <Text style={styles.bubbleGlass2}>Discoverable In App</Text>
       </View>
 
       {neighborhoods.length === 0 ? (
@@ -236,7 +447,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
 
-    backgroundColor: "#d7900833",
+    backgroundColor: "#c467d933",
   },
   header: {
     fontSize: 24,
@@ -361,7 +572,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     marginBottom: 16,
-    borderWidth: 1,
+    borderWidth: 0.1,
     borderColor: "rgba(255, 0, 129, 0.4)",
   },
   tagBadgeText: {
@@ -395,7 +606,7 @@ const styles = StyleSheet.create({
   bubbleGlassCompact: {
     borderRadius: 20,
     overflow: "hidden",
-    borderWidth: 1,
+    borderWidth: 0.1,
     borderColor: "rgba(255, 0, 129, 0.3)",
     backgroundColor: "rgba(255, 0, 129, 0.2)",
   },
@@ -463,7 +674,7 @@ const styles = StyleSheet.create({
   },
   neighborhoodType: {
     fontSize: 18,
-    color: "#d79008",
+    color: "#cf8fad",
     marginBottom: 8,
     alignSelf: "center",
   },
@@ -521,7 +732,7 @@ const styles = StyleSheet.create({
     padding: 40,
     backgroundColor: "#130720",
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: 0.1,
     borderColor: "#333",
     marginTop: 20,
   },
@@ -547,7 +758,7 @@ const styles = StyleSheet.create({
     overflow: "scroll",
     justifyContent: "flex-end",
     borderWidth: 0.5,
-    borderColor: "#d96769",
+    borderColor: "#cf8fad88",
     borderRadius: 48,
   },
   neighborhoodCardOverlay: {
@@ -586,10 +797,11 @@ const styles = StyleSheet.create({
     backdropFilter: "blur(16px) saturate(190%) brightness(1.1)",
     WebkitBackdropFilter: "blur(16px) saturate(190%) brightness(1.1)",
   },
+
   bubbleGlass2: {
     maxWidth: 600,
     alignSelf: "center",
-    color: "#d79008", // Semi-transparent background
+    color: "#cf8fad", // Semi-transparent background
     borderRadius: 48,
 
     // Web only (React Native Web supports this)

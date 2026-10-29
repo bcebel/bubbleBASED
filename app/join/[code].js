@@ -95,7 +95,7 @@ export default function JoinViaLinkScreen() {
             text: "Go to Neighborhood",
             onPress: () => {
               router.replace({
-                pathname: "/neighborhoods/bubbles/neighborhood-postfeed",
+                pathname: "/neighborhood-postfeed",
                 params: { neighborhoodId: nId },
               });
             },
@@ -253,7 +253,7 @@ export default function JoinViaLinkScreen() {
             style={[styles.joinButton, { backgroundColor: "#28a745" }]} // Green for success
             onPress={() => {
               router.replace({
-                pathname: "/neighborhoods/bubbles/neighborhood-postfeed",
+                pathname: "/neighborhood-postfeed",
                 params: { neighborhoodId: newNeighborhoodId },
               });
             }}

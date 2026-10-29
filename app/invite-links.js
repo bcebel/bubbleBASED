@@ -1,4 +1,4 @@
-// app/(tabs)/neighborhoods/bubbles/invite-links.js
+// app/(tabs)/invite-links.js
 import React, { useState } from "react";
 import {
   View,
@@ -23,7 +23,7 @@ import {
   CREATE_INVITE_LINK,
   UPDATE_INVITE_LINK,
   DELETE_INVITE_LINK,
-} from "../../../../components/graphql/queries";
+} from "../components/graphql/queries";
 
 export default function InviteLinksScreen() {
   const router = useRouter();
@@ -347,7 +347,7 @@ export default function InviteLinksScreen() {
       >
         <View style={styles.header}>
           <Link
-            href={`/neighborhoods/bubbles/${neighborhoodId}`}
+            href={`/${neighborhoodId}`}
             replace
             asChild
           >

@@ -11,9 +11,9 @@ export default function BubblesLayout() {
         contentStyle: { backgroundColor: "#130720" },
       }}
     >
-      <Stack.Screen name="../neighborhoods/bubbles/index" />
-      <Stack.Screen name="../neighborhoods/bubbles/bublic" />
-      <Stack.Screen name="../neighborhoods/bubbles/global" />
+      <Stack.Screen name="../index" />
+      <Stack.Screen name="../bublic" />
+      <Stack.Screen name="../global" />
     </Stack>
   );
 }

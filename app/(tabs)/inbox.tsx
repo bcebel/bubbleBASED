@@ -331,7 +331,7 @@ export default function InboxScreen() {
               <TouchableOpacity
                 onPress={() =>
                   router.replace(
-                    `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${item.id}`,
+                    `/neighborhood-chat?neighborhoodId=${item.id}`,
                   )
                 }
               >

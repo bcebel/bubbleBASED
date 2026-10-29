@@ -59,7 +59,7 @@ export default function CreateNeighborhoodScreen() {
       });
 
       alert(`Neighborhood "${data.createNeighborhood.name}" created!`);
-      router.replace(`neighborhoods/bubbles/${data.createNeighborhood.id}`);
+      router.replace(`/${data.createNeighborhood.id}`);
     } catch (error) {
       alert("Error creating neighborhood: " + error.message);
     }

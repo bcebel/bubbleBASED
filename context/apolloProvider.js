@@ -39,7 +39,7 @@ export async function clearApolloStore() {
   }
 }
 
-export function useApolloClient() {
+export function useInitializeApolloClient() {
   const [client, setClient] = useState(null);
   const [cacheReady, setCacheReady] = useState(false);
 
@@ -159,6 +159,8 @@ export function useApolloClient() {
         setClient(newClient);
       } catch (error) {
         console.error("❌ Apollo Client: Initialization error:", error);
+          setCacheReady(true); // let children render (they'll surface errors visibly)
+          setClient(null);
       }
     };
 
@@ -181,7 +183,7 @@ function createSSRClient() {
 }
 
 export function ApolloProviderWrapper({ children }) {
-  const asyncClient = useApolloClient();
+  const asyncClient = useInitializeApolloClient();
 const fallbackClient = useMemo(
   () => (typeof window === "undefined" ? createSSRClient() : null),
   [],
@@ -189,6 +191,12 @@ const fallbackClient = useMemo(
 
   const client = asyncClient || fallbackClient;
 
+    useEffect(() => {
+      // On web, ensure the custom splash clears even if Apollo init is slow/failed
+      if (typeof window !== "undefined" && window.__hideSplash) {
+        window.__hideSplash();
+      }
+    }, []);
   // If we're on the client and the real client isn't ready yet,
   // show the loading spinner instead of the fallback.
   if (!client) {

@@ -7,7 +7,7 @@ export default function NeighborhoodGalleryScreen() {
   const params = useLocalSearchParams();
   const neighborhoodId = params.neighborhoodId as string;
 
-  return <> <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
+  return <> <Link href={`/${neighborhoodId}`} replace asChild>
           <TouchableOpacity style={styles.backButton}>
             <Text style={styles.backButtonText}>← Back to Bubble</Text>
           </TouchableOpacity>

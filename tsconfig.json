@@ -17,7 +17,7 @@
     "components/ImagePicker.js",
     "app/webcamponent.js",
     "app/(tabs)/webcam.tsx",
-    "app/(tabs)/index.js",
+    "app/(tabs)/home.js",
     "components/WebTorrentPlayer.js",
     "components/neighborhood-chat.js",
     "components/_staticParams.js",

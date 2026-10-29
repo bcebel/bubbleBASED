@@ -1,4 +1,4 @@
-// app/neighborhoods/bubbles/pending-requests.tsx
+// app/pending-requests.tsx
 import React from "react";
 import { useLocalSearchParams, useRouter, Link } from "expo-router";
 import { useQuery, useMutation, gql } from "@apollo/client";
@@ -90,7 +90,7 @@ export default function PendingRequestsScreen() {
 
   return (
     <View style={styles.container}>
-      <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
+      <Link href={`/${neighborhoodId}`} replace asChild>
         <TouchableOpacity style={styles.backButton}>
           <Text style={styles.backButtonText}>← Back to Bubble</Text>
         </TouchableOpacity>

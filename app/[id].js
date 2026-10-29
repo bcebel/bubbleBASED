@@ -18,7 +18,7 @@ import {
   UPDATE_BUBBLE_PHOTO,
   LEAVE_NEIGHBORHOOD,
   JOIN_NEIGHBORHOOD,
-} from "../../../../components/graphql/queries";
+} from "../components/graphql/queries";
 import { ImageBackground } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
@@ -132,14 +132,14 @@ export default function NeighborhoodDetailScreen() {
     );
   }
 
- const isMember = neighborhood.members?.some(
-   (m) => m.user?.username === username,
- );
+  const isMember = neighborhood.members?.some(
+    (m) => m.user?.username === username,
+  );
 
- // NEW: check if this user has a pending request
- const hasPendingRequest = neighborhood.joinRequests?.some(
-   (r) => r.user?.id === userData?.me?.id && r.status === "pending",
- );
+  // NEW: check if this user has a pending request
+  const hasPendingRequest = neighborhood.joinRequests?.some(
+    (r) => r.user?.id === userData?.me?.id && r.status === "pending",
+  );
 
   // ✅ HANDLERS BEFORE ANY EARLY RETURN THAT USES THEM
   const handleJoin = async () => {
@@ -257,16 +257,16 @@ export default function NeighborhoodDetailScreen() {
   })();
 
   // ✅ PREVIEW EARLY RETURN (after handlers are defined)
-if (!isMember && neighborhood.type !== "personal" && previewing) {
-  return (
-    <PreviewView
-      neighborhood={neighborhood}
-      onJoin={handleJoin}
-      onBrowse={() => setPreviewing(false)}
-      hasPendingRequest={hasPendingRequest}
-    />
-  );
-}
+  if (!isMember && neighborhood.type !== "personal" && previewing) {
+    return (
+      <PreviewView
+        neighborhood={neighborhood}
+        onJoin={handleJoin}
+        onBrowse={() => setPreviewing(false)}
+        hasPendingRequest={hasPendingRequest}
+      />
+    );
+  }
   // ✅ Render full view
   return (
     <View style={styles.container}>
@@ -312,7 +312,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
+                `/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -324,7 +324,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
+                `/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -336,7 +336,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
+                `/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -348,7 +348,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-livestream?neighborhoodId=${neighborhood.id}`,
+                `/neighborhood-livestream?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -360,7 +360,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-members?neighborhoodId=${neighborhood.id}`,
+                `/neighborhood-members?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -373,7 +373,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
             <TouchableOpacity
               onPress={() =>
                 router.replace(
-                  `/neighborhoods/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
+                  `/invite-links?neighborhoodId=${neighborhood.id}`,
                 )
               }
             >
@@ -387,7 +387,7 @@ if (!isMember && neighborhood.type !== "personal" && previewing) {
             <TouchableOpacity
               onPress={() =>
                 router.replace(
-                  `/neighborhoods/bubbles/pending-requests?neighborhoodId=${neighborhood.id}`,
+                  `/pending-requests?neighborhoodId=${neighborhood.id}`,
                 )
               }
             >

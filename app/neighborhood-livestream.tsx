@@ -21,8 +21,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Head from "expo-router/head";
 import WebTorrentMedia from "@/components/WebTorrentMedia";
 
-import NeighborhoodLiveStreamPlayer from "../../../../components/NeighborhoodLiveStreamPlayer";
-import { warehouse } from "../../../../components/StreamWearhouse.js";
+import NeighborhoodLiveStreamPlayer from "../components/NeighborhoodLiveStreamPlayer";
+import { warehouse } from "../components/StreamWearhouse.js";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
 const API_BASE = "https://minnowspacebackend-e6635e46c3d0.herokuapp.com";

@@ -362,7 +362,7 @@ const hasPendingRequest = neighborhood.joinRequests?.some(
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
+                `/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -374,7 +374,7 @@ const hasPendingRequest = neighborhood.joinRequests?.some(
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
+                `/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -386,7 +386,7 @@ const hasPendingRequest = neighborhood.joinRequests?.some(
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
+                `/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -398,7 +398,7 @@ const hasPendingRequest = neighborhood.joinRequests?.some(
           <TouchableOpacity
             onPress={() =>
               router.replace(
-                `/neighborhoods/bubbles/neighborhood-members?neighborhoodId=${neighborhood.id}`,
+                `/neighborhood-members?neighborhoodId=${neighborhood.id}`,
               )
             }
           >
@@ -411,7 +411,7 @@ const hasPendingRequest = neighborhood.joinRequests?.some(
             <TouchableOpacity
               onPress={() =>
                 router.replace(
-                  `/neighborhoods/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
+                  `/invite-links?neighborhoodId=${neighborhood.id}`,
                 )
               }
             >
@@ -425,7 +425,7 @@ const hasPendingRequest = neighborhood.joinRequests?.some(
             <TouchableOpacity
               onPress={() =>
                 router.replace(
-                  `/neighborhoods/bubbles/pending-requests?neighborhoodId=${neighborhood.id}`,
+                  `/pending-requests?neighborhoodId=${neighborhood.id}`,
                 )
               }
             >

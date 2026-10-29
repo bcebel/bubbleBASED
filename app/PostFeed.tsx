@@ -9,10 +9,10 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useQuery } from "@apollo/client";
-import { GET_POSTS } from "../../../../components/graphql/queries";
-import FeedItem from "../../../../components/FeedItem";
-import PostComposer from "../../PostComposer";
-import RandomAd from "../../../../components/RandomAd";
+import { GET_POSTS } from "../components/graphql/queries";
+import FeedItem from "../components/FeedItem";
+import PostComposer from "./(tabs)/PostComposer";
+import RandomAd from "../components/RandomAd";
 import { Link } from "expo-router";
 
 export default function PostFeed({
@@ -67,7 +67,7 @@ export default function PostFeed({
   // ✅ 4. Everything else is safe to use now
   return (
     <>
-      <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
+      <Link href={`/${neighborhoodId}`} replace asChild>
         <TouchableOpacity style={styles.backButton}>
           <Text style={styles.backButtonText}>← Back to Bubble</Text>
         </TouchableOpacity>

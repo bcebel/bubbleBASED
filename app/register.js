@@ -106,7 +106,7 @@ const RegistrationScreen = () => {
                 `🎉 Welcome to the club, ${user.username}! You've been added to ${joined.neighborhood.name}.`,
               );
               router.replace({
-                pathname: "/neighborhoods/bubbles/neighborhood-postfeed",
+                pathname: "/neighborhood-postfeed",
                 params: { neighborhoodId: joined.neighborhood.id },
               });
               return;

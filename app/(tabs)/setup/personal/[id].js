@@ -176,7 +176,7 @@ export default function NeighborhoodDetailScreen() {
               <TouchableOpacity
                 onPress={() =>
                   router.replace(
-                    `/neighborhoods/bubbles/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
+                    `/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
                   )
                 }
               >
@@ -188,7 +188,7 @@ export default function NeighborhoodDetailScreen() {
               <TouchableOpacity
                 onPress={() =>
                   router.replace(
-                    `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
+                    `/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
                   )
                 }
               >
@@ -200,7 +200,7 @@ export default function NeighborhoodDetailScreen() {
               <TouchableOpacity
                 onPress={() =>
                   router.replace(
-                    `/neighborhoods/bubbles/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
+                    `/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
                   )
                 }
               >
@@ -212,7 +212,7 @@ export default function NeighborhoodDetailScreen() {
               <TouchableOpacity
                 onPress={() =>
                   router.replace(
-                    `/neighborhoods/bubbles/neighborhood-members?neighborhoodId=${neighborhood.id}`,
+                    `/neighborhood-members?neighborhoodId=${neighborhood.id}`,
                   )
                 }
               >
@@ -225,7 +225,7 @@ export default function NeighborhoodDetailScreen() {
                 <TouchableOpacity
                   onPress={() =>
                     router.replace(
-                      `/neighborhoods/bubbles/invite-links?neighborhoodId=${neighborhood.id}`,
+                      `/invite-links?neighborhoodId=${neighborhood.id}`,
                     )
                   }
                 >

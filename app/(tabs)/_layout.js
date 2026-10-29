@@ -11,13 +11,6 @@ export default function TabLayout() {
   // (tabs)/_layout.tsx
   const [wakeKey, setWakeKey] = useState(0);
 
-
-  
-  
-
-
-  // Then wrap the tabs (or each screen's content) in <View key={wakeKey}>
-
   return (
     <Tabs
       key={wakeKey}
@@ -47,7 +40,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
           tabBarIcon: () => (
             // Removed role="heading" to keep web layout semantics correct
@@ -58,7 +51,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="neighborhoods/bubbles/index"
+        name="index"
         options={{
           tabBarIcon: () => (
             <View style={styles.bubbleGlass}>
@@ -120,7 +113,7 @@ export default function TabLayout() {
       {/* Hidden screens - leave them exactly as they are */}
       <Tabs.Screen name="PostComposer" options={{ href: null }} />
       <Tabs.Screen
-        name="neighborhoods/bubbles/PostFeed"
+        name="/PostFeed"
         options={{ href: null }}
       />
       <Tabs.Screen
@@ -130,53 +123,53 @@ export default function TabLayout() {
 
       <Tabs.Screen name="gallery2" options={{ href: null }} />
       <Tabs.Screen
-        name="neighborhoods/bubbles/bublic"
+        name="/bublic"
         options={{ href: null }}
       />
       <Tabs.Screen
-        name="neighborhoods/bubbles/pending-requests"
+        name="/pending-requests"
         options={{ href: null }}
       />
       <Tabs.Screen name="setup/personal/myGallery" options={{ href: null }} />
       <Tabs.Screen name="bubbles/global" options={{ href: null }} />
       <Tabs.Screen
-        name="neighborhoods/bubbles/neighborhood-postfeed"
+        name="/neighborhood-postfeed"
         options={{ href: null }}
       />
       <Tabs.Screen name="neighborhoods/staticParams" options={{ href: null }} />
       <Tabs.Screen
-        name="neighborhoods/bubbles/neighborhood-chat"
+        name="/neighborhood-chat"
         options={{ href: null }}
       />
-      <Tabs.Screen name="neighborhoods/bubbles/[id]" options={{ href: null }} />
+      <Tabs.Screen name="/[id]" options={{ href: null }} />
       <Tabs.Screen
-        name="neighborhoods/bubbles/global"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="neighborhoods/bubbles/create"
+        name="/global"
         options={{ href: null }}
       />
       <Tabs.Screen
-        name="neighborhoods/bubbles/neighborhood-livestream"
+        name="/create"
         options={{ href: null }}
       />
       <Tabs.Screen
-        name="neighborhoods/bubbles/invite-links"
+        name="/neighborhood-livestream"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="/invite-links"
         options={{ href: null }}
       />
       <Tabs.Screen name="setup/setup" options={{ href: null }} />{" "}
       <Tabs.Screen name="setup/personal/[id]" options={{ href: null }} />
       <Tabs.Screen
-        name="neighborhoods/bubbles/neighborhood-members"
+        name="/neighborhood-members"
         options={{ href: null }}
       />
       <Tabs.Screen
-        name="neighborhoods/bubbles/neighborhood-gallery"
+        name="/neighborhood-gallery"
         options={{ href: null }}
       />
       <Tabs.Screen
-        name="neighborhoods/bubbles/neighborhoodgallery"
+        name="/neighborhoodgallery"
         options={{ href: null }}
       />
     </Tabs>

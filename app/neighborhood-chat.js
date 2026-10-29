@@ -1,4 +1,4 @@
-import NeighborhoodChat from "../../../../components/neighborhood-chat";
+import NeighborhoodChat from "../components/neighborhood-chat";
 export default function NeighborhoodChatWrapper() {
   return <NeighborhoodChat />;
 }

@@ -158,7 +158,7 @@ export default function NeighborhoodsScreen() {
         <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
           <TouchableOpacity
             style={styles.createButton}
-            onPress={() => router.replace(`/neighborhoods/bubbles/create`)}
+            onPress={() => router.replace(`/create`)}
           >
             <Text style={styles.createButtonText}>➕ Create New Bubble</Text>
           </TouchableOpacity>

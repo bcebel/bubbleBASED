@@ -200,7 +200,7 @@ export default function NeighborhoodMembersScreen() {
 
   return (
     <View style={styles.container}>
-         <Link href={`/neighborhoods/bubbles/${neighborhoodId}`} replace asChild>
+         <Link href={`/${neighborhoodId}`} replace asChild>
               <TouchableOpacity style={styles.backButton}>
                 <Text style={styles.backButtonText}>← Back to Bubble</Text>
               </TouchableOpacity>
@@ -318,7 +318,7 @@ export default function NeighborhoodMembersScreen() {
                       });
                       if (data?.createDirectMessageBubble?.id) {
                         router.replace(
-                          `/neighborhoods/bubbles/neighborhood-chat?neighborhoodId=${data.createDirectMessageBubble.id}`,
+                          `/neighborhood-chat?neighborhoodId=${data.createDirectMessageBubble.id}`,
                         );
                       }
                     } catch (err) {
