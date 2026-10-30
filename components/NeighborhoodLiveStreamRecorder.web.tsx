@@ -198,7 +198,11 @@ export default function NeighborhoodLiveStreamRecorder({
           chunkData,
           {
             name: fileName,
-            announce: ["wss://tracker-0ad4cca9fd92.herokuapp.com"],
+            announce: [
+              "wss://tracker2-c3c2b7aba721.herokuapp.com/", // your new tracker
+              "wss://tracker-0ad4cca9fd92.herokuapp.com", // keep the old one
+              "wss://tracker.openwebtorrent.com", // one public backup
+            ],
           },
           async (torrent) => {
             const uploadToBackend = async (retry = 0) => {
