@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
-  container: { flex: 1, backgroundColor: "rgba(89, 17, 85, 0.1)" },
+  container: { flex: 1, backgroundColor: "rgba(10, 12, 16,1.0)" },
   center: {
     flex: 1,
     justifyContent: "center",
