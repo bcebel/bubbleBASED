@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>P2PT Tracker Test</title>
+</head>
+
+<body>
+    <h1>P2PT Test</h1>
+    <p id="status">Starting...</p>
+    <button id="sendBtn" disabled>Send Hello</button>
+    <pre id="log"></pre>
+
+    <script src="https://cdn.jsdelivr.net/npm/p2pt@1.6.2/dist/p2pt.iife.js"></script>
+
+    <script>
+        // Define log FIRST, as a function declaration (hoisted)
+        function log(msg) {
+            const el = document.getElementById('log');
+            el.textContent += msg + '\n';
+            console.log(msg);
+        }
+
+        const trackersAnnounceURLs = [
+            'wss://tracker2-c3c2b7aba721.herokuapp.com/'
+        ];
+        const identifier = 'my-test-room-123';
+        const connectedPeers = [];
+
+        const p2pt = new P2PT(trackersAnnounceURLs, identifier);
+
+        p2pt.on('peerconnect', (peer) => {
+            document.getElementById('status').textContent = 'Peer connected!';
+            document.getElementById('sendBtn').disabled = false;
+            log(`Peer connected: ${peer.id}`);
+            connectedPeers.push(peer);
+
+            peer.on('data', (data) => {
+                log(`Received data: ${JSON.stringify(data)}`);
+            });
+        });
+
+        document.getElementById('sendBtn').onclick = () => {
+            if (connectedPeers.length === 0) return;
+            connectedPeers.forEach((peer) => {
+                p2pt.send(peer, { type: 'hello', text: 'Hello from ' + peer.id });
+                log(`Sent hello to ${peer.id}`);
+            });
+        };
+
+        p2pt.start();
+    </script>
+</body>
+
+</html>
