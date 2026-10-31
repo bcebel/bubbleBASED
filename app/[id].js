@@ -22,7 +22,6 @@ import {
 import { ImageBackground } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
-import { BlurView } from "expo-blur";
 
 const PINATA_GATEWAY = process.env.EXPO_PUBLIC_PINATA_GATEWAY;
 
@@ -53,7 +52,7 @@ function PreviewView({ neighborhood, onJoin, onBrowse, hasPendingRequest }) {
       <ImageBackground
         source={bubblePhotoSource}
         style={styles.bubbleHeader}
-        resizeMode="cover"
+        contentFit="contain"
       >
         <LinearGradient
           colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.2)"]}
@@ -273,7 +272,7 @@ export default function NeighborhoodDetailScreen() {
       <ImageBackground
         source={bubblePhotoSource}
         style={styles.bubbleHeader}
-        resizeMode="cover"
+        contentFit="contain"
       >
         <LinearGradient
           colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.2)"]}
@@ -293,136 +292,143 @@ export default function NeighborhoodDetailScreen() {
               </TouchableOpacity>
             )}
           </View>
+
+          <ScrollView style={styles.menu}>
+            <View style={styles.actionMenuContainer}>
+              <View intensity={50} tint="dark" style={styles.bubbleGlass}>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.push(
+                      `/livestream/selector?neighborhoodId=${neighborhoodId}`,
+                    )
+                  }
+                >
+                  <Text style={styles.button}>+ Go Live</Text>
+                </TouchableOpacity>
+              </View>
+              <View intensity={50} tint="dark" style={styles.bubbleGlass}>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.replace(
+                      `/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
+                    )
+                  }
+                >
+                  <Text style={styles.button}>📝 Posts</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View intensity={50} tint="dark" style={styles.bubbleGlass}>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.replace(
+                      `/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
+                    )
+                  }
+                >
+                  <Text style={styles.button}>💬 Chat</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View intensity={50} tint="dark" style={styles.bubbleGlass}>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.replace(
+                      `/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
+                    )
+                  }
+                >
+                  <Text style={styles.button}>🖼️ Gallery</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View intensity={50} tint="dark" style={styles.bubbleGlass}>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.replace(
+                      `/neighborhood-livestream?neighborhoodId=${neighborhood.id}`,
+                    )
+                  }
+                >
+                  <Text style={styles.button}>📺 Livestream</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View intensity={50} tint="dark" style={styles.bubbleGlass}>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.replace(
+                      `/neighborhood-members?neighborhoodId=${neighborhood.id}`,
+                    )
+                  }
+                >
+                  <Text style={styles.button}>👥 Members</Text>
+                </TouchableOpacity>
+              </View>
+
+              {canInvite && (
+                <View intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.replace(
+                        `/invite-links?neighborhoodId=${neighborhood.id}`,
+                      )
+                    }
+                  >
+                    <Text style={styles.button}>📧 Invite Links</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {canInvite && (
+                <View intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.replace(
+                        `/pending-requests?neighborhoodId=${neighborhood.id}`,
+                      )
+                    }
+                  >
+                    <Text style={styles.button}>⏳ Pending Requests</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {!isOwner && !isPersonal && (
+                <View intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <TouchableOpacity onPress={handleLeaveBubble}>
+                    <Text style={[styles.button, { color: "#ff375f" }]}>
+                      🚪 Leave Bubble
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {isOwner && !isPersonal && (
+                <View intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <TouchableOpacity onPress={handleDeleteBubble}>
+                    <Text style={[styles.button, { color: "#ff375f" }]}>
+                      🗑️ Delete Bubble
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </ScrollView>
         </LinearGradient>
       </ImageBackground>
-
-      <ScrollView style={styles.menu}>
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.push(
-                `/livestream/selector?neighborhoodId=${neighborhoodId}`,
-              )
-            }
-          >
-            <Text style={styles.button}>+ Go Live</Text>
-          </TouchableOpacity>
-        </BlurView>
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/neighborhood-postfeed?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>📝 Posts</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/neighborhood-chat?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>💬 Chat</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/neighborhood-gallery?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>🖼️ Gallery</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/neighborhood-livestream?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>📺 Livestream</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(
-                `/neighborhood-members?neighborhoodId=${neighborhood.id}`,
-              )
-            }
-          >
-            <Text style={styles.button}>👥 Members</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        {canInvite && (
-          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-            <TouchableOpacity
-              onPress={() =>
-                router.replace(
-                  `/invite-links?neighborhoodId=${neighborhood.id}`,
-                )
-              }
-            >
-              <Text style={styles.button}>📧 Invite Links</Text>
-            </TouchableOpacity>
-          </BlurView>
-        )}
-
-        {canInvite && (
-          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-            <TouchableOpacity
-              onPress={() =>
-                router.replace(
-                  `/pending-requests?neighborhoodId=${neighborhood.id}`,
-                )
-              }
-            >
-              <Text style={styles.button}>⏳ Pending Requests</Text>
-            </TouchableOpacity>
-          </BlurView>
-        )}
-        {!isOwner && !isPersonal && (
-          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-            <TouchableOpacity onPress={handleLeaveBubble}>
-              <Text style={[styles.button, { color: "#ff375f" }]}>
-                🚪 Leave Bubble
-              </Text>
-            </TouchableOpacity>
-          </BlurView>
-        )}
-
-        {isOwner && !isPersonal && (
-          <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-            <TouchableOpacity onPress={handleDeleteBubble}>
-              <Text style={[styles.button, { color: "#ff375f" }]}>
-                🗑️ Delete Bubble
-              </Text>
-            </TouchableOpacity>
-          </BlurView>
-        )}
-      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#130720", paddingBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: "#130720",
+    paddingBottom: 20,
+    height: 400,
+  },
   loading: { marginTop: 50 },
-  bubbleHeader: { width: "100%", height: 200, zIndex: 2 },
+  bubbleHeader: { width: "100%", zIndex: 2, flex: 1 },
   gradientOverlay: { flex: 1, justifyContent: "flex-end", padding: 20 },
   headerContent: { alignItems: "center" },
   bubbleName: {
@@ -453,24 +459,15 @@ const styles = StyleSheet.create({
   },
   editPhotoText: { color: "#00ffff", fontWeight: "bold", fontSize: 14 },
   menu: { flex: 1, padding: 20, gap: 15 },
-  bubbleGlass: {
-    borderRadius: 48,
-    overflow: "hidden",
-    backgroundColor: "rgba(177, 0, 255, 0.3)",
-    borderWidth: 1,
-    borderColor: "rgba(177, 0, 255, 0.3)",
-    boxShadow:
-      "inset 1px 1px 1px 0px rgba(255, 255, 255, 0.6), inset -1px -1px 2px 0px rgba(0, 0, 0, 0.2), 0 12px 32px 0 rgba(0, 0, 0, 0.15)",
-    backdropFilter: "blur(16px) saturate(190%) brightness(1.1)",
-    WebkitBackdropFilter: "blur(16px) saturate(190%) brightness(1.1)",
-  },
+
   button: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
-    textAlign: "center",
     paddingVertical: 15,
     paddingHorizontal: 20,
+    backgroundColor: "rgba(10, 12, 16, 0.5)",
+    width: 500,
   },
   previewBody: {
     flex: 1,
@@ -531,4 +528,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  actionMenuContainer: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+    gap: 12,
+  },
+
+  buttonText: {
+    textAlign: "center",
+  },
+  bubbleGlass: {
+    width: 260,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
 });
+
