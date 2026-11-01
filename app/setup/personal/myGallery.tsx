@@ -12,22 +12,20 @@ import {
   Platform,
 } from "react-native";
 import { gql, useQuery } from "@apollo/client";
-import WebTorrentMedia from "../../../../components/WebTorrentMediaPosts";
+import WebTorrentMedia from "../../../components/WebTorrentMediaPosts";
 import { Image } from "expo-image";
-import AdMessage from "../../../../components/AdMessage";
+import AdMessage from "../../../components/AdMessage";
 import {
   enqueueDownload,
   cancelOutsideSet,
-} from "../../../../components/downloadQueue";
+} from "../../../components/downloadQueue";
 import { useRouter } from "expo-router";
 
 import {
   GET_MY_NEIGHBORHOODS_POSTS,
   GET_NEIGHBORHOOD_POSTS,
   GET_MY_POSTS,
-} from "../../../../components/graphql/queries";
-
-
+} from "../../../components/graphql/queries";
 
 const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = width;
@@ -86,7 +84,6 @@ const MediaDisplay = ({
   isAlmostFocused,
   onMediaAspectChange,
 }) => {
-
   const router = useRouter();
   const fileType = getFileType(item);
   const isImage = fileType === "image";

@@ -15,7 +15,7 @@ import { useQuery, useMutation, gql } from "@apollo/client";
 import {
   GET_NEIGHBORHOOD,
   UPDATE_BUBBLE_PHOTO,
-} from "../../../../components/graphql/queries";
+} from "../../../components/graphql/queries";
 import { ImageBackground } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
@@ -159,7 +159,7 @@ export default function NeighborhoodDetailScreen() {
               <Text style={styles.button}>🖼️ My Vault</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => router.replace(`/setup/setup`)}>
+            <TouchableOpacity onPress={() => router.replace(`setup/personal/setup`)}>
               <Text style={styles.button}>📝 Profile</Text>
             </TouchableOpacity>
           </BlurView>

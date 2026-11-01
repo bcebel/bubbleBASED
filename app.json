@@ -106,7 +106,6 @@
         "expo-router",
         {
           "origin": "https://ebubbl.com",
-          "asyncRoutes": { "web": false }
         }
       ],
       [
