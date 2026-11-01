@@ -81,13 +81,25 @@
         }
 
         const trackersAnnounceURLs = ['wss://tracker2-c3c2b7aba721.herokuapp.com/'];
-        const identifier = 'my-test-room-123';
+        const identifier = 'my-test-room-123-minnow';
         const connectedPeers = [];
 
         let localStream = null;
         let peerConnection = null;
 
-        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+        const rtcConfig = { iceServers: [iceServers: [
+                    { urls: "stun:stun.relay.metered.ca:80" },
+                    { urls: "stun:stun.services.mozilla.com:3478" },
+                    { urls: "stun:stun.nextcloud.com:443" },
+                    { urls: "stun:stun.cloudflare.com:3478" },
+                    { urls: "turn:standard.relay.metered.ca:80", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                    { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                    { urls: "turn:standard.relay.metered.ca:443", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                    { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                    { urls: "stun:stun.l.google.com:19302" },
+                    { urls: "stun:stun1.l.google.com:19302" },
+                    { urls: "stun:global.stun.twilio.com:3478" }
+                ]] };
 
         async function initCamera() {
             try {
