@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>P2PT Video Test</title>
+    <title>Call</title>
     <style>
         body {
             font-family: sans-serif;
@@ -53,9 +53,9 @@
 </head>
 
 <body>
-    <h1>P2PT Video Test</h1>
+    <h1>Call</h1>
     <p id="status">Starting...</p>
-    <button id="sendBtn" disabled>Send Hello / Call</button>
+    <button id="sendBtn" disabled>Call</button>
 
     <div class="video-container">
         <div>
@@ -81,7 +81,7 @@
         }
     const params = new URLSearchParams(window.location.search);
         const trackersAnnounceURLs = ['wss://tracker2-c3c2b7aba721.herokuapp.com/'];
-    const identifier = params.get('room') || 'fallback-room-' + Math.random().toString(36).slice(2, 9);        
+    const identifier = params.get('room') || 'fallback-room-ebubbl-' + Math.random().toString(36).slice(2, 9);        
     log('Joined room: ' + identifier);
     const connectedPeers = [];
 
@@ -106,7 +106,7 @@
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
-                log('Local camera acquired.');
+           //     log('Local camera acquired.');
             } catch (err) {
                 log('Camera error: ' + err.message);
             }
@@ -118,19 +118,19 @@
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
             peerConnection.ontrack = (event) => {
-                log('SUCCESS: Received remote video track!');
+           //     log('SUCCESS: Received remote video track!');
                 document.getElementById('remoteVideo').srcObject = event.streams[0];
             };
 
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
                     p2pt.send(peer, { type: 'ice', candidate: event.candidate });
-                    log('Sent ICE candidate.');
+         //           log('Sent ICE candidate.');
                 }
             };
 
             peerConnection.onconnectionstatechange = () => {
-                log('PC state: ' + peerConnection.connectionState);
+        //        log('PC state: ' + peerConnection.connectionState);
             };
 
             return peerConnection;
@@ -144,7 +144,7 @@
                     text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw);
                 } catch (e) { log('Decode failed: ' + e.message); return null; }
 
-                log('RAW: ' + text.substring(0, 120));
+       //         log('RAW: ' + text.substring(0, 120));
                 const i = text.indexOf('{');
                 if (i === -1) { log('No { in payload'); return null; }
 
@@ -166,37 +166,37 @@
         p2pt.on('peerconnect', (peer) => {
             document.getElementById('status').textContent = 'Peer connected!';
             document.getElementById('sendBtn').disabled = false;
-            log(`Peer connected: ${peer.id}`);
+       //     log(`Peer connected: ${peer.id}`);
             connectedPeers.push(peer);
 
             peer.on('data', async (raw) => {
                 const data = decodePayload(raw);
                 if (!data) return;
-                log(`Received data type: ${data.type}`);
+      //          log(`Received data type: ${data.type}`);
 
                 const pc = getOrCreatePC(peer);
 
                 if (data.type === 'hello') {
-                    log(`Hello text: ${data.text}`);
+     //               log(`Hello text: ${data.text}`);
                 }
                 else if (data.type === 'offer') {
-                    log('Processing incoming offer...');
+      //              log('Processing incoming offer...');
                     await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }));
                     const answer = await pc.createAnswer();
                     await pc.setLocalDescription(answer);
                     p2pt.send(peer, { type: 'answer', sdp: pc.localDescription.sdp });
-                    log('Sent WebRTC answer back.');
+        //            log('Sent WebRTC answer back.');
                 }
                 else if (data.type === 'answer') {
                     if (pc.signalingState === 'have-local-offer') {
                         await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: data.sdp }));
-                        log('WebRTC description set. Handshake complete!');
+           //             log('WebRTC description set. Handshake complete!');
                     }
                 }
                 else if (data.type === 'ice') {
                     if (data.candidate) {
                         await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-                        log('Added remote ICE candidate.');
+             //           log('Added remote ICE candidate.');
                     }
                 }
             });
@@ -211,9 +211,9 @@
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
                 p2pt.send(peer, { type: 'offer', sdp: pc.localDescription.sdp });
-                log('Sent WebRTC video offer.');
+                //log('Sent WebRTC video offer.');
             } catch (err) {
-                log('Offer error: ' + err);
+              //  log('Offer error: ' + err);
             }
         };
 
