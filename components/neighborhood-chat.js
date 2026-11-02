@@ -2028,19 +2028,41 @@ function NeighborhoodChatScreen() {
           <Text style={styles.backButtonText}>← Back to Bubble</Text>
         </TouchableOpacity>
       </Link>
+
       <View style={styles.header}>
-        <Text style={styles.roomTitle}>🫧 {neighborhoodName} 🫧 </Text>
-        <TouchableOpacity
-          onPress={() =>
-            router.replace(
-              `/neighborhood-members?neighborhoodId=${neighborhoodId}`,
-            )
+  <Text style={styles.roomTitle}>🫧 {neighborhoodName} 🫧</Text>
+  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+    {neighborhoodData?.neighborhood?.type === "direct" && (
+      <TouchableOpacity
+        style={styles.membersButton}
+        onPress={async () => {
+          const room = `dm-${neighborhoodId}`;
+          const link = `https://ebubbl.com/webrtc?room=${room}`;
+          try {
+            await sendMessageMutation({
+              variables: {
+                content: `📞 Join my call: ${link}`,
+                neighborhoodId,
+              },
+            });
+          } catch (e) {
+            console.error("call invite send failed", e);
           }
-          style={styles.membersButton}
-        >
-          <Text style={styles.membersButtonText}>👥</Text>
-        </TouchableOpacity>
-      </View>
+          router.push(`/webrtc?room=${room}`);
+        }}
+      >
+        <Text style={styles.membersButtonText}>📞</Text>
+      </TouchableOpacity>
+    )}
+    <TouchableOpacity
+      onPress={() => router.replace(`/neighborhood-members?neighborhoodId=${neighborhoodId}`)}
+      style={styles.membersButton}
+    >
+      <Text style={styles.membersButtonText}>👥</Text>
+    </TouchableOpacity>
+  </View>
+</View>
+  
 
       {!socket && (
         <View style={styles.connectionWarning}>
