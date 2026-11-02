@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { getMedia } from "./mediaCache";
 import { enqueueDownload } from "./downloadQueue";
+import { Image } from "expo-image";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -212,7 +213,7 @@ export default function WebTorrentMedia({
 
   if (isImage) {
     return (
-      <img
+      <Image
         src={videoSrc}
         style={{ width: "100%", height: "100%", objectFit: "contain" }}
         alt=""

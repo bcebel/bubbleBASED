@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { BlurView } from "expo-blur";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useRouter, Link } from "expo-router";
 import Head from "expo-router/head";
 import WebTorrentMedia from "@/components/WebTorrentMediaPosts";
 import { themes } from "../../components/theme";
@@ -161,15 +161,15 @@ export default function HomeScreen() {
                     <Text style={styles.actionButtonText}>Logout</Text>
                   </TouchableOpacity>r
                 </BlurView>
-                
-                <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
-                  <TouchableOpacity
-                    onPress={handleLogout}
-                    style={styles.logoutButton}
-                  >
-                    <Text style={styles.actionButtonText}>Logout</Text>
-                  </TouchableOpacity>
-                </BlurView>
+
+
+<Pressable 
+  onPress={() => router.push('/webrtc')} 
+  style={styles.webrtc}
+>
+  <Text style={{ color: 'blue' }}>Go to WebRTC</Text>
+</Pressable>
+
                     <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
                   <TouchableOpacity
        onPress={() => router.replace("/bubbles/global")}                    style={styles.thirdButton}
@@ -400,6 +400,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   heroSub: {
+    color: "#9CA3AF",
+    fontSize: 18,
+    lineHeight: 28,
+    marginBottom: 32,
+  },
+    webrtc: {
     color: "#9CA3AF",
     fontSize: 18,
     lineHeight: 28,
