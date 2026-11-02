@@ -1,8 +1,14 @@
 import { Platform, View } from "react-native";
 import { WebView } from "react-native-webview";
+import { useLocalSearchParams } from "expo-router";
 
 export default function WebRTCCallScreen() {
-  const url = "https://ebubbl.com/webrtctest.html?room=abc123";
+  const { room } = useLocalSearchParams<{ room?: string }>();
+
+  // If no room in the URL, make one up so a stray tab doesn't join a public swarm
+  const roomId = room || `room-${Math.random().toString(36).slice(2, 9)}`;
+
+  const url = `https://ebubbl.com/webrtctest.html?room=${encodeURIComponent(roomId)}`;
 
   if (Platform.OS === "web") {
     return (

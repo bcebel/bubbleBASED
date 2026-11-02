@@ -82,7 +82,7 @@
     const params = new URLSearchParams(window.location.search);
         const trackersAnnounceURLs = ['wss://tracker2-c3c2b7aba721.herokuapp.com/'];
     const identifier = params.get('room') || 'fallback-room-' + Math.random().toString(36).slice(2, 9);        
-    
+    log('Joined room: ' + identifier);
     const connectedPeers = [];
 
         let localStream = null;
