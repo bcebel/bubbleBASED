@@ -153,7 +153,14 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </BlurView>
 
-                
+                     <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
+                  <TouchableOpacity
+                    onPress={handleLogout}
+                    style={styles.logoutButton}
+                  >
+                    <Text style={styles.actionButtonText}>Logout</Text>
+                  </TouchableOpacity>r
+                </BlurView>
                 
                 <BlurView intensity={50} tint="dark" style={styles.bubbleGlass}>
                   <TouchableOpacity
