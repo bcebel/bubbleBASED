@@ -79,10 +79,11 @@
             console.log(msg);
             el.scrollTop = el.scrollHeight;
         }
-
+    const params = new URLSearchParams(window.location.search);
         const trackersAnnounceURLs = ['wss://tracker2-c3c2b7aba721.herokuapp.com/'];
-        const identifier = 'my-test-room-123-minnow';
-        const connectedPeers = [];
+    const identifier = params.get('room') || 'fallback-room-' + Math.random().toString(36).slice(2, 9);        
+    
+    const connectedPeers = [];
 
         let localStream = null;
         let peerConnection = null;
