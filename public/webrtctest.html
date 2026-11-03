@@ -35,6 +35,11 @@
             overflow-y: auto;
         }
 
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
         button {
             padding: 10px 20px;
             font-size: 16px;
@@ -43,6 +48,16 @@
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+        }
+
+        button#hangupBtn {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        button#answerBtn {
+            background: #00bbff;
+            color: #fff;
         }
 
         button:disabled {
@@ -59,8 +74,8 @@
 
     <div class="controls">
         <button id="sendBtn" disabled>Call</button>
-        <button id="hangupBtn" disabled style="background: #ff4444; color: #fff;">Hang Up</button>
-        <button id="declineBtn" style="background: #ff8800; color: #fff; display: none;">Decline Call</button>
+        <button id="answerBtn" style="display: none;" disabled>Answer</button>
+        <button id="hangupBtn" disabled>Hang Up</button>
     </div>
 
     <div class="video-container">
@@ -94,6 +109,58 @@
 
         let localStream = null;
         let peerConnection = null;
+        let pendingOffer = null;
+        let ringtoneAudioCtx = null;
+        let ringInterval = null;
+
+        // --- RINGTONE FUNCTIONS ---
+        function playRingTone() {
+            if (ringtoneAudioCtx) return;
+            try {
+                ringtoneAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+                const playTonePattern = () => {
+                    if (!ringtoneAudioCtx || ringtoneAudioCtx.state === 'closed') return;
+
+                    [0, 200].forEach(delay => {
+                        setTimeout(() => {
+                            if (!ringtoneAudioCtx || ringtoneAudioCtx.state === 'closed') return;
+                            const osc = ringtoneAudioCtx.createOscillator();
+                            const gain = ringtoneAudioCtx.createGain();
+
+                            osc.type = 'sine';
+                            osc.frequency.value = 440;
+
+                            gain.gain.setValueAtTime(0.1, ringtoneAudioCtx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.001, ringtoneAudioCtx.currentTime + 0.15);
+
+                            osc.connect(gain);
+                            gain.connect(ringtoneAudioCtx.destination);
+
+                            osc.start();
+                            osc.stop(ringtoneAudioCtx.currentTime + 0.15);
+                        }, delay);
+                    });
+                };
+
+                playTonePattern();
+                ringInterval = setInterval(playTonePattern, 3000);
+            } catch (err) {
+                log('Ringtone error: ' + err.message);
+            }
+        }
+
+        function stopRingTone() {
+            if (ringInterval) {
+                clearInterval(ringInterval);
+                ringInterval = null;
+            }
+            if (ringtoneAudioCtx) {
+                ringtoneAudioCtx.close().catch(() => { });
+                ringtoneAudioCtx = null;
+            }
+        }
+        // -------------------------
 
         const rtcConfig = {
             iceServers: [
@@ -112,6 +179,7 @@
         };
 
         async function initCamera() {
+            if (localStream) return;
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
@@ -129,6 +197,8 @@
 
             peerConnection.ontrack = (event) => {
                 document.getElementById('remoteVideo').srcObject = event.streams[0];
+                document.getElementById('status').textContent = 'Connected!';
+                document.getElementById('hangupBtn').disabled = false;
             };
 
             peerConnection.onicecandidate = (event) => {
@@ -162,6 +232,8 @@
         }
 
         function hangupCall(notifyPeer = true) {
+            stopRingTone(); // Instantly kills the ringer if it's going off!
+
             if (notifyPeer && connectedPeers.length > 0) {
                 connectedPeers.forEach(peer => {
                     try { p2pt.send(peer, { type: 'hangup' }); } catch (e) { }
@@ -181,30 +253,18 @@
             document.getElementById('localVideo').srcObject = null;
             document.getElementById('remoteVideo').srcObject = null;
             document.getElementById('sendBtn').disabled = false;
+            document.getElementById('answerBtn').style.display = 'none';
+            document.getElementById('answerBtn').disabled = true;
             document.getElementById('hangupBtn').disabled = true;
-            document.getElementById('declineBtn').style.display = 'none';
             document.getElementById('status').textContent = 'Call ended.';
+            pendingOffer = null;
             log('Call hung up.');
         }
-
-        document.getElementById('declineBtn').onclick = () => {
-            if (connectedPeers.length > 0) {
-                connectedPeers.forEach(peer => {
-                    try { p2pt.send(peer, { type: 'reject' }); } catch (e) { }
-                });
-            }
-            document.getElementById('status').textContent = 'Call declined.';
-            document.getElementById('declineBtn').style.display = 'none';
-        };
-
-        document.getElementById('hangupBtn').onclick = () => {
-            hangupCall(true);
-        };
 
         const p2pt = new P2PT(trackersAnnounceURLs, identifier);
 
         p2pt.on('peerconnect', (peer) => {
-            document.getElementById('status').textContent = 'Peer connected!';
+            document.getElementById('status').textContent = 'Peer connected! Ready to call.';
             document.getElementById('sendBtn').disabled = false;
             connectedPeers.push(peer);
 
@@ -212,61 +272,43 @@
                 const data = decodePayload(raw);
                 if (!data) return;
 
-                if (data.type === 'reject') {
-                    document.getElementById('status').textContent = 'Call was declined.';
-                    hangupCall(false);
-                    return;
-                }
-
-                if (data.type === 'call-request') {
-                    document.getElementById('status').textContent = 'Incoming call...';
-                    document.getElementById('declineBtn').style.display = 'inline-block';
-                    return;
-                }
-
                 if (data.type === 'hangup') {
                     log('Remote peer hung up.');
-                    hangupCall(false);
+                    hangupCall(false); // This calls hangupCall, which now automatically stops the ringer!
                     return;
                 }
-
-                // Block incoming offers/ICE if we haven't created a connection or accepted yet
-                if (!peerConnection && (data.type === 'offer' || data.type === 'ice')) {
-                    return;
-                }
-
-                const pc = getOrCreatePC(peer);
 
                 if (data.type === 'offer') {
-                    await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }));
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-                    p2pt.send(peer, { type: 'answer', sdp: pc.localDescription.sdp });
-                    document.getElementById('hangupBtn').disabled = false;
+                    pendingOffer = data.sdp;
+                    document.getElementById('status').textContent = 'Incoming call...';
+                    document.getElementById('answerBtn').style.display = 'inline-block';
+                    document.getElementById('answerBtn').disabled = false;
+                    document.getElementById('sendBtn').disabled = true;
+                    document.getElementById('hangupBtn').disabled = false; // Let them hit hang up to reject/stop ringing
+                    playRingTone();
+                    return;
                 }
-                else if (data.type === 'answer') {
-                    if (pc.signalingState === 'have-local-offer') {
-                        await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: data.sdp }));
+
+                if (peerConnection) {
+                    if (data.type === 'answer' && peerConnection.signalingState === 'have-local-offer') {
+                        await peerConnection.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: data.sdp }));
                     }
-                }
-                else if (data.type === 'ice') {
-                    if (data.candidate) {
-                        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+                    else if (data.type === 'ice' && data.candidate) {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
                     }
                 }
             });
         });
 
+        // Caller clicks "Call"
         document.getElementById('sendBtn').onclick = async () => {
             if (connectedPeers.length === 0) return;
-            if (!localStream) await initCamera();
+            await initCamera();
 
             const peer = connectedPeers[0];
-            document.getElementById('status').textContent = 'Calling peer...';
-
-            p2pt.send(peer, { type: 'call-request' });
-
             const pc = getOrCreatePC(peer);
+            document.getElementById('status').textContent = 'Calling...';
+
             try {
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
@@ -278,7 +320,34 @@
             }
         };
 
-        initCamera();
+        // Callee clicks "Answer"
+        document.getElementById('answerBtn').onclick = async () => {
+            if (connectedPeers.length === 0 || !pendingOffer) return;
+            stopRingTone();
+            await initCamera();
+
+            const peer = connectedPeers[0];
+            const pc = getOrCreatePC(peer);
+            document.getElementById('status').textContent = 'Connecting...';
+
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: pendingOffer }));
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                p2pt.send(peer, { type: 'answer', sdp: pc.localDescription.sdp });
+
+                document.getElementById('answerBtn').style.display = 'none';
+                document.getElementById('answerBtn').disabled = true;
+                document.getElementById('hangupBtn').disabled = false;
+            } catch (err) {
+                log('Answer error: ' + err);
+            }
+        };
+
+        document.getElementById('hangupBtn').onclick = () => {
+            hangupCall(true);
+        };
+
         p2pt.start();
     </script>
 </body>
