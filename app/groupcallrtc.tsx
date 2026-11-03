@@ -9,7 +9,7 @@ export default function WebRTCCallScreen() {
   const roomId = room || `room-${Math.random().toString(36).slice(2, 9)}`;
 
   const url =
-   `https://localhost:8081/groupcall.html?room=${encodeURIComponent(roomId)}`;
+   `http://localhost:8081/groupcall.html?room=${encodeURIComponent(roomId)}`;
 
   if (Platform.OS === "web") {
     return (

@@ -109,13 +109,19 @@
             el.scrollTop = el.scrollHeight;
         }
 
+        const myPeerId = 'peer-' + Math.random().toString(36).slice(2, 9);
         const params = new URLSearchParams(window.location.search);
         const trackersAnnounceURLs = ['wss://tracker2-c3c2b7aba721.herokuapp.com/'];
         const identifier = params.get('room') || 'fallback-room-group-' + Math.random().toString(36).slice(2, 9);
+        log('My ID: ' + myPeerId);
         log('Joined room: ' + identifier);
 
         const connectedPeers = [];
         const peerConnections = {};   // peer.id -> RTCPeerConnection
+        const remoteIds = {};         // peer.id -> their myPeerId (from 'joined')
+        const makingOffer = {};       // peer.id -> bool
+        const isSettingRemoteAnswerPending = {}; // peer.id -> bool
+        const ignoreOffer = {};       // peer.id -> bool
 
         let localStream = null;
         let joined = false;
@@ -136,34 +142,40 @@
             ]
         };
 
-        async function initCamera() {
+    async function initCamera() {
             if (localStream) return;
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
                 log('Camera acquired.');
+
+                // Add tracks to any PCs that were created before the camera was ready
+                for (const [peerId, pc] of Object.entries(peerConnections)) {
+                    const senders = pc.getSenders();
+                    localStream.getTracks().forEach(track => {
+                        const existing = senders.find(s => s.track && s.track.kind === track.kind);
+                        if (!existing) {
+                            pc.addTrack(track, localStream);
+                            log('Added late ' + track.kind + ' track to ' + peerId.substring(0, 6));
+                        }
+                    });
+                }
             } catch (err) {
                 log('Camera error: ' + err.message);
             }
         }
-
-        // --- VIDEO TILES ---
         function addRemoteTile(peerId) {
             const existing = document.getElementById('tile-' + peerId);
             if (existing) return existing.querySelector('video');
-
             const tile = document.createElement('div');
             tile.className = 'video-tile';
             tile.id = 'tile-' + peerId;
-
             const video = document.createElement('video');
             video.autoplay = true;
             video.playsInline = true;
-
             const label = document.createElement('span');
             label.className = 'label';
             label.textContent = peerId.substring(0, 6);
-
             tile.appendChild(video);
             tile.appendChild(label);
             document.getElementById('videoGrid').appendChild(tile);
@@ -175,7 +187,6 @@
             if (tile) tile.remove();
         }
 
-        // --- PEER CONNECTION PER PEER ---
         function getOrCreatePC(peer) {
             if (peerConnections[peer.id]) return peerConnections[peer.id];
 
@@ -201,7 +212,6 @@
             pc.onconnectionstatechange = () => {
                 log(`[${peer.id.substring(0, 6)}] state: ${pc.connectionState}`);
                 if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
-                    log('Peer ' + peer.id.substring(0, 6) + ' gone');
                     closePeer(peer.id);
                 }
             };
@@ -214,30 +224,59 @@
                 peerConnections[peerId].close();
                 delete peerConnections[peerId];
             }
+            delete makingOffer[peerId];
+            delete isSettingRemoteAnswerPending[peerId];
+            delete ignoreOffer[peerId];
             removeRemoteTile(peerId);
         }
 
         function decodePayload(raw) {
             let text;
-            try {
-                text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw);
-            } catch (e) { return null; }
-
+            try { text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw); }
+            catch (e) { return null; }
             const i = text.indexOf('{');
             if (i === -1) return null;
-
             let outer;
-            try { outer = JSON.parse(text.substring(i)); }
-            catch (e) { return null; }
-
+            try { outer = JSON.parse(text.substring(i)); } catch (e) { return null; }
             if (outer && typeof outer.msg === 'string') {
-                try { return JSON.parse(outer.msg); }
-                catch (e) { return null; }
+                try { return JSON.parse(outer.msg); } catch (e) { return null; }
             }
             return outer;
         }
 
-        // --- JOIN: create an offer to every connected peer ---
+        // Determine politeness. Both sides must agree.
+        // If we don't know their ID yet, treat ourselves as impolite (safer default).
+        function isPolite(peerId) {
+            const theirId = remoteIds[peerId];
+            if (!theirId) return false;
+            return myPeerId < theirId;
+        }
+
+        // Create an offer on a peer's PC. No role check — anyone can offer.
+        async function offerToPeer(peer) {
+            if (!localStream) return;
+            if (!joined) return;
+            const pc = getOrCreatePC(peer);
+            if (pc.signalingState !== 'stable') return;
+            if (makingOffer[peer.id]) return;
+
+            makingOffer[peer.id] = true;
+            try {
+                const offer = await pc.createOffer();
+                if (pc.signalingState !== 'stable') {
+                    log('State changed before setLocal, aborting offer to ' + peer.id.substring(0, 6));
+                    return;
+                }
+                await pc.setLocalDescription(offer);
+                p2pt.send(peer, { type: 'offer', sdp: pc.localDescription.sdp });
+                log('Offer sent to ' + peer.id.substring(0, 6));
+            } catch (err) {
+                log('Offer error to ' + peer.id.substring(0, 6) + ': ' + err.message);
+            } finally {
+                makingOffer[peer.id] = false;
+            }
+        }
+
         async function joinCall() {
             if (joined) return;
             await initCamera();
@@ -246,38 +285,21 @@
             joined = true;
             document.getElementById('joinBtn').disabled = true;
             document.getElementById('hangupBtn').disabled = false;
-            document.getElementById('status').textContent = 'In call — connecting to peers...';
+            document.getElementById('status').textContent = 'In call — connecting...';
 
-            // Offer to everyone currently connected
             for (const peer of connectedPeers) {
+                p2pt.send(peer, { type: 'joined', id: myPeerId });
                 await offerToPeer(peer);
             }
         }
 
-        async function offerToPeer(peer) {
-            if (!localStream) return;
-            const pc = getOrCreatePC(peer);
-            if (pc.signalingState !== 'stable') return;
-
-            try {
-                const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-                p2pt.send(peer, { type: 'offer', sdp: pc.localDescription.sdp });
-                log('Offer sent to ' + peer.id.substring(0, 6));
-            } catch (err) {
-                log('Offer error to ' + peer.id.substring(0, 6) + ': ' + err.message);
-            }
-        }
-
         function hangupCall(notifyPeers = true) {
-            if (notifyPeers && connectedPeers.length > 0) {
+            if (notifyPeers) {
                 connectedPeers.forEach(peer => {
                     try { p2pt.send(peer, { type: 'hangup' }); } catch (e) { }
                 });
             }
-
             Object.keys(peerConnections).forEach(closePeer);
-
             if (localStream) {
                 localStream.getTracks().forEach(t => t.stop());
                 localStream = null;
@@ -292,18 +314,27 @@
         const p2pt = new P2PT(trackersAnnounceURLs, identifier);
 
         p2pt.on('peerconnect', (peer) => {
+            if (connectedPeers.some(p => p.id === peer.id)) return;
             connectedPeers.push(peer);
             log('Peer connected: ' + peer.id.substring(0, 6));
-            document.getElementById('status').textContent = `Connected — ${connectedPeers.length} peer(s) in room`;
 
-            // If we're already in the call, offer to the new peer immediately
-            if (joined) {
-                offerToPeer(peer);
-            }
+            // Exchange IDs so both sides can determine politeness
+            p2pt.send(peer, { type: 'joined', id: myPeerId });
+
+            // If already in the call, offer to the new peer
+            if (joined) offerToPeer(peer);
 
             peer.on('data', async (raw) => {
                 const data = decodePayload(raw);
                 if (!data) return;
+
+                if (data.type === 'joined') {
+                    remoteIds[peer.id] = data.id;
+                    log('Peer identity: ' + data.id.substring(0, 6) + ' (polite: ' + isPolite(peer.id) + ')');
+                    // If we're already in the call, offer to them.
+                    if (joined) offerToPeer(peer);
+                    return;
+                }
 
                 if (data.type === 'hangup') {
                     log('Peer ' + peer.id.substring(0, 6) + ' hung up');
@@ -312,8 +343,24 @@
                 }
 
                 if (data.type === 'offer') {
-                    // Auto-answer in group mode — no ringing
                     const pc = getOrCreatePC(peer);
+                    const polite = isPolite(peer.id);
+
+                    const readyForOffer = !makingOffer[peer.id] &&
+                        (pc.signalingState === 'stable' || isSettingRemoteAnswerPending[peer.id]);
+                    const offerCollision = !readyForOffer;
+
+                    ignoreOffer[peer.id] = !polite && offerCollision;
+                    if (ignoreOffer[peer.id]) {
+                        log('Ignoring colliding offer from ' + peer.id.substring(0, 6) + ' (impolite)');
+                        return;
+                    }
+
+                    if (offerCollision && polite) {
+                        log('Polite rollback for ' + peer.id.substring(0, 6));
+                        await pc.setLocalDescription({ type: 'rollback' });
+                    }
+
                     try {
                         await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }));
                         const answer = await pc.createAnswer();
@@ -328,23 +375,27 @@
 
                 if (data.type === 'answer') {
                     const pc = peerConnections[peer.id];
-                    if (pc && pc.signalingState === 'have-local-offer') {
-                        try {
-                            await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: data.sdp }));
-                            log('Handshake complete with ' + peer.id.substring(0, 6));
-                        } catch (err) {
-                            log('Set-answer error: ' + err.message);
-                        }
+                    if (!pc) return;
+                    isSettingRemoteAnswerPending[peer.id] = true;
+                    try {
+                        await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: data.sdp }));
+                        log('Handshake complete with ' + peer.id.substring(0, 6));
+                    } catch (err) {
+                        log('Set-answer error: ' + err.message);
+                    } finally {
+                        isSettingRemoteAnswerPending[peer.id] = false;
                     }
                     return;
                 }
 
                 if (data.type === 'ice') {
                     const pc = peerConnections[peer.id];
-                    if (pc && data.candidate) {
-                        try { await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); }
-                        catch (e) { }
-                    }
+                    if (!pc || !data.candidate) return;
+                    try {
+                        if (!ignoreOffer[peer.id]) {
+                            await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+                        }
+                    } catch (e) { }
                     return;
                 }
             });
@@ -355,6 +406,7 @@
             closePeer(peer.id);
             const i = connectedPeers.findIndex(p => p.id === peer.id);
             if (i >= 0) connectedPeers.splice(i, 1);
+            delete remoteIds[peer.id];
         });
 
         document.getElementById('joinBtn').onclick = joinCall;
