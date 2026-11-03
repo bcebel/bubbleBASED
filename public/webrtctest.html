@@ -57,6 +57,7 @@
     <h1>Call</h1>
     <p id="status">Starting...</p>
     <button id="sendBtn" disabled>Call</button>
+    <button id="hangupBtn" style="background: #ff4444; color: #fff;" disabled>Hang Up</button>
 
     <div class="video-container">
         <div>
@@ -80,6 +81,55 @@
             console.log(msg);
             el.scrollTop = el.scrollHeight;
         }
+
+        // 1. Enable the hangup button when the call starts/connects
+            document.getElementById('sendBtn').addEventListener('click', () => {
+                document.getElementById('hangupBtn').disabled = false;
+            });
+
+            // 2. Handle clicking the hangup button
+            document.getElementById('hangupBtn').onclick = () => {
+                // Tell the peer you're hanging up
+                if (connectedPeers.length > 0) {
+                    connectedPeers.forEach(peer => {
+                        try { p2pt.send(peer, { type: 'hangup' }); } catch (e) { }
+                    });
+                }
+
+                // Close WebRTC connection
+                if (peerConnection) {
+                    peerConnection.close();
+                    peerConnection = null;
+                }
+
+                // Stop local camera/mic stream tracks
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                    localStream = null;
+                }
+
+                // Clear video elements and reset buttons
+                document.getElementById('localVideo').srcObject = null;
+                document.getElementById('remoteVideo').srcObject = null;
+                document.getElementById('sendBtn').disabled = true;
+                document.getElementById('hangupBtn').disabled = true;
+                document.getElementById('status').textContent = 'Call ended.';
+                log('Call hung up.');
+            };
+
+            // 3. Listen for the hangup signal from the other peer inside your p2pt data listener
+            // (Add this check inside your existing peer.on('data', async (raw) => { ... } loop)
+            /*
+            if (data.type === 'hangup') {
+                log('Remote peer hung up.');
+                if (peerConnection) { peerConnection.close(); peerConnection = null; }
+                document.getElementById('remoteVideo').srcObject = null;
+                document.getElementById('hangupBtn').disabled = true;
+                document.getElementById('status').textContent = 'Peer hung up.';
+                return;
+            }
+            */
+
     const params = new URLSearchParams(window.location.search);
         const trackersAnnounceURLs = ['wss://tracker2-c3c2b7aba721.herokuapp.com/'];
     const identifier = params.get('room') || 'fallback-room-ebubbl-' + Math.random().toString(36).slice(2, 9);        
@@ -171,7 +221,17 @@
             connectedPeers.push(peer);
 
             peer.on('data', async (raw) => {
+                
                 const data = decodePayload(raw);
+
+                   if (data.type === 'hangup') {
+                    log('Remote peer hung up.');
+                    if (peerConnection) { peerConnection.close(); peerConnection = null; }
+                    document.getElementById('remoteVideo').srcObject = null;
+                    document.getElementById('hangupBtn').disabled = true;
+                    document.getElementById('status').textContent = 'Peer hung up.';
+                    return;
+                }
                 if (!data) return;
       //          log(`Received data type: ${data.type}`);
 
