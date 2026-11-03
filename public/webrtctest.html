@@ -14,14 +14,14 @@
 
         .video-container {
             display: flex;
-                flex-direction: column;
+            flex-direction: column;
             gap: 20px;
             margin-top: 20px;
         }
 
         video {
-  width: 50vw;
-  height: 50vh;
+            width: 50vw;
+            height: 50vh;
             background: #000;
             border: 2px solid #333;
             border-radius: 8px;
@@ -56,8 +56,12 @@
 <body>
     <h1>Call</h1>
     <p id="status">Starting...</p>
-    <button id="sendBtn" disabled>Call</button>
-    <button id="hangupBtn" style="background: #ff4444; color: #fff;" disabled>Hang Up</button>
+
+    <div class="controls">
+        <button id="sendBtn" disabled>Call</button>
+        <button id="hangupBtn" disabled style="background: #ff4444; color: #fff;">Hang Up</button>
+        <button id="declineBtn" style="background: #ff8800; color: #fff; display: none;">Decline Call</button>
+    </div>
 
     <div class="video-container">
         <div>
@@ -82,82 +86,35 @@
             el.scrollTop = el.scrollHeight;
         }
 
-        // 1. Enable the hangup button when the call starts/connects
-            document.getElementById('sendBtn').addEventListener('click', () => {
-                document.getElementById('hangupBtn').disabled = false;
-            });
-
-            // 2. Handle clicking the hangup button
-            document.getElementById('hangupBtn').onclick = () => {
-                // Tell the peer you're hanging up
-                if (connectedPeers.length > 0) {
-                    connectedPeers.forEach(peer => {
-                        try { p2pt.send(peer, { type: 'hangup' }); } catch (e) { }
-                    });
-                }
-
-                // Close WebRTC connection
-                if (peerConnection) {
-                    peerConnection.close();
-                    peerConnection = null;
-                }
-
-                // Stop local camera/mic stream tracks
-                if (localStream) {
-                    localStream.getTracks().forEach(track => track.stop());
-                    localStream = null;
-                }
-
-                // Clear video elements and reset buttons
-                document.getElementById('localVideo').srcObject = null;
-                document.getElementById('remoteVideo').srcObject = null;
-                document.getElementById('sendBtn').disabled = true;
-                document.getElementById('hangupBtn').disabled = true;
-                document.getElementById('status').textContent = 'Call ended.';
-                log('Call hung up.');
-            };
-
-            // 3. Listen for the hangup signal from the other peer inside your p2pt data listener
-            // (Add this check inside your existing peer.on('data', async (raw) => { ... } loop)
-            /*
-            if (data.type === 'hangup') {
-                log('Remote peer hung up.');
-                if (peerConnection) { peerConnection.close(); peerConnection = null; }
-                document.getElementById('remoteVideo').srcObject = null;
-                document.getElementById('hangupBtn').disabled = true;
-                document.getElementById('status').textContent = 'Peer hung up.';
-                return;
-            }
-            */
-
-    const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(window.location.search);
         const trackersAnnounceURLs = ['wss://tracker2-c3c2b7aba721.herokuapp.com/'];
-    const identifier = params.get('room') || 'fallback-room-ebubbl-' + Math.random().toString(36).slice(2, 9);        
-    log('Joined room: ' + identifier);
-    const connectedPeers = [];
+        const identifier = params.get('room') || 'fallback-room-ebubbl-' + Math.random().toString(36).slice(2, 9);
+        log('Joined room: ' + identifier);
+        const connectedPeers = [];
 
         let localStream = null;
         let peerConnection = null;
 
-        const rtcConfig = { iceServers: [
-                    { urls: "stun:stun.relay.metered.ca:80" },
-                    { urls: "stun:stun.services.mozilla.com:3478" },
-                    { urls: "stun:stun.nextcloud.com:443" },
-                    { urls: "stun:stun.cloudflare.com:3478" },
-                    { urls: "turn:standard.relay.metered.ca:80", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
-                    { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
-                    { urls: "turn:standard.relay.metered.ca:443", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
-                    { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
-                    { urls: "stun:stun.l.google.com:19302" },
-                    { urls: "stun:stun1.l.google.com:19302" },
-                    { urls: "stun:global.stun.twilio.com:3478" }
-                ] };
+        const rtcConfig = {
+            iceServers: [
+                { urls: "stun:stun.relay.metered.ca:80" },
+                { urls: "stun:stun.services.mozilla.com:3478" },
+                { urls: "stun:stun.nextcloud.com:443" },
+                { urls: "stun:stun.cloudflare.com:3478" },
+                { urls: "turn:standard.relay.metered.ca:80", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "turn:standard.relay.metered.ca:443", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:stun1.l.google.com:19302" },
+                { urls: "stun:global.stun.twilio.com:3478" }
+            ]
+        };
 
         async function initCamera() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
-           //     log('Local camera acquired.');
             } catch (err) {
                 log('Camera error: ' + err.message);
             }
@@ -166,115 +123,158 @@
         function getOrCreatePC(peer) {
             if (peerConnection) return peerConnection;
             peerConnection = new RTCPeerConnection(rtcConfig);
-            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            if (localStream) {
+                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            }
 
             peerConnection.ontrack = (event) => {
-           //     log('SUCCESS: Received remote video track!');
                 document.getElementById('remoteVideo').srcObject = event.streams[0];
             };
 
             peerConnection.onicecandidate = (event) => {
-                if (event.candidate) {
+                if (event.candidate && peer) {
                     p2pt.send(peer, { type: 'ice', candidate: event.candidate });
-         //           log('Sent ICE candidate.');
                 }
-            };
-
-            peerConnection.onconnectionstatechange = () => {
-        //        log('PC state: ' + peerConnection.connectionState);
             };
 
             return peerConnection;
         }
 
-        // Decode a p2pt payload (Uint8Array with a 1-byte header, or string) into an object.
-   
         function decodePayload(raw) {
-                let text;
-                try {
-                    text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw);
-                } catch (e) { log('Decode failed: ' + e.message); return null; }
+            let text;
+            try {
+                text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw);
+            } catch (e) { log('Decode failed: ' + e.message); return null; }
 
-       //         log('RAW: ' + text.substring(0, 120));
-                const i = text.indexOf('{');
-                if (i === -1) { log('No { in payload'); return null; }
+            const i = text.indexOf('{');
+            if (i === -1) { log('No { in payload'); return null; }
 
-                let outer;
-                try { outer = JSON.parse(text.substring(i)); }
-                catch (e) { log('Outer parse failed: ' + e.message); return null; }
+            let outer;
+            try { outer = JSON.parse(text.substring(i)); }
+            catch (e) { log('Outer parse failed: ' + e.message); return null; }
 
-                // p2pt wraps payloads as { id, msg }, where msg is a JSON string
-                if (outer && typeof outer.msg === 'string') {
-                    try { return JSON.parse(outer.msg); }
-                    catch (e) { log('Inner parse failed: ' + e.message); return null; }
-                }
-
-                // Fallback: some p2pt versions deliver the object directly
-                return outer;
+            if (outer && typeof outer.msg === 'string') {
+                try { return JSON.parse(outer.msg); }
+                catch (e) { log('Inner parse failed: ' + e.message); return null; }
             }
+
+            return outer;
+        }
+
+        function hangupCall(notifyPeer = true) {
+            if (notifyPeer && connectedPeers.length > 0) {
+                connectedPeers.forEach(peer => {
+                    try { p2pt.send(peer, { type: 'hangup' }); } catch (e) { }
+                });
+            }
+
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+
+            document.getElementById('localVideo').srcObject = null;
+            document.getElementById('remoteVideo').srcObject = null;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('hangupBtn').disabled = true;
+            document.getElementById('declineBtn').style.display = 'none';
+            document.getElementById('status').textContent = 'Call ended.';
+            log('Call hung up.');
+        }
+
+        document.getElementById('declineBtn').onclick = () => {
+            if (connectedPeers.length > 0) {
+                connectedPeers.forEach(peer => {
+                    try { p2pt.send(peer, { type: 'reject' }); } catch (e) { }
+                });
+            }
+            document.getElementById('status').textContent = 'Call declined.';
+            document.getElementById('declineBtn').style.display = 'none';
+        };
+
+        document.getElementById('hangupBtn').onclick = () => {
+            hangupCall(true);
+        };
+
         const p2pt = new P2PT(trackersAnnounceURLs, identifier);
 
         p2pt.on('peerconnect', (peer) => {
             document.getElementById('status').textContent = 'Peer connected!';
             document.getElementById('sendBtn').disabled = false;
-       //     log(`Peer connected: ${peer.id}`);
             connectedPeers.push(peer);
 
             peer.on('data', async (raw) => {
-                
                 const data = decodePayload(raw);
+                if (!data) return;
 
-                   if (data.type === 'hangup') {
-                    log('Remote peer hung up.');
-                    if (peerConnection) { peerConnection.close(); peerConnection = null; }
-                    document.getElementById('remoteVideo').srcObject = null;
-                    document.getElementById('hangupBtn').disabled = true;
-                    document.getElementById('status').textContent = 'Peer hung up.';
+                if (data.type === 'reject') {
+                    document.getElementById('status').textContent = 'Call was declined.';
+                    hangupCall(false);
                     return;
                 }
-                if (!data) return;
-      //          log(`Received data type: ${data.type}`);
+
+                if (data.type === 'call-request') {
+                    document.getElementById('status').textContent = 'Incoming call...';
+                    document.getElementById('declineBtn').style.display = 'inline-block';
+                    return;
+                }
+
+                if (data.type === 'hangup') {
+                    log('Remote peer hung up.');
+                    hangupCall(false);
+                    return;
+                }
+
+                // Block incoming offers/ICE if we haven't created a connection or accepted yet
+                if (!peerConnection && (data.type === 'offer' || data.type === 'ice')) {
+                    return;
+                }
 
                 const pc = getOrCreatePC(peer);
 
-                if (data.type === 'hello') {
-     //               log(`Hello text: ${data.text}`);
-                }
-                else if (data.type === 'offer') {
-      //              log('Processing incoming offer...');
+                if (data.type === 'offer') {
                     await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }));
                     const answer = await pc.createAnswer();
                     await pc.setLocalDescription(answer);
                     p2pt.send(peer, { type: 'answer', sdp: pc.localDescription.sdp });
-        //            log('Sent WebRTC answer back.');
+                    document.getElementById('hangupBtn').disabled = false;
                 }
                 else if (data.type === 'answer') {
                     if (pc.signalingState === 'have-local-offer') {
                         await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: data.sdp }));
-           //             log('WebRTC description set. Handshake complete!');
                     }
                 }
                 else if (data.type === 'ice') {
                     if (data.candidate) {
                         await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-             //           log('Added remote ICE candidate.');
                     }
                 }
             });
         });
 
         document.getElementById('sendBtn').onclick = async () => {
-            if (connectedPeers.length === 0 || !localStream) return;
+            if (connectedPeers.length === 0) return;
+            if (!localStream) await initCamera();
+
             const peer = connectedPeers[0];
+            document.getElementById('status').textContent = 'Calling peer...';
+
+            p2pt.send(peer, { type: 'call-request' });
 
             const pc = getOrCreatePC(peer);
             try {
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
                 p2pt.send(peer, { type: 'offer', sdp: pc.localDescription.sdp });
-                //log('Sent WebRTC video offer.');
+                document.getElementById('hangupBtn').disabled = false;
+                document.getElementById('sendBtn').disabled = true;
             } catch (err) {
-              //  log('Offer error: ' + err);
+                log('Offer error: ' + err);
             }
         };
 

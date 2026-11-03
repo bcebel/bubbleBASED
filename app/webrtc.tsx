@@ -8,7 +8,8 @@ export default function WebRTCCallScreen() {
   // If no room in the URL, make one up so a stray tab doesn't join a public swarm
   const roomId = room || `room-${Math.random().toString(36).slice(2, 9)}`;
 
-  const url = `https://ebubbl.com/webrtctest.html?room=${encodeURIComponent(roomId)}`;
+  const url =
+   `https://ebubbl.com/webrtctest.html?room=${encodeURIComponent(roomId)}`;
 
   if (Platform.OS === "web") {
     return (
