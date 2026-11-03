@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Group Call</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #121212;
+            color: #eee;
+            padding: 20px;
+        }
+
+        .video-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .video-tile {
+            position: relative;
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 4 / 3;
+        }
+
+        .video-tile video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-tile .label {
+            position: absolute;
+            bottom: 4px;
+            left: 8px;
+            font-size: 12px;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 160px;
+            overflow-y: auto;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #00ff88;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button#hangupBtn {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        button:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Group Call</h1>
+    <p id="status">Starting...</p>
+
+    <div class="controls">
+        <button id="joinBtn">Join Call</button>
+        <button id="hangupBtn" disabled>Leave Call</button>
+    </div>
+
+    <div class="video-container" id="videoGrid">
+        <div class="video-tile">
+            <video id="localVideo" autoplay playsinline muted></video>
+            <span class="label">You</span>
+        </div>
+    </div>
+
+    <pre id="log"></pre>
+
+    <script src="https://cdn.jsdelivr.net/npm/p2pt@1.6.2/dist/p2pt.iife.js"></script>
+
+    <script>
+        function log(msg) {
+            const el = document.getElementById('log');
+            el.textContent += msg + '\n';
+            console.log(msg);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const trackersAnnounceURLs = ['wss://tracker2-c3c2b7aba721.herokuapp.com/'];
+        const identifier = params.get('room') || 'fallback-room-group-' + Math.random().toString(36).slice(2, 9);
+        log('Joined room: ' + identifier);
+
+        const connectedPeers = [];
+        const peerConnections = {};   // peer.id -> RTCPeerConnection
+
+        let localStream = null;
+        let joined = false;
+
+        const rtcConfig = {
+            iceServers: [
+                { urls: "stun:stun.relay.metered.ca:80" },
+                { urls: "stun:stun.services.mozilla.com:3478" },
+                { urls: "stun:stun.nextcloud.com:443" },
+                { urls: "stun:stun.cloudflare.com:3478" },
+                { urls: "turn:standard.relay.metered.ca:80", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "turn:standard.relay.metered.ca:443", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:stun1.l.google.com:19302" },
+                { urls: "stun:global.stun.twilio.com:3478" }
+            ]
+        };
+
+        async function initCamera() {
+            if (localStream) return;
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+                log('Camera acquired.');
+            } catch (err) {
+                log('Camera error: ' + err.message);
+            }
+        }
+
+        // --- VIDEO TILES ---
+        function addRemoteTile(peerId) {
+            const existing = document.getElementById('tile-' + peerId);
+            if (existing) return existing.querySelector('video');
+
+            const tile = document.createElement('div');
+            tile.className = 'video-tile';
+            tile.id = 'tile-' + peerId;
+
+            const video = document.createElement('video');
+            video.autoplay = true;
+            video.playsInline = true;
+
+            const label = document.createElement('span');
+            label.className = 'label';
+            label.textContent = peerId.substring(0, 6);
+
+            tile.appendChild(video);
+            tile.appendChild(label);
+            document.getElementById('videoGrid').appendChild(tile);
+            return video;
+        }
+
+        function removeRemoteTile(peerId) {
+            const tile = document.getElementById('tile-' + peerId);
+            if (tile) tile.remove();
+        }
+
+        // --- PEER CONNECTION PER PEER ---
+        function getOrCreatePC(peer) {
+            if (peerConnections[peer.id]) return peerConnections[peer.id];
+
+            const pc = new RTCPeerConnection(rtcConfig);
+            peerConnections[peer.id] = pc;
+
+            if (localStream) {
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            }
+
+            pc.ontrack = (event) => {
+                const video = addRemoteTile(peer.id);
+                video.srcObject = event.streams[0];
+                log('Remote track from ' + peer.id.substring(0, 6));
+            };
+
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    p2pt.send(peer, { type: 'ice', candidate: event.candidate });
+                }
+            };
+
+            pc.onconnectionstatechange = () => {
+                log(`[${peer.id.substring(0, 6)}] state: ${pc.connectionState}`);
+                if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+                    log('Peer ' + peer.id.substring(0, 6) + ' gone');
+                    closePeer(peer.id);
+                }
+            };
+
+            return pc;
+        }
+
+        function closePeer(peerId) {
+            if (peerConnections[peerId]) {
+                peerConnections[peerId].close();
+                delete peerConnections[peerId];
+            }
+            removeRemoteTile(peerId);
+        }
+
+        function decodePayload(raw) {
+            let text;
+            try {
+                text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw);
+            } catch (e) { return null; }
+
+            const i = text.indexOf('{');
+            if (i === -1) return null;
+
+            let outer;
+            try { outer = JSON.parse(text.substring(i)); }
+            catch (e) { return null; }
+
+            if (outer && typeof outer.msg === 'string') {
+                try { return JSON.parse(outer.msg); }
+                catch (e) { return null; }
+            }
+            return outer;
+        }
+
+        // --- JOIN: create an offer to every connected peer ---
+        async function joinCall() {
+            if (joined) return;
+            await initCamera();
+            if (!localStream) return log('No camera, cannot join');
+
+            joined = true;
+            document.getElementById('joinBtn').disabled = true;
+            document.getElementById('hangupBtn').disabled = false;
+            document.getElementById('status').textContent = 'In call — connecting to peers...';
+
+            // Offer to everyone currently connected
+            for (const peer of connectedPeers) {
+                await offerToPeer(peer);
+            }
+        }
+
+        async function offerToPeer(peer) {
+            if (!localStream) return;
+            const pc = getOrCreatePC(peer);
+            if (pc.signalingState !== 'stable') return;
+
+            try {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                p2pt.send(peer, { type: 'offer', sdp: pc.localDescription.sdp });
+                log('Offer sent to ' + peer.id.substring(0, 6));
+            } catch (err) {
+                log('Offer error to ' + peer.id.substring(0, 6) + ': ' + err.message);
+            }
+        }
+
+        function hangupCall(notifyPeers = true) {
+            if (notifyPeers && connectedPeers.length > 0) {
+                connectedPeers.forEach(peer => {
+                    try { p2pt.send(peer, { type: 'hangup' }); } catch (e) { }
+                });
+            }
+
+            Object.keys(peerConnections).forEach(closePeer);
+
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+                localStream = null;
+            }
+            document.getElementById('localVideo').srcObject = null;
+            document.getElementById('joinBtn').disabled = false;
+            document.getElementById('hangupBtn').disabled = true;
+            document.getElementById('status').textContent = 'Left call.';
+            joined = false;
+        }
+
+        const p2pt = new P2PT(trackersAnnounceURLs, identifier);
+
+        p2pt.on('peerconnect', (peer) => {
+            connectedPeers.push(peer);
+            log('Peer connected: ' + peer.id.substring(0, 6));
+            document.getElementById('status').textContent = `Connected — ${connectedPeers.length} peer(s) in room`;
+
+            // If we're already in the call, offer to the new peer immediately
+            if (joined) {
+                offerToPeer(peer);
+            }
+
+            peer.on('data', async (raw) => {
+                const data = decodePayload(raw);
+                if (!data) return;
+
+                if (data.type === 'hangup') {
+                    log('Peer ' + peer.id.substring(0, 6) + ' hung up');
+                    closePeer(peer.id);
+                    return;
+                }
+
+                if (data.type === 'offer') {
+                    // Auto-answer in group mode — no ringing
+                    const pc = getOrCreatePC(peer);
+                    try {
+                        await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }));
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        p2pt.send(peer, { type: 'answer', sdp: pc.localDescription.sdp });
+                        log('Answered ' + peer.id.substring(0, 6));
+                    } catch (err) {
+                        log('Answer error: ' + err.message);
+                    }
+                    return;
+                }
+
+                if (data.type === 'answer') {
+                    const pc = peerConnections[peer.id];
+                    if (pc && pc.signalingState === 'have-local-offer') {
+                        try {
+                            await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: data.sdp }));
+                            log('Handshake complete with ' + peer.id.substring(0, 6));
+                        } catch (err) {
+                            log('Set-answer error: ' + err.message);
+                        }
+                    }
+                    return;
+                }
+
+                if (data.type === 'ice') {
+                    const pc = peerConnections[peer.id];
+                    if (pc && data.candidate) {
+                        try { await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); }
+                        catch (e) { }
+                    }
+                    return;
+                }
+            });
+        });
+
+        p2pt.on('peerclose', (peer) => {
+            log('Peer left room: ' + peer.id.substring(0, 6));
+            closePeer(peer.id);
+            const i = connectedPeers.findIndex(p => p.id === peer.id);
+            if (i >= 0) connectedPeers.splice(i, 1);
+        });
+
+        document.getElementById('joinBtn').onclick = joinCall;
+        document.getElementById('hangupBtn').onclick = () => hangupCall(true);
+
+        p2pt.start();
+    </script>
+</body>
+
+</html>
