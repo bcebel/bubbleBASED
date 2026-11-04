@@ -17,7 +17,7 @@ import { useRouter } from "expo-router";
 import Head from "expo-router/head";
 import { BlurView } from "expo-blur";
 import { useQuery, gql } from "@apollo/client";
-import WebTorrentMedia from "../../../components/WebTorrentMedia";
+import WebTorrentMedia from "../../../components/WebTorrentMediaPosts";
 import { Image } from "expo-image";
 import AdMessage from "../../../components/RandomAd";
 
