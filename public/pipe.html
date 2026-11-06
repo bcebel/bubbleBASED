@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Group Call</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #121212;
+            color: #eee;
+            padding: 20px;
+        }
+
+        .video-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .video-tile {
+            position: relative;
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 4 / 3;
+        }
+
+        .video-tile video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-tile .label {
+            position: absolute;
+            bottom: 4px;
+            left: 8px;
+            font-size: 12px;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 160px;
+            overflow-y: auto;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #00ff88;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button#hangupBtn {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        button:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Group Call</h1>
+    <p id="status">Starting...</p>
+
+    <div class="controls">
+        <button id="joinBtn">Join Call</button>
+        <button id="hangupBtn" disabled>Leave Call</button>
+    </div>
+
+    <div class="video-container" id="videoGrid">
+        <div class="video-tile">
+            <video id="localVideo" autoplay playsinline muted></video>
+            <span class="label">You</span>
+        </div>
+    </div>
+
+    <pre id="log"></pre>
+
+    <script src="https://cdn.jsdelivr.net/npm/p2pt@1.6.2/dist/p2pt.iife.js"></script>
+
+    <script>
+        function log(msg) {
+            const el = document.getElementById('log');
+            el.textContent += msg + '\n';
+            console.log(msg);
+            el.scrollTop = el.scrollHeight;
+        }
+    function sendJSON(peer, obj) {
+        const text = JSON.stringify(obj);
+        const bytes = new TextEncoder().encode(text);
+        const packet = new Uint8Array(1 + bytes.length);
+        packet[0] = 0x01;              // 0x01 = JSON
+        packet.set(bytes, 1);
+        peer.send(packet.buffer);
+    }
+
+    
+        const myPeerId = 'peer-' + Math.random().toString(36).slice(2, 9);
+        const params = new URLSearchParams(window.location.search);
+        const trackersAnnounceURLs = ['wss://tracker2-c3c2b7aba721.herokuapp.com/'];
+        const identifier = params.get('room') || 'fallback-room-group-' + Math.random().toString(36).slice(2, 9);
+        log('My ID: ' + myPeerId);
+        log('Joined room: ' + identifier);
+
+        const connectedPeers = [];
+        const peerConnections = {};   // peer.id -> RTCPeerConnection
+        const remoteIds = {};         // peer.id -> their myPeerId (from 'joined')
+        const makingOffer = {};       // peer.id -> bool
+        const isSettingRemoteAnswerPending = {}; // peer.id -> bool
+        const ignoreOffer = {};       // peer.id -> bool
+
+        let localStream = null;
+        let joined = false;
+
+        const rtcConfig = {
+            iceServers: [
+                { urls: "stun:stun.relay.metered.ca:80" },
+                { urls: "stun:stun.services.mozilla.com:3478" },
+                { urls: "stun:stun.nextcloud.com:443" },
+                { urls: "stun:stun.cloudflare.com:3478" },
+                { urls: "turn:standard.relay.metered.ca:80", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "turn:standard.relay.metered.ca:443", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: "fe67734f65cabae0c1f0bf61", credential: "AY3FDMwL9QjEIZ2R" },
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:stun1.l.google.com:19302" },
+                { urls: "stun:global.stun.twilio.com:3478" }
+            ]
+        };
+
+
+        // Global memory state for tracking data streams without melting RAM
+        const activeStreamId = 101; // Assign a unique numerical ID to this browser's canvas/stream
+        let chunkSequence = 0;
+        const seenPackets = new Set(); // Seen cache: 'streamId:sequence'
+
+        // Low-Level Packet Multi-Stream Protocol
+        function handleIncomingWireMessage(peer, arrayBuffer) {
+            const view = new DataView(arrayBuffer);
+            if (arrayBuffer.byteLength < 6) return; // Malformed check
+
+            // Extract metadata headers (Stream ID + Segment Order Sequence)
+            const streamId = view.getUint16(0);
+            const sequence = view.getUint32(2);
+            const chunkKey = `${streamId}:${sequence}`;
+
+            // 1. Loop Prevention Storm Guard
+            if (seenPackets.has(chunkKey)) return;
+            seenPackets.add(chunkKey);
+
+            // Clear cache boundaries dynamically to save mobile memory
+            if (seenPackets.size > 200) {
+                const firstKey = seenPackets.values().next().value;
+                seenPackets.delete(firstKey);
+            }
+
+            log(`[Wire Wire] Received chunk for stream ${streamId}, seq ${sequence}`);
+
+            // 2. Select Forwarding Propagation (Tree Scale)
+            let fanOutCount = 0;
+            connectedPeers.forEach(targetPeer => {
+                if (targetPeer.id === peer.id) return; // Don't send back to the source
+                if (fanOutCount >= 2) return;
+
+                if (targetPeer.connected) {
+                    try {
+                        targetPeer.send(arrayBuffer);
+                        fanOutCount++;
+                    } catch (e) {
+                        console.warn('Forward failed:', e);
+                    }
+                }
+            });
+
+            // 3. Render Pass-Through Execution
+            window.dispatchEvent(new CustomEvent('live-wire-chunk', {
+                detail: { streamId, sequence, bytes: new Uint8Array(arrayBuffer, 6) }
+            }));
+        }
+
+        // Global broadcast loop for the local recording engine
+    function sendLiveChunkToSwarm(streamId, sequence, rawUint8Array) {
+        const packet = new Uint8Array(1 + 6 + rawUint8Array.length);
+        const view = new DataView(packet.buffer);
+        packet[0] = 0x02;              // 0x02 = wire
+        view.setUint16(1, streamId);
+        view.setUint32(3, sequence);
+        packet.set(rawUint8Array, 7);
+
+            // Ship down all currently warm data channel interfaces
+            let initialFanOut = 0;
+            connectedPeers.forEach(peer => {
+                if (initialFanOut >= 3) return; // Direct host only pushes to 3 root branches
+
+                if (peer.connected) {
+                    try {
+                        peer.send(packet.buffer);
+                        initialFanOut++;
+                    } catch (e) {
+                        console.error('Wire broadcast failed:', e);
+                    }
+                }
+            });
+        }
+
+
+        async function initCamera() {
+            if (localStream) return;
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+                log('Camera acquired.');
+
+                // Add tracks to any PCs that were created before the camera was ready
+                for (const [peerId, pc] of Object.entries(peerConnections)) {
+                    const senders = pc.getSenders();
+                    localStream.getTracks().forEach(track => {
+                        const existing = senders.find(s => s.track && s.track.kind === track.kind);
+                        if (!existing) {
+                            pc.addTrack(track, localStream);
+                            log('Added late ' + track.kind + ' track to ' + peerId.substring(0, 6));
+                        }
+                    });
+                }
+            } catch (err) {
+                log('Camera error: ' + err.message);
+            }
+        }
+        function addRemoteTile(peerId) {
+            const existing = document.getElementById('tile-' + peerId);
+            if (existing) return existing.querySelector('video');
+            const tile = document.createElement('div');
+            tile.className = 'video-tile';
+            tile.id = 'tile-' + peerId;
+            const video = document.createElement('video');
+            video.autoplay = true;
+            video.playsInline = true;
+            const label = document.createElement('span');
+            label.className = 'label';
+            label.textContent = peerId.substring(0, 6);
+            tile.appendChild(video);
+            tile.appendChild(label);
+            document.getElementById('videoGrid').appendChild(tile);
+            return video;
+        }
+
+        function removeRemoteTile(peerId) {
+            const tile = document.getElementById('tile-' + peerId);
+            if (tile) tile.remove();
+        }
+
+        function getOrCreatePC(peer) {
+            if (peerConnections[peer.id]) return peerConnections[peer.id];
+
+            const pc = new RTCPeerConnection(rtcConfig);
+            peerConnections[peer.id] = pc;
+
+            if (localStream) {
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            }
+
+            pc.ontrack = (event) => {
+                const video = addRemoteTile(peer.id);
+                video.srcObject = event.streams[0];
+                log('Remote track from ' + peer.id.substring(0, 6));
+            };
+
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    p2pt.send(peer, { type: 'ice', candidate: event.candidate });
+                }
+            };
+
+            pc.onconnectionstatechange = () => {
+                log(`[${peer.id.substring(0, 6)}] state: ${pc.connectionState}`);
+                if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+                    closePeer(peer.id);
+                }
+            };
+
+            return pc;
+        }
+
+        function closePeer(peerId) {
+            if (peerConnections[peerId]) {
+                peerConnections[peerId].close();
+                delete peerConnections[peerId];
+            }
+            delete makingOffer[peerId];
+            delete isSettingRemoteAnswerPending[peerId];
+            delete ignoreOffer[peerId];
+            removeRemoteTile(peerId);
+        }
+
+        function decodePayload(raw) {
+            let text;
+            try { text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw); }
+            catch (e) { return null; }
+            const i = text.indexOf('{');
+            if (i === -1) return null;
+            let outer;
+            try { outer = JSON.parse(text.substring(i)); } catch (e) { return null; }
+            if (outer && typeof outer.msg === 'string') {
+                try { return JSON.parse(outer.msg); } catch (e) { return null; }
+            }
+            return outer;
+        }
+
+        // Determine politeness. Both sides must agree.
+        // If we don't know their ID yet, treat ourselves as impolite (safer default).
+        function isPolite(peerId) {
+            const theirId = remoteIds[peerId];
+            if (!theirId) return false;
+            return myPeerId < theirId;
+        }
+
+        // Create an offer on a peer's PC. No role check — anyone can offer.
+        async function offerToPeer(peer) {
+            if (!localStream) return;
+            if (!joined) return;
+            const pc = getOrCreatePC(peer);
+            if (pc.signalingState !== 'stable') return;
+            if (makingOffer[peer.id]) return;
+
+            makingOffer[peer.id] = true;
+            try {
+                const offer = await pc.createOffer();
+                if (pc.signalingState !== 'stable') {
+                    log('State changed before setLocal, aborting offer to ' + peer.id.substring(0, 6));
+                    return;
+                }
+                await pc.setLocalDescription(offer);
+                p2pt.send(peer, { type: 'offer', sdp: pc.localDescription.sdp });
+                log('Offer sent to ' + peer.id.substring(0, 6));
+            } catch (err) {
+                log('Offer error to ' + peer.id.substring(0, 6) + ': ' + err.message);
+            } finally {
+                makingOffer[peer.id] = false;
+            }
+        }
+
+        async function joinCall() {
+            if (joined) return;
+            await initCamera();
+            if (!localStream) return log('No camera, cannot join');
+
+            joined = true;
+            document.getElementById('joinBtn').disabled = true;
+            document.getElementById('hangupBtn').disabled = false;
+            document.getElementById('status').textContent = 'In call — connecting...';
+
+            for (const peer of connectedPeers) {
+                p2pt.send(peer, { type: 'joined', id: myPeerId });
+                await offerToPeer(peer);
+            }
+        }
+
+        function hangupCall(notifyPeers = true) {
+            if (notifyPeers) {
+                connectedPeers.forEach(peer => {
+                    try { p2pt.send(peer, { type: 'hangup' }); } catch (e) { }
+                });
+            }
+            Object.keys(peerConnections).forEach(closePeer);
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+                localStream = null;
+            }
+            document.getElementById('localVideo').srcObject = null;
+            document.getElementById('joinBtn').disabled = false;
+            document.getElementById('hangupBtn').disabled = true;
+            document.getElementById('status').textContent = 'Left call.';
+            joined = false;
+        }
+
+        const p2pt = new P2PT(trackersAnnounceURLs, identifier);
+
+        function handleCallSignal(peer, data) {
+                if (data.type === 'joined') {
+                    remoteIds[peer.id] = data.id;
+                    log('Peer identity: ' + data.id.substring(0, 6) + ' (polite: ' + isPolite(peer.id) + ')');
+                    if (joined) offerToPeer(peer);
+                    return;
+                }
+
+                if (data.type === 'hangup') {
+                    log('Peer ' + peer.id.substring(0, 6) + ' hung up');
+                    closePeer(peer.id);
+                    return;
+                }
+
+                if (data.type === 'offer') {
+                    const pc = getOrCreatePC(peer);
+                    const polite = isPolite(peer.id);
+                    const readyForOffer = !makingOffer[peer.id] &&
+                        (pc.signalingState === 'stable' || isSettingRemoteAnswerPending[peer.id]);
+                    const offerCollision = !readyForOffer;
+
+                    ignoreOffer[peer.id] = !polite && offerCollision;
+                    if (ignoreOffer[peer.id]) {
+                        log('Ignoring colliding offer from ' + peer.id.substring(0, 6) + ' (impolite)');
+                        return;
+                    }
+
+                    if (offerCollision && polite) {
+                        log('Polite rollback for ' + peer.id.substring(0, 6));
+                        pc.setLocalDescription({ type: 'rollback' }).then(() => {
+                            return pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }));
+                        }).then(() => {
+                            return pc.createAnswer();
+                        }).then(answer => {
+                            return pc.setLocalDescription(answer);
+                        }).then(() => {
+                            p2pt.send(peer, { type: 'answer', sdp: pc.localDescription.sdp });
+                            log('Answered ' + peer.id.substring(0, 6));
+                        }).catch(err => log('Answer error: ' + err.message));
+                    } else {
+                        pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }))
+                            .then(() => pc.createAnswer())
+                            .then(answer => pc.setLocalDescription(answer))
+                            .then(() => {
+                                p2pt.send(peer, { type: 'answer', sdp: pc.localDescription.sdp });
+                                log('Answered ' + peer.id.substring(0, 6));
+                            })
+                            .catch(err => log('Answer error: ' + err.message));
+                    }
+                    return;
+                }
+
+                if (data.type === 'answer') {
+                    const pc = peerConnections[peer.id];
+                    if (!pc) return;
+                    isSettingRemoteAnswerPending[peer.id] = true;
+                    pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: data.sdp }))
+                        .then(() => log('Handshake complete with ' + peer.id.substring(0, 6)))
+                        .catch(err => log('Set-answer error: ' + err.message))
+                        .finally(() => { isSettingRemoteAnswerPending[peer.id] = false; });
+                    return;
+                }
+
+                if (data.type === 'ice') {
+                    const pc = peerConnections[peer.id];
+                    if (!pc || !data.candidate) return;
+                    if (ignoreOffer[peer.id]) return;
+                    pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(() => { });
+                    return;
+                }
+            }
+
+    p2pt.on('peerconnect', (peer) => {
+        if (!connectedPeers.find(p => p.id === peer.id)) {
+            connectedPeers.push(peer);
+        }
+
+        // Attach the data handler only once per peer
+        if (!peer._dataHandlerAttached) {
+            peer._dataHandlerAttached = true;
+
+            p2pt.send(peer, { type: 'joined', id: myPeerId });   // move this inside the guard
+            if (joined) offerToPeer(peer);
+
+       peer.on('data', (rawPayload) => {
+           let bytes;
+           if (rawPayload instanceof ArrayBuffer) {
+               bytes = new Uint8Array(rawPayload);
+           } else if (rawPayload instanceof Uint8Array) {
+               bytes = rawPayload;
+           } else if (rawPayload instanceof Blob) {
+               rawPayload.arrayBuffer().then(buf => {
+                   const b = new Uint8Array(buf);
+                   routeIncoming(peer, b);
+               });
+               return;
+           } else if (typeof rawPayload === 'string') {
+               // Some p2pt versions deliver strings — handle them as JSON directly
+               const data = decodePayload(rawPayload);
+               if (data) handleCallSignal(peer, data);
+               return;
+           } else {
+               return;
+           }
+           routeIncoming(peer, bytes);
+       });
+    }
+       function routeIncoming(peer, bytes) {
+           if (bytes.length < 1) return;
+           const tag = bytes[0];
+
+           if (tag === 0x01) {
+               const text = new TextDecoder().decode(bytes.slice(1));
+               const data = decodePayload(text);
+               if (data) handleCallSignal(peer, data);
+               return;
+           }
+
+           if (tag === 0x02) {
+               handleIncomingWireMessage(peer, bytes.slice(1).buffer);
+               return;
+           }
+
+           // Legacy: untagged binary that looks like a p2pt envelope (`^{`)
+           // Treat it as JSON so old senders still work
+           if (bytes[0] === 0x5E && bytes[1] === 0x7B) {
+               const text = new TextDecoder().decode(bytes);
+               const data = decodePayload(text);
+               if (data) handleCallSignal(peer, data);
+               return;
+           }
+       } 
+    });
+    p2pt.on('peerclose', (peer) => {
+        log(`[Wire Severed] Peer disconnected: ${peer.id.substring(0, 6)}`);
+        closePeer(peer.id);
+        const i = connectedPeers.findIndex(p => p.id === peer.id);
+        if (i >= 0) connectedPeers.splice(i, 1);
+        delete remoteIds[peer.id];
+    });  // ← CLOSE peerclose here
+
+    document.getElementById('joinBtn').onclick = joinCall;
+    document.getElementById('hangupBtn').onclick = () => hangupCall(true);
+
+    p2pt.start();
+    </script>
+</body>
+
+</html>
