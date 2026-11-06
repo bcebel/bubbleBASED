@@ -230,7 +230,10 @@
         async function initCamera() {
             if (localStream) return;
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480, frameRate: 24 },
+                    audio: true
+                });
                 document.getElementById('localVideo').srcObject = localStream;
                 log('Camera acquired.');
 
@@ -258,6 +261,8 @@
             const video = document.createElement('video');
             video.autoplay = true;
             video.playsInline = true;
+                  video.setAttribute("playsinline", "true");
+            video.setAttribute("webkit-playsinline", "true");
             video.muted = false; 
             const label = document.createElement('span');
             label.className = 'label';
@@ -419,6 +424,9 @@
                 if (data.type === 'offer') {
                     const pc = getOrCreatePC(peer);
                     const polite = isPolite(peer.id);
+                            const collision = makingOffer[peer.id] || pc.signalingState !== 'stable';
+
+                    if (collision && !polite) return;
                     const readyForOffer = !makingOffer[peer.id] &&
                         (pc.signalingState === 'stable' || isSettingRemoteAnswerPending[peer.id]);
                     const offerCollision = !readyForOffer;
