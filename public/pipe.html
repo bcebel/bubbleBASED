@@ -375,9 +375,10 @@
             document.getElementById('hangupBtn').disabled = false;
             document.getElementById('status').textContent = 'In call — connecting...';
 
-            for (const peer of connectedPeers) {
+  for (const peer of connectedPeers) {
                 p2pt.send(peer, { type: 'joined', id: myPeerId });
                 await offerToPeer(peer);
+                await new Promise(r => setTimeout(r, 250)); // Give WebKit time to release ports
             }
         }
 
