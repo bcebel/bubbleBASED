@@ -258,6 +258,7 @@
             const video = document.createElement('video');
             video.autoplay = true;
             video.playsInline = true;
+            video.muted = false; 
             const label = document.createElement('span');
             label.className = 'label';
             label.textContent = peerId.substring(0, 6);
@@ -283,8 +284,10 @@
             }
 
             pc.ontrack = (event) => {
+                 console.log("ONTrack fired! Streams:", event.streams.length, "Tracks:", event.streams[0]?.getTracks().map(t => t.kind));
                 const video = addRemoteTile(peer.id);
                 video.srcObject = event.streams[0];
+                video.play()
                 log('Remote track from ' + peer.id.substring(0, 6));
             };
 

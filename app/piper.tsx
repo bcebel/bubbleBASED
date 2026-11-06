@@ -13,6 +13,13 @@ export default function WebRTCCallScreen() {
   const url =
    `https://ebubbl.com/pipe.html?room=${encodeURIComponent(roomId)}`;
 
+    useEffect(() => {
+  (async () => {
+    await Camera.requestCameraPermissionsAsync();
+    await Audio.requestMicrophonePermissionsAsync();
+  })();
+    }, []);
+  
   if (Platform.OS === "web") {
     return (
       <iframe
@@ -24,12 +31,7 @@ export default function WebRTCCallScreen() {
     );
   }
 
-  useEffect(() => {
-  (async () => {
-    await Camera.requestCameraPermissionsAsync();
-    await Audio.requestMicrophonePermissionsAsync();
-  })();
-  }, []);
+
   
   return (
     <WebView
