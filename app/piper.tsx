@@ -1,6 +1,8 @@
 import { Platform, View } from "react-native";
+import { useEffect } from "react";  
 import { WebView } from "react-native-webview";
 import { useLocalSearchParams } from "expo-router";
+import { Camera } from "expo-camera";
 
 export default function WebRTCCallScreen() {
   const { room } = useLocalSearchParams<{ room?: string }>();
@@ -22,6 +24,13 @@ export default function WebRTCCallScreen() {
     );
   }
 
+  useEffect(() => {
+  (async () => {
+    await Camera.requestCameraPermissionsAsync();
+    await Audio.requestMicrophonePermissionsAsync();
+  })();
+  }, []);
+  
   return (
     <WebView
       source={{ uri: url }}
@@ -29,6 +38,10 @@ export default function WebRTCCallScreen() {
       mediaPlaybackRequiresUserAction={false}
       allowsInlineMediaPlayback
       originWhitelist={["*"]}
+        mediaCapturePermissionGrantType="grant"
+      onPermissionRequest={(event) => {
+        event.request.grant(event.request.getAccessibleResource());
+      }}
     />
   );
 }
