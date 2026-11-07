@@ -421,47 +421,34 @@
                     return;
                 }
 
-                if (data.type === 'offer') {
-                    const pc = getOrCreatePC(peer);
-                    const polite = isPolite(peer.id);
-                            const collision = makingOffer[peer.id] || pc.signalingState !== 'stable';
+            if (data.type === 'offer') {
+                let pc = getOrCreatePC(peer);
+                const polite = isPolite(peer.id);
+                const collision = makingOffer[peer.id] || pc.signalingState !== 'stable';
 
-                    if (collision && !polite) return;
-                    const readyForOffer = !makingOffer[peer.id] &&
-                        (pc.signalingState === 'stable' || isSettingRemoteAnswerPending[peer.id]);
-                    const offerCollision = !readyForOffer;
-
-                    ignoreOffer[peer.id] = !polite && offerCollision;
-                    if (ignoreOffer[peer.id]) {
-                        log('Ignoring colliding offer from ' + peer.id.substring(0, 6) + ' (impolite)');
-                        return;
-                    }
-
-                    if (offerCollision && polite) {
-                        log('Polite rollback for ' + peer.id.substring(0, 6));
-                        pc.setLocalDescription({ type: 'rollback' }).then(() => {
-                            return pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }));
-                        }).then(() => {
-                            return pc.createAnswer();
-                        }).then(answer => {
-                            return pc.setLocalDescription(answer);
-                        }).then(() => {
-                            p2pt.send(peer, { type: 'answer', sdp: pc.localDescription.sdp });
-                            log('Answered ' + peer.id.substring(0, 6));
-                        }).catch(err => log('Answer error: ' + err.message));
-                    } else {
-                        pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }))
-                            .then(() => pc.createAnswer())
-                            .then(answer => pc.setLocalDescription(answer))
-                            .then(() => {
-                                p2pt.send(peer, { type: 'answer', sdp: pc.localDescription.sdp });
-                                log('Answered ' + peer.id.substring(0, 6));
-                            })
-                            .catch(err => log('Answer error: ' + err.message));
-                    }
+                // Impolite peer ignores colliding offers
+                if (collision && !polite) {
+                    log('Ignoring colliding offer from ' + peer.id.substring(0, 6) + ' (impolite)');
                     return;
                 }
 
+                // Polite peer: Safari can't rollback, so tear down and recreate
+                if (collision && polite) {
+                    log('Collision on polite side — recreating PC for ' + peer.id.substring(0, 6));
+                    closePeer(peer.id);
+                    pc = getOrCreatePC(peer);
+                }
+
+                pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }))
+                    .then(() => pc.createAnswer())
+                    .then(answer => pc.setLocalDescription(answer))
+                    .then(() => {
+                        p2pt.send(peer, { type: 'answer', sdp: pc.localDescription.sdp });
+                        log('Answered ' + peer.id.substring(0, 6));
+                    })
+                    .catch(err => log('Answer error: ' + err.message));
+                return;
+            }
                 if (data.type === 'answer') {
                     const pc = peerConnections[peer.id];
                     if (!pc) return;
@@ -482,67 +469,60 @@
                 }
             }
 
-    p2pt.on('peerconnect', (peer) => {
-        if (!connectedPeers.find(p => p.id === peer.id)) {
-            connectedPeers.push(peer);
+    function routeIncoming(peer, bytes) {
+            if (!bytes || bytes.length < 1) return;
+            const tag = bytes[0];
+
+            if (tag === 0x01) {
+                const text = new TextDecoder().decode(bytes.slice(1));
+                const data = decodePayload(text);
+                if (data) handleCallSignal(peer, data);
+                return;
+            }
+
+            if (tag === 0x02) {
+                handleIncomingWireMessage(peer, bytes.slice(1).buffer);
+                return;
+            }
+
+            // Legacy: untagged p2pt envelope `^{`
+            if (bytes[0] === 0x5E && bytes[1] === 0x7B) {
+                const text = new TextDecoder().decode(bytes);
+                const data = decodePayload(text);
+                if (data) handleCallSignal(peer, data);
+                return;
+            }
         }
 
-        // Attach the data handler only once per peer
+    p2pt.on('peerconnect', (peer) => {
+        if (!connectedPeers.find(p => p.id === peer.id)) connectedPeers.push(peer);
         if (!peer._dataHandlerAttached) {
             peer._dataHandlerAttached = true;
-
-            p2pt.send(peer, { type: 'joined', id: myPeerId });   // move this inside the guard
+            p2pt.send(peer, { type: 'joined', id: myPeerId });
             if (joined) offerToPeer(peer);
-
-       peer.on('data', (rawPayload) => {
-           let bytes;
-           if (rawPayload instanceof ArrayBuffer) {
-               bytes = new Uint8Array(rawPayload);
-           } else if (rawPayload instanceof Uint8Array) {
-               bytes = rawPayload;
-           } else if (rawPayload instanceof Blob) {
-               rawPayload.arrayBuffer().then(buf => {
-                   const b = new Uint8Array(buf);
-                   routeIncoming(peer, b);
-               });
-               return;
-           } else if (typeof rawPayload === 'string') {
-               // Some p2pt versions deliver strings — handle them as JSON directly
-               const data = decodePayload(rawPayload);
-               if (data) handleCallSignal(peer, data);
-               return;
-           } else {
-               return;
-           }
-           routeIncoming(peer, bytes);
-       });
-    }
-       function routeIncoming(peer, bytes) {
-           if (bytes.length < 1) return;
-           const tag = bytes[0];
-
-           if (tag === 0x01) {
-               const text = new TextDecoder().decode(bytes.slice(1));
-               const data = decodePayload(text);
-               if (data) handleCallSignal(peer, data);
-               return;
-           }
-
-           if (tag === 0x02) {
-               handleIncomingWireMessage(peer, bytes.slice(1).buffer);
-               return;
-           }
-
-           // Legacy: untagged binary that looks like a p2pt envelope (`^{`)
-           // Treat it as JSON so old senders still work
-           if (bytes[0] === 0x5E && bytes[1] === 0x7B) {
-               const text = new TextDecoder().decode(bytes);
-               const data = decodePayload(text);
-               if (data) handleCallSignal(peer, data);
-               return;
-           }
-       } 
+  peer.on('data', (rawPayload) => {
+                let bytes;
+                if (rawPayload instanceof ArrayBuffer) {
+                    bytes = new Uint8Array(rawPayload);
+                } else if (rawPayload instanceof Uint8Array) {
+                    bytes = rawPayload;
+                } else if (rawPayload instanceof Blob) {
+                    rawPayload.arrayBuffer().then(buf => {
+                        routeIncoming(peer, new Uint8Array(buf));
+                    });
+                    return;
+                } else if (typeof rawPayload === 'string') {
+                    const data = decodePayload(rawPayload);
+                    if (data) handleCallSignal(peer, data);
+                    return;
+                } else {
+                    return;
+                }
+                routeIncoming(peer, bytes);
+            });
+        }
     });
+
     p2pt.on('peerclose', (peer) => {
         log(`[Wire Severed] Peer disconnected: ${peer.id.substring(0, 6)}`);
         closePeer(peer.id);
