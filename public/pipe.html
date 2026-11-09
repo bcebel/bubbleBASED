@@ -153,8 +153,7 @@
 
 
         // Global memory state for tracking data streams without melting RAM
-        const activeStreamId = 101; // Assign a unique numerical ID to this browser's canvas/stream
-        let chunkSequence = 0;
+    const activeStreamId = Math.floor(Math.random() * 800) + 100;        let chunkSequence = 0;
         const seenPackets = new Set(); // Seen cache: 'streamId:sequence'
 
         // Low-Level Packet Multi-Stream Protocol
@@ -178,7 +177,7 @@
             }
 
             log(`[Wire Wire] Received chunk for stream ${streamId}, seq ${sequence}`);
-
+          const maxFanOut = connectedPeers.length <= 4 ? connectedPeers.length : 2;
             // 2. Select Forwarding Propagation (Tree Scale)
             let fanOutCount = 0;
             connectedPeers.forEach(targetPeer => {
@@ -226,6 +225,87 @@
             });
         }
 
+        let wireRecorder = null;
+
+            function startLocalWireStream() {
+                if (!localStream || wireRecorder) return;
+
+                const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+                    ? 'video/webm;codecs=vp8,opus'
+                    : 'video/mp4';
+
+                wireRecorder = new MediaRecorder(localStream, {
+                    mimeType,
+                    videoBitsPerSecond: 400000,
+                });
+
+                wireRecorder.ondataavailable = async (event) => {
+                    if (!event.data || event.data.size === 0) return;
+                    const buf = await event.data.arrayBuffer();
+                    chunkSequence++;
+                    sendLiveChunkToSwarm(activeStreamId, chunkSequence, new Uint8Array(buf));
+                };
+
+                wireRecorder.start(500);
+                log('Wire recorder started (0.5s chunks)');
+            }
+
+
+            const wirePlayers = {};
+
+                function ensureWirePlayer(streamId) {
+                    if (wirePlayers[streamId]) return wirePlayers[streamId];
+
+                    const video = document.createElement('video');
+                    video.autoplay = true;
+                    video.playsInline = true;
+                    video.muted = false;
+                    document.getElementById('videoGrid').appendChild(video);
+
+                    const mediaSource = new MediaSource();
+                    video.src = URL.createObjectURL(mediaSource);
+
+                    const player = { video, mediaSource, sourceBuffer: null, queue: [], nextSeq: 1 };
+                    wirePlayers[streamId] = player;
+
+                    mediaSource.addEventListener('sourceopen', () => {
+                        // MUST match the recorder's mimeType
+                        const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+                            ? 'video/webm;codecs=vp8,opus'
+                            : 'video/mp4';
+                        player.sourceBuffer = mediaSource.addSourceBuffer(mime);
+                        player.sourceBuffer.addEventListener('updateend', () => flushWireQueue(player));
+                        log('Wire player ready for stream ' + streamId);
+                    });
+
+                    return player;
+                }
+
+                function flushWireQueue(player) {
+                    if (!player.sourceBuffer || player.sourceBuffer.updating) return;
+                    while (player.queue.length > 0 && !player.sourceBuffer.updating) {
+                        const next = player.queue[0];
+                        if (next.seq !== player.nextSeq) break;   // wait for the next expected seq
+                        player.queue.shift();
+                        try {
+                            player.sourceBuffer.appendBuffer(next.bytes);
+                            player.nextSeq++;
+                        } catch (e) {
+                            log('appendBuffer error: ' + e.message);
+                            break;
+                        }
+                    }
+                }
+
+                window.addEventListener('live-wire-chunk', (e) => {
+                    const { streamId, sequence, bytes } = e.detail;
+                    log('Wire player got chunk seq ' + sequence);
+                    const player = ensureWirePlayer(streamId);
+                    if (sequence < player.nextSeq) return;
+                    player.queue.push({ seq: sequence, bytes });
+                    player.queue.sort((a, b) => a.seq - b.seq);
+                    flushWireQueue(player);
+                });
 
         async function initCamera() {
             if (localStream) return;
@@ -375,6 +455,8 @@
             await initCamera();
             if (!localStream) return log('No camera, cannot join');
 
+                startLocalWireStream(); 
+
             joined = true;
             document.getElementById('joinBtn').disabled = true;
             document.getElementById('hangupBtn').disabled = false;
@@ -388,6 +470,10 @@
         }
 
         function hangupCall(notifyPeers = true) {
+               if (wireRecorder && wireRecorder.state !== 'inactive') {
+                wireRecorder.stop();
+                wireRecorder = null;
+            }
             if (notifyPeers) {
                 connectedPeers.forEach(peer => {
                     try { p2pt.send(peer, { type: 'hangup' }); } catch (e) { }
